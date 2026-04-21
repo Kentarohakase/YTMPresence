@@ -53,6 +53,7 @@ Mit `Verbindung testen` in den Extension-Optionen kannst du prüfen, ob Companio
 
 ## Tray-Menü
 
+- `Einstellungen…`: öffnet das Settings-Fenster für Token, Server, Presence und Discord Client ID
 - `Presence nur wenn Musik läuft`: löscht die Discord-Presence sofort beim Pausieren
 - `Werbung ignorieren`: sendet bei Werbung kein Discord-Update
 - `Autostart aktivieren`: startet YTMPresence beim Windows-Login

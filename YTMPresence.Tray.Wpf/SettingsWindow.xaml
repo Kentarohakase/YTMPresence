@@ -1,0 +1,178 @@
+<Window x:Class="YTMPresence.TrayWpf.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="YTM Presence Einstellungen"
+        Width="560"
+        Height="640"
+        MinWidth="520"
+        MinHeight="560"
+        WindowStartupLocation="CenterScreen">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="18">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0"
+                       Text="YTM Presence"
+                       FontSize="22"
+                       FontWeight="SemiBold"
+                       Margin="0,0,0,14" />
+
+            <GroupBox Grid.Row="1"
+                      Header="Verbindung"
+                      Padding="12"
+                      Margin="0,0,0,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="150" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Security Token" VerticalAlignment="Center" />
+                    <DockPanel Grid.Row="0" Grid.Column="1" LastChildFill="True">
+                        <Button x:Name="CopyTokenButton"
+                                Content="Kopieren"
+                                Width="86"
+                                Margin="8,0,0,0"
+                                DockPanel.Dock="Right"
+                                Click="CopyTokenButton_Click" />
+                        <Button x:Name="GenerateTokenButton"
+                                Content="Neu"
+                                Width="64"
+                                Margin="8,0,0,0"
+                                DockPanel.Dock="Right"
+                                Click="GenerateTokenButton_Click" />
+                        <TextBox x:Name="SecurityTokenBox"
+                                 IsReadOnly="True"
+                                 FontFamily="Consolas"
+                                 VerticalContentAlignment="Center" />
+                    </DockPanel>
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Host" Margin="0,10,0,0" VerticalAlignment="Center" />
+                    <TextBox x:Name="ListenHostBox"
+                             Grid.Row="1"
+                             Grid.Column="1"
+                             Margin="0,10,0,0"
+                             VerticalContentAlignment="Center" />
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Port" Margin="0,10,0,0" VerticalAlignment="Center" />
+                    <TextBox x:Name="ListenPortBox"
+                             Grid.Row="2"
+                             Grid.Column="1"
+                             Margin="0,10,0,0"
+                             VerticalContentAlignment="Center" />
+
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="WebSocket-Pfad" Margin="0,10,0,0" VerticalAlignment="Center" />
+                    <TextBox x:Name="WebSocketPathBox"
+                             Grid.Row="3"
+                             Grid.Column="1"
+                             Margin="0,10,0,0"
+                             VerticalContentAlignment="Center" />
+                </Grid>
+            </GroupBox>
+
+            <GroupBox Grid.Row="2"
+                      Header="Presence"
+                      Padding="12"
+                      Margin="0,0,0,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="220" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Discord Update-Intervall" VerticalAlignment="Center" />
+                    <TextBox x:Name="MinUpdateSecondsBox"
+                             Grid.Row="0"
+                             Grid.Column="1"
+                             VerticalContentAlignment="Center" />
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Idle-Clear nach Sekunden" Margin="0,10,0,0" VerticalAlignment="Center" />
+                    <TextBox x:Name="IdleClearSecondsBox"
+                             Grid.Row="1"
+                             Grid.Column="1"
+                             Margin="0,10,0,0"
+                             VerticalContentAlignment="Center" />
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Pause-Clear nach Sekunden" Margin="0,10,0,0" VerticalAlignment="Center" />
+                    <TextBox x:Name="PausedClearSecondsBox"
+                             Grid.Row="2"
+                             Grid.Column="1"
+                             Margin="0,10,0,0"
+                             VerticalContentAlignment="Center" />
+
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Werbung" Margin="0,10,0,0" VerticalAlignment="Center" />
+                    <ComboBox x:Name="AdBehaviorBox"
+                              Grid.Row="3"
+                              Grid.Column="1"
+                              Margin="0,10,0,0"
+                              SelectedValuePath="Tag">
+                        <ComboBoxItem Content="Als Werbung anzeigen" Tag="ShowAdvertisement" />
+                        <ComboBoxItem Content="Ignorieren" Tag="Ignore" />
+                        <ComboBoxItem Content="Presence löschen" Tag="Clear" />
+                    </ComboBox>
+
+                    <CheckBox x:Name="OnlyShowWhenPlayingBox"
+                              Grid.Row="4"
+                              Grid.Column="0"
+                              Grid.ColumnSpan="2"
+                              Content="Presence nur anzeigen, wenn Musik läuft"
+                              Margin="0,12,0,0" />
+                </Grid>
+            </GroupBox>
+
+            <GroupBox Grid.Row="3"
+                      Header="Discord"
+                      Padding="12"
+                      Margin="0,0,0,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="150" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="Client ID" VerticalAlignment="Center" />
+                    <TextBox x:Name="DiscordClientIdBox"
+                             Grid.Column="1"
+                             FontFamily="Consolas"
+                             VerticalContentAlignment="Center" />
+                </Grid>
+            </GroupBox>
+
+            <DockPanel Grid.Row="4" LastChildFill="False">
+                <TextBlock x:Name="StatusText"
+                           DockPanel.Dock="Left"
+                           VerticalAlignment="Center"
+                           Foreground="#0a7a2f" />
+                <Button Content="Abbrechen"
+                        Width="96"
+                        Margin="8,0,0,0"
+                        DockPanel.Dock="Right"
+                        IsCancel="True" />
+                <Button Content="Speichern"
+                        Width="96"
+                        DockPanel.Dock="Right"
+                        IsDefault="True"
+                        Click="SaveButton_Click" />
+            </DockPanel>
+        </Grid>
+    </ScrollViewer>
+</Window>

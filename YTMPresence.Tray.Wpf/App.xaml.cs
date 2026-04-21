@@ -33,6 +33,7 @@ public partial class App : System.Windows.Application
   private ToolStripMenuItem? _autostartItem;
   private ToolStripMenuItem? _onlyShowWhenPlayingItem;
   private ToolStripMenuItem? _ignoreAdsItem;
+  private SettingsWindow? _settingsWindow;
 
   private readonly string _settingsPath = SettingsStore.GetDefaultSettingsPath();
   private AppSettings _settings = new();
@@ -224,6 +225,9 @@ public partial class App : System.Windows.Application
     var rotateTokenItem = new ToolStripMenuItem(UiText.GenerateNewToken);
     rotateTokenItem.Click += (_, __) => RotateToken();
 
+    var settingsItem = new ToolStripMenuItem(UiText.Settings);
+    settingsItem.Click += (_, __) => ShowSettingsWindow();
+
     var openYtmItem = new ToolStripMenuItem(UiText.OpenYtm);
     openYtmItem.Click += (_, __) => OpenUrl("https://music.youtube.com/");
 
@@ -255,6 +259,7 @@ public partial class App : System.Windows.Application
     menu.Items.Add(_ignoreAdsItem);
     menu.Items.Add(new ToolStripSeparator());
     menu.Items.Add(_autostartItem);
+    menu.Items.Add(settingsItem);
     menu.Items.Add(copyTokenItem);
     menu.Items.Add(rotateTokenItem);
     menu.Items.Add(openYtmItem);
@@ -390,6 +395,39 @@ public partial class App : System.Windows.Application
       if (_ignoreAdsItem is not null)
         _ignoreAdsItem.Checked = _settings.AdBehavior == AdBehavior.Ignore;
     }
+  }
+
+  private void ShowSettingsWindow()
+  {
+    if (_settingsWindow is not null)
+    {
+      _settingsWindow.Activate();
+      return;
+    }
+
+    _settingsWindow = new SettingsWindow(_settings, _settingsPath);
+    _settingsWindow.Closed += (_, __) => _settingsWindow = null;
+    _settingsWindow.SettingsSaved += (_, args) =>
+    {
+      SyncPresenceMenuItems();
+
+      if (args.RequiresServerRestart)
+        _ = RestartServerAsync();
+
+      Logger.Info($"Settings window saved. Restart required: {args.RequiresServerRestart}.");
+    };
+
+    _settingsWindow.Show();
+    _settingsWindow.Activate();
+  }
+
+  private void SyncPresenceMenuItems()
+  {
+    if (_onlyShowWhenPlayingItem is not null)
+      _onlyShowWhenPlayingItem.Checked = _settings.OnlyShowWhenPlaying;
+
+    if (_ignoreAdsItem is not null)
+      _ignoreAdsItem.Checked = _settings.AdBehavior == AdBehavior.Ignore;
   }
 
   private void RotateToken()

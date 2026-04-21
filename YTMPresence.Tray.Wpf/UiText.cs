@@ -203,6 +203,12 @@ internal static class UiText
       es: "Generar nuevo token"
   );
 
+  public static string Settings => T(
+      de: "Einstellungen…",
+      en: "Settings…",
+      es: "Configuración…"
+  );
+
   public static string OpenYtm => T(
       de: "YouTube Music öffnen",
       en: "Open YouTube Music",
