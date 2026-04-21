@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "YTM Discord Presence Bridge",
+  "version": "0.3.2",
+  "description": "Sendet YouTube Music Playback-Daten an den lokalen Companion (mit Security Token).",
+  "host_permissions": [
+    "https://music.youtube.com/*",
+    "http://127.0.0.1/*",
+    "http://localhost/*"
+  ],
+  "permissions": [ "storage" ],
+  "options_page": "options.html",
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [ "https://music.youtube.com/*" ],
+      "js": [ "content.js" ],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [ "page.js" ],
+      "matches": [ "https://music.youtube.com/*" ]
+    }
+  ]
+}

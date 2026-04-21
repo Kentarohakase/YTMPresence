@@ -1,0 +1,10 @@
+.vs/
+.dotnet-home/
+
+**/bin/
+**/obj/
+
+artifacts/
+
+*.user
+*.suo

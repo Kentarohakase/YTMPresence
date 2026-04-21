@@ -1,0 +1,19 @@
+<Solution>
+  <Configurations>
+    <BuildType Name="All" />
+    <BuildType Name="Debug" />
+    <BuildType Name="Release" />
+  </Configurations>
+  <Project Path="YTMPresence.Console/YTMPresence.Console.csproj">
+    <BuildType Solution="All|*" Project="Debug" />
+  </Project>
+  <Project Path="YTMPresence.Core/YTMPresence.Core.csproj">
+    <BuildType Solution="All|*" Project="Debug" />
+  </Project>
+  <Project Path="YTMPresence.Tray.Wpf/YTMPresence.Tray.Wpf.csproj">
+    <BuildType Solution="All|*" Project="Debug" />
+  </Project>
+  <Project Path="YTMPresence/YTMPresence.csproj">
+    <BuildType Solution="All|*" Project="Debug" />
+  </Project>
+</Solution>
