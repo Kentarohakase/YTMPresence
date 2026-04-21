@@ -243,11 +243,15 @@ public partial class App : System.Windows.Application
     _trayIcon = new NotifyIcon
     {
       Visible = true,
-      Text = UiText.AppName,
+      Text = $"{UiText.AppName} {GetAppVersion()}",
       Icon = LoadTrayIcon() ?? System.Drawing.SystemIcons.Application
     };
 
+    var versionItem = new ToolStripMenuItem(UiText.AppVersion(GetAppVersion())) { Enabled = false };
+
     var menu = new ContextMenuStrip();
+    menu.Items.Add(versionItem);
+    menu.Items.Add(new ToolStripSeparator());
     menu.Items.Add(_serverStatusItem);
     menu.Items.Add(_extensionStatusItem);
     menu.Items.Add(_discordStatusItem);
@@ -367,7 +371,7 @@ public partial class App : System.Windows.Application
     if (_trayIcon is not null)
     {
       var mode = clientCount > 0 ? UiText.TooltipActive : UiText.TooltipWaiting;
-      _trayIcon.Text = Truncate($"{UiText.AppName} – {mode}", 63);
+      _trayIcon.Text = Truncate($"{UiText.AppName} {GetAppVersion()} – {mode}", 63);
     }
   }
 
@@ -511,6 +515,13 @@ public partial class App : System.Windows.Application
 
   private static string Truncate(string text, int max)
       => text.Length <= max ? text : text[..max];
+
+  private static string GetAppVersion()
+  {
+    var assembly = Assembly.GetExecutingAssembly();
+    var version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+    return string.IsNullOrWhiteSpace(version) ? "dev" : version;
+  }
 
   private static void OpenUrl(string url)
   {

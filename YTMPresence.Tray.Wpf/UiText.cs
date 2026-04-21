@@ -13,6 +13,12 @@ internal static class UiText
       es: "YTM Presence"
   );
 
+  public static string AppVersion(string version) => T(
+      de: $"Version: {version}",
+      en: $"Version: {version}",
+      es: $"Versión: {version}"
+  );
+
   public static string AlreadyRunningTitle => T(
       de: "YTM Presence",
       en: "YTM Presence",

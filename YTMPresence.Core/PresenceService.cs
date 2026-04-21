@@ -47,7 +47,7 @@ public sealed class PresenceService
     }
 
     var rawTitle = state.Title ?? "";
-    var rawArtist = state.Artist ?? "";
+    var rawArtist = ResolveArtist(state);
     var songKey = state.IsAd ? "AD" : $"{Clamp(rawTitle, 128)}\u001F{Clamp(rawArtist, 128)}";
     var playStateChanged = _lastIsPlaying is null || _lastIsPlaying.Value != state.IsPlaying;
     var trackChanged = !string.Equals(songKey, _lastSongKey, StringComparison.Ordinal);
@@ -67,7 +67,7 @@ public sealed class PresenceService
       return;
     }
 
-    if (string.IsNullOrWhiteSpace(rawTitle) || string.IsNullOrWhiteSpace(rawArtist))
+    if (string.IsNullOrWhiteSpace(rawTitle))
       return;
 
     var title = Clamp(rawTitle, 128);
@@ -395,6 +395,17 @@ public sealed class PresenceService
   {
     s = s.Trim();
     return s.Length <= max ? s : s[..max];
+  }
+
+  private static string ResolveArtist(YtmState state)
+  {
+    if (!string.IsNullOrWhiteSpace(state.Artist))
+      return state.Artist;
+
+    if (!string.IsNullOrWhiteSpace(state.Album))
+      return state.Album;
+
+    return "YouTube Music";
   }
 
   private void MarkDiscordOk()

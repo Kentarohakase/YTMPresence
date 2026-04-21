@@ -14,6 +14,7 @@ $extensionSource = Join-Path $repoRoot "YTMPresence\extension"
 $extensionOutput = Join-Path $releaseRoot "extension"
 $extensionZip = Join-Path $releaseRoot "YTMPresence-extension.zip"
 $project = Join-Path $repoRoot "YTMPresence.Tray.Wpf\YTMPresence.Tray.Wpf.csproj"
+$manifestPath = Join-Path $extensionSource "manifest.json"
 
 if (-not (Test-Path -LiteralPath $project)) {
     throw "Tray project not found: $project"
@@ -21,6 +22,11 @@ if (-not (Test-Path -LiteralPath $project)) {
 
 if (-not (Test-Path -LiteralPath $extensionSource)) {
     throw "Extension folder not found: $extensionSource"
+}
+
+$extensionVersion = "unknown"
+if (Test-Path -LiteralPath $manifestPath) {
+    $extensionVersion = (Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json).version
 }
 
 New-Item -ItemType Directory -Path $releaseRoot -Force | Out-Null
@@ -46,6 +52,9 @@ $summaryPath = Join-Path $releaseRoot "RELEASE.txt"
 $summary = @"
 YTMPresence Release
 ===================
+
+Version:
+$extensionVersion
 
 App:
 $appOutput
