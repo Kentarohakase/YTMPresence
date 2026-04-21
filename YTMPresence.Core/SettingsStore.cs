@@ -62,11 +62,11 @@ public static class SettingsStore
     s.PlayerWindow.Width = ClampDouble(s.PlayerWindow.Width, 380, 1200, 460);
     s.PlayerWindow.Height = ClampDouble(s.PlayerWindow.Height, 200, 900, 250);
 
-    if (!double.IsFinite(s.PlayerWindow.Left))
-      s.PlayerWindow.Left = double.NaN;
+    if (s.PlayerWindow.Left is double left && !double.IsFinite(left))
+      s.PlayerWindow.Left = null;
 
-    if (!double.IsFinite(s.PlayerWindow.Top))
-      s.PlayerWindow.Top = double.NaN;
+    if (s.PlayerWindow.Top is double top && !double.IsFinite(top))
+      s.PlayerWindow.Top = null;
 
     // Token automatisch generieren, wenn leer
     s.SecurityToken = (s.SecurityToken ?? "").Trim();

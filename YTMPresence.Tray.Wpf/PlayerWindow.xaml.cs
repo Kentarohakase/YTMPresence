@@ -122,10 +122,10 @@ public partial class PlayerWindow : Window
     Width = _settings.PlayerWindow.Width;
     Height = _settings.PlayerWindow.Height;
 
-    if (double.IsFinite(_settings.PlayerWindow.Left) && double.IsFinite(_settings.PlayerWindow.Top))
+    if (_settings.PlayerWindow.Left is double left && _settings.PlayerWindow.Top is double top)
     {
-      Left = _settings.PlayerWindow.Left;
-      Top = _settings.PlayerWindow.Top;
+      Left = left;
+      Top = top;
     }
     else
     {
