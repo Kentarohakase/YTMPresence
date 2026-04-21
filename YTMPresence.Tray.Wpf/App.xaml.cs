@@ -35,6 +35,7 @@ public partial class App : System.Windows.Application
   private ToolStripMenuItem? _ignoreAdsItem;
   private SettingsWindow? _settingsWindow;
   private PlayerWindow? _playerWindow;
+  private DiagnosticsWindow? _diagnosticsWindow;
 
   private readonly string _settingsPath = SettingsStore.GetDefaultSettingsPath();
   private AppSettings _settings = new();
@@ -232,6 +233,9 @@ public partial class App : System.Windows.Application
     var playerItem = new ToolStripMenuItem(UiText.OpenPlayer);
     playerItem.Click += (_, __) => ShowPlayerWindow();
 
+    var diagnosticsItem = new ToolStripMenuItem(UiText.Diagnostics);
+    diagnosticsItem.Click += (_, __) => ShowDiagnosticsWindow();
+
     var openYtmItem = new ToolStripMenuItem(UiText.OpenYtm);
     openYtmItem.Click += (_, __) => OpenUrl("https://music.youtube.com/");
 
@@ -268,6 +272,7 @@ public partial class App : System.Windows.Application
     menu.Items.Add(new ToolStripSeparator());
     menu.Items.Add(_autostartItem);
     menu.Items.Add(playerItem);
+    menu.Items.Add(diagnosticsItem);
     menu.Items.Add(settingsItem);
     menu.Items.Add(copyTokenItem);
     menu.Items.Add(rotateTokenItem);
@@ -442,6 +447,20 @@ public partial class App : System.Windows.Application
     _playerWindow.Closed += (_, __) => _playerWindow = null;
     _playerWindow.Show();
     _playerWindow.Activate();
+  }
+
+  private void ShowDiagnosticsWindow()
+  {
+    if (_diagnosticsWindow is not null)
+    {
+      _diagnosticsWindow.Activate();
+      return;
+    }
+
+    _diagnosticsWindow = new DiagnosticsWindow(() => _server?.GetStatusSnapshot(), _settings, _settingsPath);
+    _diagnosticsWindow.Closed += (_, __) => _diagnosticsWindow = null;
+    _diagnosticsWindow.Show();
+    _diagnosticsWindow.Activate();
   }
 
   private void SyncPresenceMenuItems()

@@ -221,6 +221,12 @@ internal static class UiText
       es: "Abrir minirreproductor"
   );
 
+  public static string Diagnostics => T(
+      de: "Diagnose öffnen",
+      en: "Open diagnostics",
+      es: "Abrir diagnostico"
+  );
+
   public static string OpenYtm => T(
       de: "YouTube Music öffnen",
       en: "Open YouTube Music",

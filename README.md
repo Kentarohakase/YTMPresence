@@ -29,14 +29,14 @@ Token kopieren
 
 In Chrome oder Edge:
 
-1. `chrome://extensions` oder `edge://extensions` öffnen
+1. `chrome://extensions` oder `edge://extensions` oeffnen
 2. Entwicklermodus aktivieren
-3. `Entpackte Erweiterung laden` auswählen
-4. den Ordner `extension` auswählen
+3. `Entpackte Erweiterung laden` auswaehlen
+4. den Ordner `extension` auswaehlen
 
 ### 4. Extension konfigurieren
 
-Öffne die Optionen der Extension und trage ein:
+Oeffne die Optionen der Extension und trage ein:
 
 ```text
 Security Token: Token aus dem Tray
@@ -49,18 +49,19 @@ Danach YouTube Music neu laden:
 https://music.youtube.com/
 ```
 
-Mit `Verbindung testen` in den Extension-Optionen kannst du prüfen, ob Companion URL und Token zusammenpassen.
+Mit `Verbindung testen` in den Extension-Optionen kannst du pruefen, ob Companion URL und Token zusammenpassen.
 
-## Tray-Menü
+## Tray-Menue
 
-- `Einstellungen…`: öffnet das Settings-Fenster für Token, Server, Presence und Discord Client ID
-- `Mini-Player öffnen`: zeigt aktuellen Track, Cover, Fortschritt und einen Button zum Öffnen des Tracks
-- `Presence nur wenn Musik läuft`: löscht die Discord-Presence sofort beim Pausieren
+- `Einstellungen...`: oeffnet das Settings-Fenster fuer Token, Server, Presence und Discord Client ID
+- `Mini-Player oeffnen`: zeigt aktuellen Track, Cover, Fortschritt und einen Button zum Oeffnen des Tracks
+- `Diagnose oeffnen`: zeigt Server-, Extension-, Discord-, Track- und Security-Status
+- `Presence nur wenn Musik laeuft`: loescht die Discord-Presence sofort beim Pausieren
 - `Werbung ignorieren`: sendet bei Werbung kein Discord-Update
 - `Autostart aktivieren`: startet YTMPresence beim Windows-Login
 - `Token kopieren`: kopiert den aktuellen Security Token
 - `Neuen Token generieren`: erzeugt einen neuen Token und startet den Companion neu
-- `Log öffnen`: öffnet das aktuelle Logfile
+- `Log oeffnen`: oeffnet das aktuelle Logfile
 
 ## Release bauen
 
@@ -72,7 +73,7 @@ Voraussetzung: .NET 10 SDK.
 
 Der Standard-Build ist framework-dependent. Auf einem anderen Rechner muss also die .NET 10 Desktop Runtime installiert sein.
 
-Für ein größeres Paket, das die Runtime mitbringt:
+Fuer ein groesseres Paket, das die Runtime mitbringt:
 
 ```powershell
 .\scripts\package-release.ps1 -SelfContained
@@ -81,12 +82,13 @@ Für ein größeres Paket, das die Runtime mitbringt:
 Das Skript erstellt:
 
 ```text
-artifacts\release\YTMPresence-win-x64\
+artifacts\release\YTMPresence-<version>-win-x64-app\
 artifacts\release\YTMPresence-extension.zip
+artifacts\release\YTMPresence-<version>-win-x64.zip
 artifacts\release\extension\
 ```
 
-Für eine normale Weitergabe brauchst du den App-Ordner `YTMPresence-win-x64` und entweder den Extension-Ordner oder die ZIP-Datei.
+Fuer eine normale Weitergabe ist das versionierte Komplett-ZIP am bequemsten. Es enthaelt die App, die Extension und eine `RELEASE.txt`.
 
 ## Fehlerbehebung
 
@@ -95,24 +97,26 @@ Für eine normale Weitergabe brauchst du den App-Ordner `YTMPresence-win-x64` un
 - Discord Desktop-App muss laufen.
 - Companion muss im Tray sichtbar sein.
 - YouTube Music Tab einmal neu laden.
-- Im Tray `Log öffnen` prüfen.
+- Im Tray `Diagnose oeffnen` pruefen.
+- Im Tray `Log oeffnen` pruefen.
 
 ### Extension ist nicht verbunden
 
-- Token in der Extension prüfen.
+- Token in der Extension pruefen.
 - Companion URL muss normalerweise `ws://127.0.0.1:17373/ws` sein.
-- Nach Token-Änderungen den YouTube-Music-Tab neu laden.
+- In den Extension-Optionen `Verbindung testen` verwenden.
+- Nach Token-Aenderungen den YouTube-Music-Tab neu laden.
 
-### Token ungültig
+### Token ungueltig
 
-Wenn im Tray ungültige Tokens gezählt werden:
+Wenn im Tray oder Diagnosefenster ungueltige Tokens gezaehlt werden:
 
 1. `Token kopieren`
-2. Extension-Optionen öffnen
+2. Extension-Optionen oeffnen
 3. Token ersetzen
 4. speichern
 5. YouTube Music neu laden
 
 ### Port belegt
 
-Der Companion nutzt standardmäßig Port `17373`. Falls der Port belegt ist, kann er in `%APPDATA%\YTMPresence\settings.json` geändert werden. Danach muss auch die Companion WebSocket URL in der Extension angepasst werden.
+Der Companion nutzt standardmaessig Port `17373`. Falls der Port belegt ist, kann er im Settings-Fenster oder in `%APPDATA%\YTMPresence\settings.json` geaendert werden. Danach muss auch die Companion WebSocket URL in der Extension angepasst werden.

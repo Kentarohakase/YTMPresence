@@ -1,0 +1,97 @@
+<Window x:Class="YTMPresence.TrayWpf.DiagnosticsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="YTM Presence Diagnose"
+        Width="560"
+        Height="460"
+        MinWidth="520"
+        MinHeight="420"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Diagnose"
+                   FontSize="22"
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,12" />
+
+        <Border Grid.Row="1"
+                BorderBrush="#D0D0D0"
+                BorderThickness="1"
+                CornerRadius="6"
+                Padding="12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Version" FontWeight="SemiBold" />
+                <TextBlock x:Name="VersionText" Grid.Row="0" Grid.Column="1" TextTrimming="CharacterEllipsis" />
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Server" FontWeight="SemiBold" Margin="0,10,0,0" />
+                <TextBlock x:Name="ServerText" Grid.Row="1" Grid.Column="1" Margin="0,10,0,0" TextWrapping="Wrap" />
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Endpoint" FontWeight="SemiBold" Margin="0,10,0,0" />
+                <TextBlock x:Name="EndpointText" Grid.Row="2" Grid.Column="1" Margin="0,10,0,0" TextWrapping="Wrap" />
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Extension" FontWeight="SemiBold" Margin="0,10,0,0" />
+                <TextBlock x:Name="ExtensionText" Grid.Row="3" Grid.Column="1" Margin="0,10,0,0" TextWrapping="Wrap" />
+
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Discord" FontWeight="SemiBold" Margin="0,10,0,0" />
+                <TextBlock x:Name="DiscordText" Grid.Row="4" Grid.Column="1" Margin="0,10,0,0" TextWrapping="Wrap" />
+
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="Track" FontWeight="SemiBold" Margin="0,10,0,0" />
+                <TextBlock x:Name="TrackText" Grid.Row="5" Grid.Column="1" Margin="0,10,0,0" TextWrapping="Wrap" />
+
+                <TextBlock Grid.Row="6" Grid.Column="0" Text="Progress" FontWeight="SemiBold" Margin="0,10,0,0" />
+                <TextBlock x:Name="ProgressText" Grid.Row="6" Grid.Column="1" Margin="0,10,0,0" TextWrapping="Wrap" />
+
+                <TextBlock Grid.Row="7" Grid.Column="0" Text="Security" FontWeight="SemiBold" Margin="0,10,0,0" />
+                <TextBlock x:Name="SecurityText" Grid.Row="7" Grid.Column="1" Margin="0,10,0,0" TextWrapping="Wrap" />
+
+                <TextBlock Grid.Row="8" Grid.Column="0" Text="Settings" FontWeight="SemiBold" Margin="0,10,0,0" />
+                <TextBlock x:Name="SettingsText" Grid.Row="8" Grid.Column="1" Margin="0,10,0,0" TextWrapping="Wrap" />
+
+                <TextBlock Grid.Row="9" Grid.Column="0" Text="Log" FontWeight="SemiBold" Margin="0,10,0,0" />
+                <TextBlock x:Name="LogText" Grid.Row="9" Grid.Column="1" Margin="0,10,0,0" TextWrapping="Wrap" />
+
+                <TextBlock Grid.Row="10" Grid.Column="0" Text="Aktualisiert" FontWeight="SemiBold" Margin="0,10,0,0" />
+                <TextBlock x:Name="UpdatedText" Grid.Row="10" Grid.Column="1" Margin="0,10,0,0" />
+            </Grid>
+        </Border>
+
+        <DockPanel Grid.Row="2" Margin="0,12,0,0" LastChildFill="False">
+            <TextBlock x:Name="StatusText"
+                       DockPanel.Dock="Left"
+                       VerticalAlignment="Center"
+                       Foreground="#0A7A2F" />
+            <Button Content="Kopieren"
+                    Width="96"
+                    DockPanel.Dock="Right"
+                    Click="CopyButton_Click" />
+            <Button Content="Schliessen"
+                    Width="96"
+                    Margin="8,0,0,0"
+                    DockPanel.Dock="Right"
+                    Click="CloseButton_Click" />
+        </DockPanel>
+    </Grid>
+</Window>
