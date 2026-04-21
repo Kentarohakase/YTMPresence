@@ -10,24 +10,31 @@ namespace YTMPresence.TrayWpf;
 public partial class PlayerWindow : Window
 {
   private readonly Func<CompanionStatus?> _getStatus;
+  private readonly AppSettings _settings;
+  private readonly string _settingsPath;
   private readonly DispatcherTimer _timer;
 
   private string? _currentCoverUrl;
   private string? _currentTrackUrl;
+  private bool _isInitializing;
 
-  public PlayerWindow(Func<CompanionStatus?> getStatus)
+  public PlayerWindow(Func<CompanionStatus?> getStatus, AppSettings settings, string settingsPath)
   {
     InitializeComponent();
 
     _getStatus = getStatus;
+    _settings = settings;
+    _settingsPath = settingsPath;
     _timer = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.Background, (_, __) => UpdateStatus(), Dispatcher);
 
     Loaded += (_, __) =>
     {
+      ApplySavedWindowState();
       UpdateStatus();
       _timer.Start();
     };
 
+    Closing += (_, __) => SaveWindowState();
     Closed += (_, __) => _timer.Stop();
   }
 
@@ -52,7 +59,7 @@ public partial class PlayerWindow : Window
 
     PositionText.Text = FormatTime(position);
     DurationText.Text = duration > 0 ? FormatTime(duration) : "--:--";
-    PlayStateText.Text = status.LastIsPlaying == true ? "Läuft" : "Pausiert";
+    PlayStateText.Text = status.LastIsPlaying == true ? "Laeuft" : "Pausiert";
 
     _currentTrackUrl = status.LastTrackUrl;
     OpenTrackButton.IsEnabled = !string.IsNullOrWhiteSpace(_currentTrackUrl);
@@ -108,6 +115,50 @@ public partial class PlayerWindow : Window
     }
   }
 
+  private void ApplySavedWindowState()
+  {
+    _isInitializing = true;
+
+    Width = _settings.PlayerWindow.Width;
+    Height = _settings.PlayerWindow.Height;
+
+    if (double.IsFinite(_settings.PlayerWindow.Left) && double.IsFinite(_settings.PlayerWindow.Top))
+    {
+      Left = _settings.PlayerWindow.Left;
+      Top = _settings.PlayerWindow.Top;
+    }
+    else
+    {
+      WindowStartupLocation = WindowStartupLocation.CenterScreen;
+    }
+
+    Topmost = _settings.PlayerWindow.AlwaysOnTop;
+    TopMostBox.IsChecked = Topmost;
+
+    _isInitializing = false;
+  }
+
+  private void SaveWindowState()
+  {
+    if (WindowState == WindowState.Normal)
+    {
+      _settings.PlayerWindow.Left = Left;
+      _settings.PlayerWindow.Top = Top;
+      _settings.PlayerWindow.Width = Width;
+      _settings.PlayerWindow.Height = Height;
+    }
+
+    _settings.PlayerWindow.AlwaysOnTop = Topmost;
+
+    try
+    {
+      SettingsStore.Save(_settingsPath, _settings);
+    }
+    catch
+    {
+    }
+  }
+
   private static double EstimatePosition(CompanionStatus status)
   {
     var position = status.LastPositionSeconds ?? 0;
@@ -145,6 +196,23 @@ public partial class PlayerWindow : Window
     try
     {
       Process.Start(new ProcessStartInfo(_currentTrackUrl) { UseShellExecute = true });
+    }
+    catch
+    {
+    }
+  }
+
+  private void TopMostBox_Changed(object sender, RoutedEventArgs e)
+  {
+    if (_isInitializing)
+      return;
+
+    Topmost = TopMostBox.IsChecked == true;
+    _settings.PlayerWindow.AlwaysOnTop = Topmost;
+
+    try
+    {
+      SettingsStore.Save(_settingsPath, _settings);
     }
     catch
     {

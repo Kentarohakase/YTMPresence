@@ -58,6 +58,16 @@ public static class SettingsStore
     s.Assets.PauseSmallImageKey = (s.Assets.PauseSmallImageKey ?? "").Trim().ToLowerInvariant();
     s.Assets.LargeImageText = (s.Assets.LargeImageText ?? "YouTube Music").Trim();
 
+    s.PlayerWindow ??= new PlayerWindowSettings();
+    s.PlayerWindow.Width = ClampDouble(s.PlayerWindow.Width, 380, 1200, 460);
+    s.PlayerWindow.Height = ClampDouble(s.PlayerWindow.Height, 200, 900, 250);
+
+    if (!double.IsFinite(s.PlayerWindow.Left))
+      s.PlayerWindow.Left = double.NaN;
+
+    if (!double.IsFinite(s.PlayerWindow.Top))
+      s.PlayerWindow.Top = double.NaN;
+
     // Token automatisch generieren, wenn leer
     s.SecurityToken = (s.SecurityToken ?? "").Trim();
     if (string.IsNullOrWhiteSpace(s.SecurityToken))
@@ -65,6 +75,12 @@ public static class SettingsStore
   }
 
   private static int Clamp(int v, int min, int max) => v < min ? min : (v > max ? max : v);
+  private static double ClampDouble(double v, double min, double max, double fallback)
+  {
+    if (!double.IsFinite(v)) return fallback;
+    return v < min ? min : (v > max ? max : v);
+  }
+
   private static string EnsureSlash(string path) => path.StartsWith('/') ? path : "/" + path;
 
   private static string GetConfigDir()

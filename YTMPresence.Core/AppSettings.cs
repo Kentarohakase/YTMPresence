@@ -15,6 +15,15 @@ public sealed class DiscordAssetKeys
   public string PauseSmallImageKey { get; set; } = "pause";
 }
 
+public sealed class PlayerWindowSettings
+{
+  public bool AlwaysOnTop { get; set; }
+  public double Left { get; set; } = double.NaN;
+  public double Top { get; set; } = double.NaN;
+  public double Width { get; set; } = 460;
+  public double Height { get; set; } = 250;
+}
+
 public sealed class AppSettings
 {
   public string DiscordClientId { get; set; } = "1476649347008565259";
@@ -30,6 +39,7 @@ public sealed class AppSettings
 
   public AdBehavior AdBehavior { get; set; } = AdBehavior.ShowAdvertisement;
   public DiscordAssetKeys Assets { get; set; } = new();
+  public PlayerWindowSettings PlayerWindow { get; set; } = new();
 
   /// <summary>
   /// Shared Secret: muss von Extension mitgesendet werden.
