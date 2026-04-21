@@ -131,7 +131,6 @@ public partial class SettingsWindow : Window
         !string.Equals(_settings.SecurityToken, _initialSecurityToken, StringComparison.Ordinal);
 
     SettingsSaved?.Invoke(this, new SettingsSavedEventArgs(requiresRestart));
-    DialogResult = true;
     Close();
   }
 

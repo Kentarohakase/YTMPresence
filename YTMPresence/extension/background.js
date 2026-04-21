@@ -13,6 +13,7 @@ let activeCompanionUrl = "";
 
 let lastSentKey = "";
 let lastSentAt = 0;
+let pendingPayload = null;
 
 let cachedToken = "";
 let configLoaded = false;
@@ -117,17 +118,44 @@ async function sendState(payload) {
         return;
     }
 
-    const now = Date.now();
-    const key = `${payload.isPlaying}|${payload.title}|${payload.artist}|${payload.url}|${payload.isAd}`;
-    if (key === lastSentKey && (now - lastSentAt) < MIN_SEND_INTERVAL_MS) return;
+    pendingPayload = payload;
+    flushPendingState();
+}
 
-    lastSentKey = key;
-    lastSentAt = now;
+function buildPayloadKey(payload) {
+    return [
+        payload.isPlaying,
+        payload.title,
+        payload.artist,
+        payload.album,
+        payload.url,
+        payload.shareUrl,
+        payload.mode,
+        payload.isAd
+    ].join("|");
+}
+
+function flushPendingState() {
+    if (!pendingPayload || !cachedToken) return;
 
     const socket = connect();
     if (!socket || socket.readyState !== WebSocket.OPEN) return;
 
-    socket.send(JSON.stringify({ ...payload, token: cachedToken }));
+    const now = Date.now();
+    const payload = pendingPayload;
+    const key = buildPayloadKey(payload);
+    if (key === lastSentKey && (now - lastSentAt) < MIN_SEND_INTERVAL_MS) return;
+
+    try {
+        socket.send(JSON.stringify({ ...payload, token: cachedToken }));
+        pendingPayload = null;
+        lastSentKey = key;
+        lastSentAt = now;
+    } catch (error) {
+        console.warn(`[YTM Bridge] WebSocket send failed: ${error?.message || error}`);
+        webSocket = null;
+        scheduleReconnect();
+    }
 }
 
 function connect() {
@@ -149,6 +177,7 @@ function connect() {
         socket.onopen = () => {
             reconnectDelayMs = 500;
             console.info(`[YTM Bridge] Connected to ${activeCompanionUrl}.`);
+            flushPendingState();
         };
 
         socket.onclose = (event) => {
