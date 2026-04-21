@@ -238,6 +238,25 @@
         return null;
     }
 
+    function getBestArtworkUrl(artworkArray) {
+        if (!Array.isArray(artworkArray)) return "";
+
+        const candidates = artworkArray
+            .map((item) => {
+                const sizesText = typeof item?.sizes === "string" ? item.sizes : "";
+                const sizeFromText = Number(sizesText.split("x")[0]) || 0;
+
+                return {
+                    src: typeof item?.src === "string" ? item.src : "",
+                    size: Math.max(sizeFromText, Number(item?.width) || 0, Number(item?.height) || 0)
+                };
+            })
+            .filter((item) => item.src);
+
+        candidates.sort((a, b) => b.size - a.size);
+        return clampText(candidates[0]?.src || "");
+    }
+
     function getPlayerBarWatchUrl() {
         const anchors = [
             document.querySelector('ytmusic-player-bar a#song-title'),
@@ -376,6 +395,7 @@
         const isPlaying = playbackState === "playing";
 
         let { title, artist, album } = mergeMetadata(metadata, domMetadata);
+        const albumArtUrl = getBestArtworkUrl(metadata?.artwork);
 
         const mode = detectPlaybackMode();
 
@@ -403,6 +423,7 @@
             title,
             artist,
             album,
+            albumArtUrl,
             isPlaying,
             position,
             duration,
@@ -424,6 +445,7 @@
             state.title,
             state.artist,
             state.album,
+            state.albumArtUrl,
             state.isPlaying,
             state.url,
             state.shareUrl,

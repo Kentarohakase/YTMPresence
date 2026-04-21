@@ -7,6 +7,7 @@ public sealed record YtmState(
     [property: JsonPropertyName("title")] string Title,
     [property: JsonPropertyName("artist")] string Artist,
     [property: JsonPropertyName("album")] string? Album,
+    [property: JsonPropertyName("albumArtUrl")] string? AlbumArtUrl,
     [property: JsonPropertyName("isPlaying")] bool IsPlaying,
     [property: JsonPropertyName("position")] double? PositionSeconds,
     [property: JsonPropertyName("duration")] double? DurationSeconds,

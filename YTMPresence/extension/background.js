@@ -128,6 +128,7 @@ function buildPayloadKey(payload) {
         payload.title,
         payload.artist,
         payload.album,
+        payload.albumArtUrl,
         payload.url,
         payload.shareUrl,
         payload.mode,

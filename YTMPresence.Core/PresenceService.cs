@@ -216,20 +216,23 @@ public sealed class PresenceService
     // "Spotify-like": Balken ist Discord-seitig nicht garantiert.
     // Daher: Zeit als Text im State anzeigen.
     var hasTimes = TryGetTimes(state, out var pos, out var dur);
+    var album = NormalizeAlbum(state.Album, title, artist);
 
     // Timestamps nur beim Playing (optional – Discord kann dann trotzdem irgendwo Zeit anzeigen)
     var timestamps = state.IsPlaying ? TryBuildTimestamps(state) : null;
 
     var assets = new DiscordAssets(
         LargeImage: _settings.Assets.LargeImageKey,
-        LargeText: _settings.Assets.LargeImageText,
+        LargeText: string.IsNullOrWhiteSpace(album)
+            ? _settings.Assets.LargeImageText
+            : $"{album} · {_settings.Assets.LargeImageText}",
         SmallImage: state.IsPlaying ? _settings.Assets.PlaySmallImageKey : _settings.Assets.PauseSmallImageKey,
-        SmallText: state.IsPlaying ? "Playing" : "Paused"
+        SmallText: state.IsPlaying ? "Läuft" : "Pausiert"
     );
 
     DiscordButton[] buttons =
     {
-            new DiscordButton("Track öffnen", trackUrl),
+            new DiscordButton("Auf YouTube Music öffnen", trackUrl),
             new DiscordButton("YouTube Music", "https://music.youtube.com/")
         };
 
@@ -239,13 +242,13 @@ public sealed class PresenceService
     {
       stateLine = hasTimes
           ? $"{artist} · {Fmt(pos)} / {Fmt(dur)}"
-          : artist;
+          : AppendAlbum(artist, album);
     }
     else
     {
       stateLine = hasTimes
           ? $"Pausiert bei {Fmt(pos)} · {artist}"
-          : $"Pausiert · {artist}";
+          : $"Pausiert · {AppendAlbum(artist, album)}";
     }
 
     return new DiscordActivity(
@@ -407,6 +410,24 @@ public sealed class PresenceService
 
     return "YouTube Music";
   }
+
+  private static string NormalizeAlbum(string? value, string title, string artist)
+  {
+    if (string.IsNullOrWhiteSpace(value))
+      return "";
+
+    var album = Clamp(value, 128);
+    if (string.Equals(album, title, StringComparison.OrdinalIgnoreCase))
+      return "";
+
+    if (string.Equals(album, artist, StringComparison.OrdinalIgnoreCase))
+      return "";
+
+    return album;
+  }
+
+  private static string AppendAlbum(string artist, string album)
+      => string.IsNullOrWhiteSpace(album) ? artist : $"{artist} · {album}";
 
   private void MarkDiscordOk()
   {

@@ -215,6 +215,12 @@ internal static class UiText
       es: "Configuración…"
   );
 
+  public static string OpenPlayer => T(
+      de: "Mini-Player öffnen",
+      en: "Open mini player",
+      es: "Abrir minirreproductor"
+  );
+
   public static string OpenYtm => T(
       de: "YouTube Music öffnen",
       en: "Open YouTube Music",

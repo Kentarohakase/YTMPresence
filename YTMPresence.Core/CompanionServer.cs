@@ -28,7 +28,12 @@ public sealed class CompanionServer : IAsyncDisposable
   private DateTimeOffset? _lastMessageUtc;
   private string? _lastTitle;
   private string? _lastArtist;
+  private string? _lastAlbum;
+  private string? _lastAlbumArtUrl;
+  private string? _lastTrackUrl;
   private bool? _lastIsPlaying;
+  private double? _lastPositionSeconds;
+  private double? _lastDurationSeconds;
 
   private readonly ConcurrentDictionary<int, WebSocket> _activeSockets = new();
   private int _socketIdCounter;
@@ -50,7 +55,12 @@ public sealed class CompanionServer : IAsyncDisposable
         LastMessageUtc: _lastMessageUtc,
         LastTitle: _lastTitle,
         LastArtist: _lastArtist,
+        LastAlbum: _lastAlbum,
+        LastAlbumArtUrl: _lastAlbumArtUrl,
+        LastTrackUrl: GetBestTrackUrl(state: null, fallbackUrl: _lastTrackUrl),
         LastIsPlaying: _lastIsPlaying,
+        LastPositionSeconds: _lastPositionSeconds,
+        LastDurationSeconds: _lastDurationSeconds,
         UnauthorizedMessages: Volatile.Read(ref _unauthorizedCount),
         LastUnauthorizedUtc: _lastUnauthorizedUtc,
         DiscordOk: _presence.DiscordOk,
@@ -144,7 +154,12 @@ public sealed class CompanionServer : IAsyncDisposable
           _lastMessageUtc = DateTimeOffset.UtcNow;
           _lastTitle = state.Title;
           _lastArtist = state.Artist;
+          _lastAlbum = state.Album;
+          _lastAlbumArtUrl = state.AlbumArtUrl;
+          _lastTrackUrl = GetBestTrackUrl(state, fallbackUrl: state.Url);
           _lastIsPlaying = state.IsPlaying;
+          _lastPositionSeconds = state.PositionSeconds;
+          _lastDurationSeconds = state.DurationSeconds;
 
           await _presence.HandleAsync(state, ctx.RequestAborted);
         }
@@ -336,6 +351,19 @@ public sealed class CompanionServer : IAsyncDisposable
   {
     var bytes = Encoding.UTF8.GetBytes(text);
     return ws.SendAsync(bytes, WebSocketMessageType.Text, endOfMessage: true, ct);
+  }
+
+  private static string? GetBestTrackUrl(YtmState? state, string? fallbackUrl)
+  {
+    var candidate =
+        !string.IsNullOrWhiteSpace(state?.ShareUrl) ? state!.ShareUrl :
+        !string.IsNullOrWhiteSpace(fallbackUrl) ? fallbackUrl :
+        null;
+
+    if (string.IsNullOrWhiteSpace(candidate))
+      return null;
+
+    return candidate;
   }
 
   public async ValueTask DisposeAsync()
