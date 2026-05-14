@@ -494,7 +494,7 @@ function testConnection() {
         const timeoutId = setTimeout(() => {
             finish({
                 ok: false,
-                message: "Keine Antwort vom Companion. Laeuft die Tray-App?"
+                message: "Keine Antwort vom Companion. Läuft die Tray-App?"
             });
         }, TEST_TIMEOUT_MS);
 

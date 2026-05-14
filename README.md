@@ -57,6 +57,13 @@ Das Extension-Icon zeigt den aktuellen Verbindungsstatus als Badge an. Im Popup 
 
 Alle Release-Änderungen stehen in [CHANGELOG.md](CHANGELOG.md).
 
+## Extension veröffentlichen
+
+Vorbereitete Store- und Privacy-Texte stehen unter:
+
+- [Chrome Web Store Vorbereitung](docs/CHROME_WEB_STORE.md)
+- [Extension Privacy-Hinweis](docs/EXTENSION_PRIVACY.md)
+
 ## Tray-Menü
 
 - `Einstellungen...`: öffnet das Settings-Fenster für Token, Server, Presence und Discord Client ID

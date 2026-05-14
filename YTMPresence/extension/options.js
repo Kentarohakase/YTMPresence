@@ -164,7 +164,7 @@ function getCurrentSettings() {
     }
 
     if (!companionUrl) {
-        return { error: "Ungueltige Companion URL. Erlaubt sind localhost oder 127.0.0.1." };
+        return { error: "Ungültige Companion URL. Erlaubt sind localhost oder 127.0.0.1." };
     }
 
     return { token, companionUrl };
@@ -194,7 +194,7 @@ function testConnection(companionUrl, token) {
         const timeoutId = setTimeout(() => {
             finish({
                 ok: false,
-                message: "Keine Antwort vom Companion. Laeuft die Tray-App und ist die URL korrekt?"
+                message: "Keine Antwort vom Companion. Läuft die Tray-App und ist die URL korrekt?"
             });
         }, TEST_TIMEOUT_MS);
 

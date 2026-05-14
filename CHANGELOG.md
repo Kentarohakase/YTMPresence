@@ -6,6 +6,21 @@ Alle wichtigen Änderungen an YTMPresence werden in dieser Datei dokumentiert.
 
 - Noch keine Änderungen.
 
+## [0.8.1] - 2026-05-15
+
+### Added
+
+- GitHub Actions Workflow für automatische Tag-Releases mit ZIP-Artefakten und SHA256-Prüfsummen.
+- Extension-Icons in 16, 32, 48 und 128 Pixeln.
+- Privacy-Hinweis und Chrome-Web-Store-Vorbereitung für die Extension.
+- `.editorconfig` für UTF-8-Dateien.
+
+### Changed
+
+- App-Version und Extension-Version auf `0.8.1` angehoben.
+- Deutsche README-, Changelog- und Extension-Texte verwenden echte UTF-8-Umlaute.
+- Release-Hinweise werden im Paket als UTF-8 geschrieben.
+
 ## [0.8.0] - 2026-05-15
 
 ### Added

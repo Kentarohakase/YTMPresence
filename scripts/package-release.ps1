@@ -108,15 +108,15 @@ $extensionOutput
 Extension zip:
 $extensionZip
 
-Install:
-1. Start YTMPresence.exe from the app folder.
-2. Copy the token from the tray menu.
-3. Load the extension folder as an unpacked extension.
-4. Paste the token into the extension options.
+Installation:
+1. Starte YTMPresence.exe aus dem app-Ordner.
+2. Kopiere den Token aus dem Tray-Menü.
+3. Lade den extension-Ordner als entpackte Erweiterung.
+4. Füge den Token in den Extension-Optionen ein.
 
 Runtime:
-This package is framework-dependent unless it was built with -SelfContained.
-Framework-dependent packages require the .NET 10 Desktop Runtime on the target PC.
+Dieses Paket ist framework-dependent, außer es wurde mit -SelfContained gebaut.
+Framework-dependent Pakete benötigen die .NET 10 Desktop Runtime auf dem Ziel-PC.
 "@
 
 Set-Content -LiteralPath $summaryPath -Value $summary -Encoding UTF8

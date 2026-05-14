@@ -43,6 +43,10 @@ $requiredPaths = @(
     (Join-Path $extensionFolder "options.js"),
     (Join-Path $extensionFolder "popup.html"),
     (Join-Path $extensionFolder "popup.js"),
+    (Join-Path $extensionFolder "icons\icon16.png"),
+    (Join-Path $extensionFolder "icons\icon32.png"),
+    (Join-Path $extensionFolder "icons\icon48.png"),
+    (Join-Path $extensionFolder "icons\icon128.png"),
     $extensionZip,
     $bundleZip,
     $summaryPath
@@ -90,7 +94,11 @@ Assert-ZipEntries -ZipPath $extensionZip -Entries @(
     "options.html",
     "options.js",
     "popup.html",
-    "popup.js"
+    "popup.js",
+    "icons/icon16.png",
+    "icons/icon32.png",
+    "icons/icon48.png",
+    "icons/icon128.png"
 )
 
 Assert-ZipEntries -ZipPath $bundleZip -Entries @(
@@ -106,6 +114,10 @@ Assert-ZipEntries -ZipPath $bundleZip -Entries @(
     "extension/options.js",
     "extension/popup.html",
     "extension/popup.js",
+    "extension/icons/icon16.png",
+    "extension/icons/icon32.png",
+    "extension/icons/icon48.png",
+    "extension/icons/icon128.png",
     "RELEASE.txt"
 )
 
