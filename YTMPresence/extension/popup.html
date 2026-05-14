@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <title>YTM Presence</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            --bg: #111111;
+            --panel: #1a1a1a;
+            --muted: #a9a9a9;
+            --text: #f4f4f4;
+            --line: #303030;
+            --red: #d92323;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 360px;
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            font-size: 14px;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 16px 16px 12px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            margin-top: 3px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .badge {
+            min-width: 88px;
+            padding: 6px 9px;
+            border-radius: 999px;
+            background: #2a2a2a;
+            color: var(--muted);
+            text-align: center;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .badge.ok {
+            background: rgba(22, 163, 74, 0.16);
+            color: #86efac;
+        }
+
+        .badge.warn {
+            background: rgba(217, 119, 6, 0.16);
+            color: #fbbf24;
+        }
+
+        .badge.err {
+            background: rgba(217, 35, 35, 0.16);
+            color: #fca5a5;
+        }
+
+        main {
+            padding: 14px 16px 16px;
+        }
+
+        .track {
+            padding: 12px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--panel);
+        }
+
+        .track-title {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-weight: 700;
+        }
+
+        .track-meta {
+            overflow: hidden;
+            margin-top: 4px;
+            color: var(--muted);
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 12px;
+        }
+
+        .rows {
+            display: grid;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding-bottom: 8px;
+        }
+
+        .row span:first-child {
+            color: var(--muted);
+        }
+
+        .row span:last-child {
+            min-width: 0;
+            overflow: hidden;
+            text-align: right;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        button {
+            min-height: 34px;
+            border: 0;
+            border-radius: 7px;
+            background: #2f2f2f;
+            color: var(--text);
+            cursor: pointer;
+            font: inherit;
+            font-weight: 650;
+        }
+
+        button.primary {
+            background: var(--red);
+        }
+
+        button:disabled {
+            cursor: wait;
+            opacity: 0.65;
+        }
+
+        .message {
+            min-height: 18px;
+            margin-top: 12px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .message.ok {
+            color: #86efac;
+        }
+
+        .message.err {
+            color: #fca5a5;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div>
+            <h1>YTM Presence</h1>
+            <div id="subtitle" class="subtitle">Status wird geladen</div>
+        </div>
+        <div id="stateBadge" class="badge">...</div>
+    </header>
+
+    <main>
+        <section class="track">
+            <div id="trackTitle" class="track-title">Kein Track empfangen</div>
+            <div id="trackMeta" class="track-meta">YouTube Music öffnen und einen Track starten</div>
+        </section>
+
+        <section class="rows">
+            <div class="row">
+                <span>Companion</span>
+                <span id="connectionText">-</span>
+            </div>
+            <div class="row">
+                <span>Token</span>
+                <span id="tokenText">-</span>
+            </div>
+            <div class="row">
+                <span>URL</span>
+                <span id="urlText">-</span>
+            </div>
+            <div class="row">
+                <span>Letztes Update</span>
+                <span id="lastUpdateText">-</span>
+            </div>
+        </section>
+
+        <div class="actions">
+            <button id="testButton" class="primary">Verbindung testen</button>
+            <button id="optionsButton">Optionen</button>
+            <button id="ytmButton">YT Music</button>
+            <button id="refreshButton">Aktualisieren</button>
+        </div>
+
+        <div id="message" class="message"></div>
+    </main>
+
+    <script src="popup.js"></script>
+</body>
+</html>

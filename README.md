@@ -51,6 +51,8 @@ https://music.youtube.com/
 
 Mit `Verbindung testen` in den Extension-Optionen kannst du pruefen, ob Companion URL und Token zusammenpassen.
 
+Das Extension-Icon zeigt den aktuellen Verbindungsstatus als Badge an. Im Popup siehst du Companion-Status, Token-Status und den zuletzt empfangenen Track.
+
 ## Tray-Menue
 
 - `Einstellungen...`: oeffnet das Settings-Fenster fuer Token, Server, Presence und Discord Client ID

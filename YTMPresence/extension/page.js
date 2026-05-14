@@ -1,6 +1,9 @@
 ﻿(() => {
     // Läuft im Page-Context, damit navigator.mediaSession direkt verfügbar ist.
 
+    if (window.__ytmPresencePageBridgeLoaded) return;
+    window.__ytmPresencePageBridgeLoaded = true;
+
     const MAX_TEXT_LENGTH = 256;
     const EMPTY_METADATA_GRACE_MS = 5000;
     const SEND_POSITION_BUCKET_SECONDS = 5;
@@ -457,20 +460,73 @@
     }
 
     let lastSendKey = "";
+    let publishTimer = null;
+    let queuedForcePublish = false;
 
-    setInterval(() => {
+    function publishState(force) {
         try {
             const state = readState();
 
             if (!state.title && !state.isAd) return;
 
             const sendKey = getSendKey(state);
-            if (sendKey !== lastSendKey) {
+            if (force || sendKey !== lastSendKey) {
                 lastSendKey = sendKey;
                 window.postMessage({ type: "YTM_STATE", payload: state }, location.origin);
             }
         } catch {
             // bewusst still
         }
-    }, 1000);
+    }
+
+    function schedulePublish(delayMs = 0, force = false) {
+        queuedForcePublish = queuedForcePublish || force;
+        if (publishTimer) return;
+
+        publishTimer = setTimeout(() => {
+            const shouldForce = queuedForcePublish;
+            queuedForcePublish = false;
+            publishTimer = null;
+            publishState(shouldForce);
+        }, delayMs);
+    }
+
+    function bindAudioEvents() {
+        const audio = getAudioElement();
+        if (!audio || audio.__ytmPresenceEventsBound) return;
+
+        audio.__ytmPresenceEventsBound = true;
+
+        const forceEvents = new Set([
+            "durationchange",
+            "loadedmetadata",
+            "pause",
+            "play",
+            "seeked"
+        ]);
+
+        [
+            "durationchange",
+            "loadedmetadata",
+            "pause",
+            "play",
+            "seeked",
+            "timeupdate"
+        ].forEach((eventName) => {
+            audio.addEventListener(
+                eventName,
+                () => schedulePublish(0, forceEvents.has(eventName)),
+                true
+            );
+        });
+    }
+
+    setInterval(() => publishState(false), 1000);
+    setInterval(bindAudioEvents, 2000);
+
+    document.addEventListener("visibilitychange", () => schedulePublish(0, true), true);
+    window.addEventListener("yt-navigate-finish", () => schedulePublish(250, true), true);
+
+    bindAudioEvents();
+    schedulePublish(250, true);
 })();
