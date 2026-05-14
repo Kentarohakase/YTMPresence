@@ -227,8 +227,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         const ok = Boolean(message.ok);
         const command = clampText(message.command, "unknown");
         lastStatusMessage = ok
-            ? `Command '${command}' ausgefuehrt.`
-            : `Command '${command}' konnte nicht ausgefuehrt werden.`;
+            ? `Command '${command}' ausgeführt.`
+            : `Command '${command}' konnte nicht ausgeführt werden.`;
         if (!ok) lastError = lastStatusMessage;
         return false;
     }
@@ -464,7 +464,7 @@ function testConnection() {
         if (!token) {
             resolve({
                 ok: false,
-                message: "Token fehlt. Oeffne die Optionen und fuege den Tray-Token ein."
+                message: "Token fehlt. Öffne die Optionen und füge den Tray-Token ein."
             });
             return;
         }
@@ -547,7 +547,7 @@ function testConnection() {
         socket.onerror = () => {
             finish({
                 ok: false,
-                message: "Companion nicht erreichbar. Starte die Tray-App oder pruefe die URL."
+                message: "Companion nicht erreichbar. Starte die Tray-App oder prüfe die URL."
             });
         };
 

@@ -34,7 +34,7 @@ function formatAge(timestamp) {
 function formatPlayback(state) {
     if (!state) return "";
     if (state.isAd) return "Werbung";
-    return state.isPlaying ? "laeuft" : "pausiert";
+    return state.isPlaying ? "läuft" : "pausiert";
 }
 
 function getConnectionLabel(status) {
@@ -81,7 +81,7 @@ function renderTrack(status) {
     const state = status?.lastState;
     if (!state?.title) {
         trackTitle.textContent = "Kein Track empfangen";
-        trackMeta.textContent = "YouTube Music oeffnen und einen Track starten";
+        trackMeta.textContent = "YouTube Music öffnen und einen Track starten";
         return;
     }
 

@@ -160,7 +160,7 @@ function getCurrentSettings() {
     const companionUrl = normalizeCompanionUrl(companionUrlInput.value);
 
     if (!token) {
-        return { error: "Token fehlt. Kopiere ihn aus dem Tray-Menue und fuege ihn hier ein." };
+        return { error: "Token fehlt. Kopiere ihn aus dem Tray-Menü und füge ihn hier ein." };
     }
 
     if (!companionUrl) {
@@ -203,7 +203,7 @@ function testConnection(companionUrl, token) {
         } catch {
             finish({
                 ok: false,
-                message: "WebSocket konnte nicht erstellt werden. Pruefe die Companion URL."
+                message: "WebSocket konnte nicht erstellt werden. Prüfe die Companion URL."
             });
             return;
         }
@@ -244,7 +244,7 @@ function testConnection(companionUrl, token) {
         socket.onerror = () => {
             finish({
                 ok: false,
-                message: "Companion nicht erreichbar. Starte die Tray-App oder pruefe die URL."
+                message: "Companion nicht erreichbar. Starte die Tray-App oder prüfe die URL."
             });
         };
 
