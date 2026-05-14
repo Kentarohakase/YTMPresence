@@ -1,7 +1,8 @@
 param(
     [string]$Configuration = "Release",
     [string]$Runtime = "win-x64",
-    [switch]$SelfContained
+    [switch]$SelfContained,
+    [switch]$KeepOldArtifacts
 )
 
 $ErrorActionPreference = "Stop"
@@ -15,6 +16,7 @@ $extensionZip = Join-Path $releaseRoot "YTMPresence-extension.zip"
 $bundleRoot = Join-Path $releaseRoot "bundle"
 $project = Join-Path $repoRoot "YTMPresence.Tray.Wpf\YTMPresence.Tray.Wpf.csproj"
 $manifestPath = Join-Path $extensionSource "manifest.json"
+$verifyScript = Join-Path $PSScriptRoot "verify-release.ps1"
 
 if (-not (Test-Path -LiteralPath $project)) {
     throw "Tray project not found: $project"
@@ -30,13 +32,46 @@ if (Test-Path -LiteralPath $manifestPath) {
 }
 
 $appOutput = Join-Path $releaseRoot "YTMPresence-$extensionVersion-$Runtime-app"
+$bundleName = "YTMPresence-$extensionVersion-$Runtime"
+$bundleDir = Join-Path $bundleRoot $bundleName
+$bundleAppDir = Join-Path $bundleDir "app"
+$bundleExtensionDir = Join-Path $bundleDir "extension"
+$bundleZip = Join-Path $releaseRoot "$bundleName.zip"
+
+function Remove-ReleasePath {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    if (-not (Test-Path -LiteralPath $Path)) {
+        return
+    }
+
+    $releaseFullPath = [System.IO.Path]::GetFullPath($releaseRoot)
+    $targetFullPath = [System.IO.Path]::GetFullPath($Path)
+
+    if (-not $targetFullPath.StartsWith($releaseFullPath, [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw "Refusing to remove path outside release root: $targetFullPath"
+    }
+
+    Remove-Item -LiteralPath $targetFullPath -Recurse -Force
+}
 
 New-Item -ItemType Directory -Path $releaseRoot -Force | Out-Null
 
+if (-not $KeepOldArtifacts) {
+    Get-ChildItem -LiteralPath $releaseRoot -Directory -Filter "YTMPresence-*-$Runtime-app" -ErrorAction SilentlyContinue |
+        Where-Object { [System.IO.Path]::GetFullPath($_.FullName) -ne [System.IO.Path]::GetFullPath($appOutput) } |
+        ForEach-Object { Remove-ReleasePath -Path $_.FullName }
+
+    Get-ChildItem -LiteralPath $releaseRoot -File -Filter "YTMPresence-*-$Runtime.zip" -ErrorAction SilentlyContinue |
+        Where-Object { [System.IO.Path]::GetFullPath($_.FullName) -ne [System.IO.Path]::GetFullPath($bundleZip) } |
+        ForEach-Object { Remove-ReleasePath -Path $_.FullName }
+
+    Remove-ReleasePath -Path (Join-Path $releaseRoot "YTMPresence-$Runtime")
+    Remove-ReleasePath -Path (Join-Path $releaseRoot "YTMPresence-$Runtime.zip")
+}
+
 foreach ($path in @($appOutput, $extensionOutput, $extensionZip, $bundleRoot)) {
-    if (Test-Path -LiteralPath $path) {
-        Remove-Item -LiteralPath $path -Recurse -Force
-    }
+    Remove-ReleasePath -Path $path
 }
 
 $selfContainedValue = if ($SelfContained) { "true" } else { "false" }
@@ -50,15 +85,7 @@ dotnet publish $project `
 Copy-Item -LiteralPath $extensionSource -Destination $extensionOutput -Recurse
 Compress-Archive -Path (Join-Path $extensionOutput "*") -DestinationPath $extensionZip -Force
 
-$bundleName = "YTMPresence-$extensionVersion-$Runtime"
-$bundleDir = Join-Path $bundleRoot $bundleName
-$bundleAppDir = Join-Path $bundleDir "app"
-$bundleExtensionDir = Join-Path $bundleDir "extension"
-$bundleZip = Join-Path $releaseRoot "$bundleName.zip"
-
-if (Test-Path -LiteralPath $bundleZip) {
-    Remove-Item -LiteralPath $bundleZip -Force
-}
+Remove-ReleasePath -Path $bundleZip
 
 New-Item -ItemType Directory -Path $bundleAppDir -Force | Out-Null
 Copy-Item -Path (Join-Path $appOutput "*") -Destination $bundleAppDir -Recurse -Force
@@ -95,6 +122,10 @@ Framework-dependent packages require the .NET 10 Desktop Runtime on the target P
 Set-Content -LiteralPath $summaryPath -Value $summary -Encoding UTF8
 Copy-Item -LiteralPath $summaryPath -Destination (Join-Path $bundleDir "RELEASE.txt") -Force
 Compress-Archive -Path (Join-Path $bundleDir "*") -DestinationPath $bundleZip -Force
+
+if (Test-Path -LiteralPath $verifyScript) {
+    & $verifyScript -ReleaseRoot $releaseRoot -Version $extensionVersion -Runtime $Runtime
+}
 
 Write-Host ""
 Write-Host "Release package created:"

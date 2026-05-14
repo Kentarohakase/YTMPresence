@@ -443,7 +443,11 @@ public partial class App : System.Windows.Application
       return;
     }
 
-    _playerWindow = new PlayerWindow(() => _server?.GetStatusSnapshot(), _settings, _settingsPath);
+    _playerWindow = new PlayerWindow(
+        () => _server?.GetStatusSnapshot(),
+        command => _server?.SendPlayerCommandAsync(command) ?? Task.FromResult(false),
+        _settings,
+        _settingsPath);
     _playerWindow.Closed += (_, __) => _playerWindow = null;
     _playerWindow.Show();
     _playerWindow.Activate();

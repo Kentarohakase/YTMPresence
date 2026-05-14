@@ -352,6 +352,99 @@
         return /\b(advertisement|werbung|anzeige|anuncio|publicidad)\b/.test(labels);
     }
 
+    function getButtonLabel(element) {
+        return normalizeLabel([
+            element.getAttribute?.("aria-label"),
+            element.getAttribute?.("title"),
+            element.textContent
+        ].filter(Boolean).join(" "));
+    }
+
+    function clickFirstVisible(selectors) {
+        for (const selector of selectors) {
+            const elements = Array.from(document.querySelectorAll(selector));
+            for (const element of elements) {
+                if (!isVisible(element)) continue;
+                element.click();
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function clickButtonByLabels(labels) {
+        const candidates = Array.from(document.querySelectorAll([
+            "ytmusic-player-bar button",
+            "ytmusic-player-bar tp-yt-paper-icon-button",
+            "ytmusic-player-page button",
+            "ytmusic-player-page tp-yt-paper-icon-button",
+            "button",
+            "tp-yt-paper-icon-button"
+        ].join(",")));
+
+        for (const element of candidates) {
+            if (!isVisible(element)) continue;
+
+            const label = getButtonLabel(element);
+            if (!label) continue;
+
+            if (labels.some((candidate) => label.includes(candidate))) {
+                element.click();
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function executePlayerCommand(command) {
+        if (command === "play-pause") {
+            if (clickFirstVisible([
+                "ytmusic-player-bar #play-pause-button",
+                "ytmusic-player-bar .play-pause-button",
+                "ytmusic-player-page #play-pause-button"
+            ])) {
+                return true;
+            }
+
+            if (clickButtonByLabels(["play", "pause", "wiedergabe", "pausieren"])) {
+                return true;
+            }
+
+            const audio = getAudioElement();
+            if (!audio) return false;
+
+            if (audio.paused) {
+                audio.play().catch(() => {});
+            } else {
+                audio.pause();
+            }
+
+            return true;
+        }
+
+        if (command === "next") {
+            return clickFirstVisible([
+                "ytmusic-player-bar .next-button",
+                "ytmusic-player-bar #next-button",
+                "ytmusic-player-page .next-button",
+                "ytmusic-player-page #next-button"
+            ]) || clickButtonByLabels(["next", "weiter", "naechst", "nächst"]);
+        }
+
+        if (command === "previous") {
+            return clickFirstVisible([
+                "ytmusic-player-bar .previous-button",
+                "ytmusic-player-bar #previous-button",
+                "ytmusic-player-page .previous-button",
+                "ytmusic-player-page #previous-button"
+            ]) || clickButtonByLabels(["previous", "zurueck", "zurück", "vorherig"]);
+        }
+
+        return false;
+    }
+
     /**
      * Baut den bestmöglichen Discord-Link:
      * - Video-Modus: echter watch?v=... bevorzugt
@@ -526,6 +619,17 @@
 
     document.addEventListener("visibilitychange", () => schedulePublish(0, true), true);
     window.addEventListener("yt-navigate-finish", () => schedulePublish(250, true), true);
+
+    window.addEventListener("message", (event) => {
+        if (event.source !== window) return;
+        if (event.origin !== location.origin) return;
+        if (!event.data || event.data.type !== "YTM_COMMAND") return;
+
+        const command = clampText(event.data.command);
+        const ok = executePlayerCommand(command);
+        window.postMessage({ type: "YTM_COMMAND_RESULT", command, ok }, location.origin);
+        schedulePublish(250, true);
+    }, true);
 
     bindAudioEvents();
     schedulePublish(250, true);

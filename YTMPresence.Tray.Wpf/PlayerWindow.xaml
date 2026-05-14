@@ -2,9 +2,9 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="YTM Presence Player"
-        Width="460"
+        Width="520"
         Height="250"
-        MinWidth="380"
+        MinWidth="460"
         MinHeight="220"
         WindowStartupLocation="Manual"
         ResizeMode="CanResizeWithGrip"
@@ -123,15 +123,47 @@
                     </DockPanel>
                 </Grid>
 
-                <StackPanel Grid.Row="4"
-                            Orientation="Horizontal"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Bottom">
-                    <Button x:Name="OpenTrackButton"
-                            Content="Track oeffnen"
-                            MinWidth="118"
-                            Click="OpenTrackButton_Click" />
-                </StackPanel>
+                <Grid Grid.Row="4"
+                      VerticalAlignment="Bottom">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock x:Name="CommandStatusText"
+                               Foreground="#8F8F8F"
+                               FontSize="12"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis" />
+
+                    <StackPanel Grid.Column="1"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Right">
+                        <Button x:Name="PreviousButton"
+                                Content="&lt;&lt;"
+                                ToolTip="Zurueck"
+                                MinWidth="44"
+                                Margin="0,0,8,0"
+                                Click="PreviousButton_Click" />
+                        <Button x:Name="PlayPauseButton"
+                                Content="Play"
+                                ToolTip="Play/Pause"
+                                MinWidth="72"
+                                Margin="0,0,8,0"
+                                Click="PlayPauseButton_Click" />
+                        <Button x:Name="NextButton"
+                                Content="&gt;&gt;"
+                                ToolTip="Weiter"
+                                MinWidth="44"
+                                Margin="0,0,8,0"
+                                Click="NextButton_Click" />
+                        <Button x:Name="OpenTrackButton"
+                                Content="Oeffnen"
+                                ToolTip="Track oeffnen"
+                                MinWidth="86"
+                                Click="OpenTrackButton_Click" />
+                    </StackPanel>
+                </Grid>
             </Grid>
         </Grid>
     </Border>

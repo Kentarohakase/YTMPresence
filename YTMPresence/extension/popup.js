@@ -34,7 +34,7 @@ function formatAge(timestamp) {
 function formatPlayback(state) {
     if (!state) return "";
     if (state.isAd) return "Werbung";
-    return state.isPlaying ? "läuft" : "pausiert";
+    return state.isPlaying ? "laeuft" : "pausiert";
 }
 
 function getConnectionLabel(status) {
@@ -81,14 +81,14 @@ function renderTrack(status) {
     const state = status?.lastState;
     if (!state?.title) {
         trackTitle.textContent = "Kein Track empfangen";
-        trackMeta.textContent = "YouTube Music öffnen und einen Track starten";
+        trackMeta.textContent = "YouTube Music oeffnen und einen Track starten";
         return;
     }
 
     const playback = formatPlayback(state);
     const artist = state.artist || "YouTube Music";
     trackTitle.textContent = state.title;
-    trackMeta.textContent = [artist, playback].filter(Boolean).join(" · ");
+    trackMeta.textContent = [artist, playback].filter(Boolean).join(" - ");
 }
 
 function renderStatus(status) {

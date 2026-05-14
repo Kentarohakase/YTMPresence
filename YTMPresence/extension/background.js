@@ -223,6 +223,16 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         return true;
     }
 
+    if (message.type === "YTM_COMMAND_RESULT") {
+        const ok = Boolean(message.ok);
+        const command = clampText(message.command, "unknown");
+        lastStatusMessage = ok
+            ? `Command '${command}' ausgefuehrt.`
+            : `Command '${command}' konnte nicht ausgefuehrt werden.`;
+        if (!ok) lastError = lastStatusMessage;
+        return false;
+    }
+
     if (message.type !== "YTM_STATE") return false;
 
     sendState(message.payload).catch((error) => {
@@ -338,6 +348,13 @@ function connect() {
             console.warn(`[YTM Bridge] WebSocket error at ${activeCompanionUrl}.`);
         };
 
+        socket.onmessage = (event) => {
+            handleCompanionMessage(event.data).catch((error) => {
+                lastError = `Companion message failed: ${error?.message || error}`;
+                console.warn(`[YTM Bridge] ${lastError}`);
+            });
+        };
+
         return socket;
     } catch (error) {
         lastError = `WebSocket konnte nicht erstellt werden: ${error?.message || error}`;
@@ -384,6 +401,61 @@ function restartConnection() {
     connect();
 }
 
+async function handleCompanionMessage(data) {
+    let message;
+    try {
+        message = JSON.parse(data);
+    } catch {
+        return;
+    }
+
+    if (message?.type !== "YTM_COMMAND") return;
+
+    const command = clampText(message.command);
+    if (!isAllowedCommand(command)) return;
+
+    const result = await forwardCommandToYtmTabs(command);
+    lastStatusMessage = result.ok
+        ? `Command '${command}' an YouTube Music gesendet.`
+        : result.message;
+
+    if (!result.ok) {
+        lastError = result.message;
+    }
+}
+
+function isAllowedCommand(command) {
+    return command === "play-pause" || command === "next" || command === "previous";
+}
+
+async function forwardCommandToYtmTabs(command) {
+    const tabs = await chrome.tabs.query({ url: "https://music.youtube.com/*" });
+    if (!tabs.length) {
+        return {
+            ok: false,
+            message: "Kein YouTube Music Tab gefunden."
+        };
+    }
+
+    let delivered = 0;
+
+    await Promise.allSettled(tabs.map(async (tab) => {
+        if (!tab.id) return;
+
+        const response = await chrome.tabs.sendMessage(tab.id, {
+            type: "YTM_COMMAND",
+            command,
+            ts: Date.now()
+        });
+
+        if (response?.ok) delivered++;
+    }));
+
+    return delivered > 0
+        ? { ok: true, message: `Command '${command}' gesendet.` }
+        : { ok: false, message: "YouTube Music Tab hat den Command nicht angenommen." };
+}
+
 function testConnection() {
     const companionUrl = companionWsUrls[0] || DEFAULT_COMPANION_WS_URLS[0];
     const token = cachedToken;
@@ -392,7 +464,7 @@ function testConnection() {
         if (!token) {
             resolve({
                 ok: false,
-                message: "Token fehlt. Öffne die Optionen und füge den Tray-Token ein."
+                message: "Token fehlt. Oeffne die Optionen und fuege den Tray-Token ein."
             });
             return;
         }
@@ -422,7 +494,7 @@ function testConnection() {
         const timeoutId = setTimeout(() => {
             finish({
                 ok: false,
-                message: "Keine Antwort vom Companion. Läuft die Tray-App?"
+                message: "Keine Antwort vom Companion. Laeuft die Tray-App?"
             });
         }, TEST_TIMEOUT_MS);
 
@@ -475,7 +547,7 @@ function testConnection() {
         socket.onerror = () => {
             finish({
                 ok: false,
-                message: "Companion nicht erreichbar. Starte die Tray-App oder prüfe die URL."
+                message: "Companion nicht erreichbar. Starte die Tray-App oder pruefe die URL."
             });
         };
 

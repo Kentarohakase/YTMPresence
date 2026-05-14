@@ -36,6 +36,7 @@ public sealed class CompanionServer : IAsyncDisposable
   private double? _lastDurationSeconds;
 
   private readonly ConcurrentDictionary<int, WebSocket> _activeSockets = new();
+  private readonly ConcurrentDictionary<int, WebSocket> _authenticatedSockets = new();
   private int _socketIdCounter;
 
   public CompanionServer(AppSettings settings)
@@ -148,6 +149,7 @@ public sealed class CompanionServer : IAsyncDisposable
           {
             countedClient = true;
             Interlocked.Increment(ref _connectedClients);
+            _authenticatedSockets[socketId] = ws;
             Logger.Info($"Extension Client authentifiziert. Clients aktiv: {Volatile.Read(ref _connectedClients)}");
           }
 
@@ -167,6 +169,7 @@ public sealed class CompanionServer : IAsyncDisposable
       finally
       {
         _activeSockets.TryRemove(socketId, out _);
+        _authenticatedSockets.TryRemove(socketId, out _);
 
         if (countedClient)
         {
@@ -241,6 +244,48 @@ public sealed class CompanionServer : IAsyncDisposable
       _cts?.Dispose();
       _cts = null;
     }
+  }
+
+  public async Task<bool> SendPlayerCommandAsync(string command, CancellationToken ct = default)
+  {
+    if (!IsAllowedPlayerCommand(command))
+      return false;
+
+    var message = JsonSerializer.Serialize(new
+    {
+      type = "YTM_COMMAND",
+      command,
+      ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+    });
+
+    var sent = 0;
+
+    foreach (var pair in _authenticatedSockets.ToArray())
+    {
+      var ws = pair.Value;
+
+      try
+      {
+        if (ws.State != WebSocketState.Open)
+        {
+          _authenticatedSockets.TryRemove(pair.Key, out _);
+          continue;
+        }
+
+        await SendTextAsync(ws, message, ct);
+        sent++;
+      }
+      catch (Exception ex) when (ex is WebSocketException or OperationCanceledException or ConnectionAbortedException)
+      {
+        _authenticatedSockets.TryRemove(pair.Key, out _);
+        Logger.Warn($"Player command '{command}' konnte nicht an Extension Socket {pair.Key} gesendet werden: {ex.Message}");
+      }
+    }
+
+    if (sent > 0)
+      Logger.Info($"Player command '{command}' an {sent} Extension Socket(s) gesendet.");
+
+    return sent > 0;
   }
 
   private async Task CloseAllSocketsAsync()
@@ -364,6 +409,11 @@ public sealed class CompanionServer : IAsyncDisposable
       return null;
 
     return candidate;
+  }
+
+  private static bool IsAllowedPlayerCommand(string command)
+  {
+    return command is "play-pause" or "next" or "previous";
   }
 
   public async ValueTask DisposeAsync()

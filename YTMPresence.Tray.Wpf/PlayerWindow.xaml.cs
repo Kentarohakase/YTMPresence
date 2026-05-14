@@ -10,6 +10,7 @@ namespace YTMPresence.TrayWpf;
 public partial class PlayerWindow : Window
 {
   private readonly Func<CompanionStatus?> _getStatus;
+  private readonly Func<string, Task<bool>> _sendCommand;
   private readonly AppSettings _settings;
   private readonly string _settingsPath;
   private readonly DispatcherTimer _timer;
@@ -17,12 +18,18 @@ public partial class PlayerWindow : Window
   private string? _currentCoverUrl;
   private string? _currentTrackUrl;
   private bool _isInitializing;
+  private bool _isSendingCommand;
 
-  public PlayerWindow(Func<CompanionStatus?> getStatus, AppSettings settings, string settingsPath)
+  public PlayerWindow(
+      Func<CompanionStatus?> getStatus,
+      Func<string, Task<bool>> sendCommand,
+      AppSettings settings,
+      string settingsPath)
   {
     InitializeComponent();
 
     _getStatus = getStatus;
+    _sendCommand = sendCommand;
     _settings = settings;
     _settingsPath = settingsPath;
     _timer = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.Background, (_, __) => UpdateStatus(), Dispatcher);
@@ -43,7 +50,7 @@ public partial class PlayerWindow : Window
     var status = _getStatus();
     if (status is null || string.IsNullOrWhiteSpace(status.LastTitle))
     {
-      ShowEmpty();
+      ShowEmpty(status);
       return;
     }
 
@@ -60,14 +67,16 @@ public partial class PlayerWindow : Window
     PositionText.Text = FormatTime(position);
     DurationText.Text = duration > 0 ? FormatTime(duration) : "--:--";
     PlayStateText.Text = status.LastIsPlaying == true ? "Laeuft" : "Pausiert";
+    PlayPauseButton.Content = status.LastIsPlaying == true ? "Pause" : "Play";
 
     _currentTrackUrl = status.LastTrackUrl;
     OpenTrackButton.IsEnabled = !string.IsNullOrWhiteSpace(_currentTrackUrl);
+    SetCommandButtonsEnabled(status.ConnectedClients > 0);
 
     SetCover(status.LastAlbumArtUrl);
   }
 
-  private void ShowEmpty()
+  private void ShowEmpty(CompanionStatus? status)
   {
     TitleText.Text = "Kein Track";
     ArtistText.Text = "Warte auf YouTube Music";
@@ -77,9 +86,24 @@ public partial class PlayerWindow : Window
     PositionText.Text = "0:00";
     DurationText.Text = "--:--";
     PlayStateText.Text = "Bereit";
+    PlayPauseButton.Content = "Play";
     OpenTrackButton.IsEnabled = false;
+    SetCommandButtonsEnabled(status?.ConnectedClients > 0);
     _currentTrackUrl = null;
     SetCover(null);
+  }
+
+  private void SetCommandButtonsEnabled(bool isEnabled)
+  {
+    var effectiveEnabled = isEnabled && !_isSendingCommand;
+    PreviousButton.IsEnabled = effectiveEnabled;
+    PlayPauseButton.IsEnabled = effectiveEnabled;
+    NextButton.IsEnabled = effectiveEnabled;
+
+    if (!isEnabled)
+      CommandStatusText.Text = "Keine Extension verbunden";
+    else if (!_isSendingCommand && CommandStatusText.Text == "Keine Extension verbunden")
+      CommandStatusText.Text = "";
   }
 
   private void SetCover(string? coverUrl)
@@ -200,6 +224,47 @@ public partial class PlayerWindow : Window
     catch
     {
     }
+  }
+
+  private async Task SendCommandAsync(string command, string label)
+  {
+    if (_isSendingCommand)
+      return;
+
+    _isSendingCommand = true;
+    SetCommandButtonsEnabled(isEnabled: false);
+    CommandStatusText.Text = $"{label}...";
+
+    try
+    {
+      var sent = await _sendCommand(command);
+      CommandStatusText.Text = sent ? $"{label} gesendet" : "Keine Extension verbunden";
+    }
+    catch
+    {
+      CommandStatusText.Text = $"{label} fehlgeschlagen";
+    }
+    finally
+    {
+      _isSendingCommand = false;
+      var status = _getStatus();
+      SetCommandButtonsEnabled(status?.ConnectedClients > 0);
+    }
+  }
+
+  private async void PreviousButton_Click(object sender, RoutedEventArgs e)
+  {
+    await SendCommandAsync("previous", "Zurueck");
+  }
+
+  private async void PlayPauseButton_Click(object sender, RoutedEventArgs e)
+  {
+    await SendCommandAsync("play-pause", "Play/Pause");
+  }
+
+  private async void NextButton_Click(object sender, RoutedEventArgs e)
+  {
+    await SendCommandAsync("next", "Weiter");
   }
 
   private void TopMostBox_Changed(object sender, RoutedEventArgs e)

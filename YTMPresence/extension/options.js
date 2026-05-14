@@ -2,19 +2,30 @@ const tokenInput = document.getElementById("token");
 const companionUrlInput = document.getElementById("companionUrl");
 const saveBtn = document.getElementById("save");
 const testBtn = document.getElementById("test");
+const resetUrlBtn = document.getElementById("resetUrl");
+const refreshBtn = document.getElementById("refresh");
+const openYtmBtn = document.getElementById("openYtm");
 const msg = document.getElementById("msg");
+const stateBadge = document.getElementById("stateBadge");
+const subtitle = document.getElementById("subtitle");
+const connectionText = document.getElementById("connectionText");
+const tokenText = document.getElementById("tokenText");
+const activeUrlText = document.getElementById("activeUrlText");
+const lastTrackText = document.getElementById("lastTrackText");
+const lastUpdateText = document.getElementById("lastUpdateText");
 
 const DEFAULT_COMPANION_URL = "ws://127.0.0.1:17373/ws";
 const TEST_TIMEOUT_MS = 4000;
 
-function show(text, cls) {
-    msg.className = cls || "";
+function show(text, cls = "") {
+    msg.className = `message ${cls}`.trim();
     msg.textContent = text || "";
 }
 
 function setBusy(isBusy) {
     saveBtn.disabled = isBusy;
     testBtn.disabled = isBusy;
+    resetUrlBtn.disabled = isBusy;
 }
 
 function normalizeCompanionUrl(value) {
@@ -47,6 +58,92 @@ function normalizeCompanionUrl(value) {
     }
 }
 
+function formatAge(timestamp) {
+    if (!timestamp) return "-";
+
+    const seconds = Math.max(0, Math.round((Date.now() - timestamp) / 1000));
+    if (seconds < 2) return "gerade eben";
+    if (seconds < 60) return `vor ${seconds}s`;
+
+    const minutes = Math.round(seconds / 60);
+    if (minutes < 60) return `vor ${minutes}m`;
+
+    const hours = Math.round(minutes / 60);
+    return `vor ${hours}h`;
+}
+
+function getConnectionLabel(status) {
+    if (!status?.tokenConfigured) return "Token fehlt";
+
+    switch (status.connectionState) {
+        case "connected":
+            return "Verbunden";
+        case "connecting":
+            return "Verbindet";
+        case "disconnected":
+            return "Getrennt";
+        default:
+            return "Bereit";
+    }
+}
+
+function renderBadge(status) {
+    stateBadge.className = "badge";
+
+    if (!status?.tokenConfigured) {
+        stateBadge.textContent = "Setup";
+        stateBadge.classList.add("err");
+        return;
+    }
+
+    if (status.connectionState === "connected") {
+        stateBadge.textContent = "Online";
+        stateBadge.classList.add("ok");
+        return;
+    }
+
+    if (status.connectionState === "connecting") {
+        stateBadge.textContent = "Verbinden";
+        stateBadge.classList.add("warn");
+        return;
+    }
+
+    stateBadge.textContent = "Offline";
+    stateBadge.classList.add(status.lastReceivedStateAt ? "warn" : "err");
+}
+
+function renderStatus(status) {
+    renderBadge(status);
+
+    const state = status?.lastState;
+    const activeUrl = status?.activeCompanionUrl || status?.companionUrls?.[0] || "-";
+    const track = state?.title
+        ? `${state.title}${state.artist ? ` - ${state.artist}` : ""}`
+        : "-";
+
+    subtitle.textContent = status?.lastStatusMessage || getConnectionLabel(status);
+    connectionText.textContent = getConnectionLabel(status);
+    tokenText.textContent = status?.tokenConfigured ? "gesetzt" : "fehlt";
+    activeUrlText.textContent = activeUrl;
+    activeUrlText.title = activeUrl;
+    lastTrackText.textContent = track;
+    lastTrackText.title = track;
+    lastUpdateText.textContent = formatAge(status?.lastReceivedStateAt);
+
+    if (status?.lastError && status.connectionState !== "connected") {
+        show(status.lastError, "err");
+    }
+}
+
+async function refreshStatus() {
+    try {
+        const status = await chrome.runtime.sendMessage({ type: "YTM_GET_STATUS" });
+        renderStatus(status);
+    } catch (error) {
+        show(`Status konnte nicht geladen werden: ${error?.message || error}`, "err");
+    }
+}
+
 async function load() {
     const result = await chrome.storage.local.get({
         securityToken: "",
@@ -55,6 +152,7 @@ async function load() {
 
     tokenInput.value = result.securityToken || "";
     companionUrlInput.value = result.companionUrl || DEFAULT_COMPANION_URL;
+    await refreshStatus();
 }
 
 function getCurrentSettings() {
@@ -138,18 +236,9 @@ function testConnection(companionUrl, token) {
                 return;
             }
 
-            if (response.ok) {
-                finish({
-                    ok: true,
-                    message: "Verbindung OK. Token und Companion URL passen."
-                });
-                return;
-            }
-
-            finish({
-                ok: false,
-                message: "Companion erreichbar, aber der Token ist falsch."
-            });
+            finish(response.ok
+                ? { ok: true, message: "Verbindung OK. Token und Companion URL passen." }
+                : { ok: false, message: "Companion erreichbar, aber der Token ist falsch." });
         };
 
         socket.onerror = () => {
@@ -176,13 +265,20 @@ saveBtn.addEventListener("click", async () => {
         return;
     }
 
-    await chrome.storage.local.set({
-        securityToken: settings.token,
-        companionUrl: settings.companionUrl
-    });
+    setBusy(true);
 
-    companionUrlInput.value = settings.companionUrl;
-    show("Gespeichert. YT Music Tab neu laden, falls er schon offen war.", "ok");
+    try {
+        await chrome.storage.local.set({
+            securityToken: settings.token,
+            companionUrl: settings.companionUrl
+        });
+
+        companionUrlInput.value = settings.companionUrl;
+        show("Gespeichert. YouTube Music Tab neu laden, falls er schon offen war.", "ok");
+        await refreshStatus();
+    } finally {
+        setBusy(false);
+    }
 });
 
 testBtn.addEventListener("click", async () => {
@@ -194,15 +290,40 @@ testBtn.addEventListener("click", async () => {
     }
 
     setBusy(true);
-    show("Teste Verbindung...", "");
+    show("Teste Verbindung...");
 
     try {
         const result = await testConnection(settings.companionUrl, settings.token);
         companionUrlInput.value = settings.companionUrl;
         show(result.message, result.ok ? "ok" : "err");
+        await refreshStatus();
     } finally {
         setBusy(false);
     }
 });
 
+resetUrlBtn.addEventListener("click", () => {
+    companionUrlInput.value = DEFAULT_COMPANION_URL;
+    show("");
+});
+
+refreshBtn.addEventListener("click", () => {
+    show("");
+    refreshStatus();
+});
+
+openYtmBtn.addEventListener("click", () => {
+    if (chrome.tabs?.create) {
+        chrome.tabs.create({ url: "https://music.youtube.com/" });
+        return;
+    }
+
+    window.open("https://music.youtube.com/", "_blank", "noopener");
+});
+
 load().catch(() => show("Konnte Einstellungen nicht laden.", "err"));
+setInterval(() => {
+    if (document.visibilityState === "visible") {
+        refreshStatus();
+    }
+}, 3000);

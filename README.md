@@ -56,7 +56,7 @@ Das Extension-Icon zeigt den aktuellen Verbindungsstatus als Badge an. Im Popup 
 ## Tray-Menue
 
 - `Einstellungen...`: oeffnet das Settings-Fenster fuer Token, Server, Presence und Discord Client ID
-- `Mini-Player oeffnen`: zeigt aktuellen Track, Cover, Fortschritt und einen Button zum Oeffnen des Tracks
+- `Mini-Player oeffnen`: zeigt aktuellen Track, Cover, Fortschritt, Play/Pause, Zurueck/Weiter und einen Button zum Oeffnen des Tracks
 - `Diagnose oeffnen`: zeigt Server-, Extension-, Discord-, Track- und Security-Status
 - `Presence nur wenn Musik laeuft`: loescht die Discord-Presence sofort beim Pausieren
 - `Werbung ignorieren`: sendet bei Werbung kein Discord-Update
@@ -88,9 +88,17 @@ artifacts\release\YTMPresence-<version>-win-x64-app\
 artifacts\release\YTMPresence-extension.zip
 artifacts\release\YTMPresence-<version>-win-x64.zip
 artifacts\release\extension\
+artifacts\release\SHA256SUMS.txt
 ```
 
 Fuer eine normale Weitergabe ist das versionierte Komplett-ZIP am bequemsten. Es enthaelt die App, die Extension und eine `RELEASE.txt`.
+Das Release-Skript prueft das Paket nach dem Build automatisch. Alte versionierte App-/ZIP-Artefakte fuer denselben Runtime-Zieltyp werden standardmaessig entfernt. Mit `-KeepOldArtifacts` bleiben sie erhalten.
+
+Ein vorhandenes Release kannst du auch separat pruefen:
+
+```powershell
+.\scripts\verify-release.ps1
+```
 
 ## Fehlerbehebung
 
