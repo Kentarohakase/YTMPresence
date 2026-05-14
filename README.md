@@ -53,6 +53,10 @@ Mit `Verbindung testen` in den Extension-Optionen kannst du pruefen, ob Companio
 
 Das Extension-Icon zeigt den aktuellen Verbindungsstatus als Badge an. Im Popup siehst du Companion-Status, Token-Status und den zuletzt empfangenen Track.
 
+## Changelog
+
+Alle Release-Aenderungen stehen in [CHANGELOG.md](CHANGELOG.md).
+
 ## Tray-Menue
 
 - `Einstellungen...`: oeffnet das Settings-Fenster fuer Token, Server, Presence und Discord Client ID
