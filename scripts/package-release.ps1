@@ -61,7 +61,7 @@ if (Test-Path -LiteralPath $bundleZip) {
 }
 
 New-Item -ItemType Directory -Path $bundleAppDir -Force | Out-Null
-Copy-Item -LiteralPath (Join-Path $appOutput "*") -Destination $bundleAppDir -Recurse
+Copy-Item -Path (Join-Path $appOutput "*") -Destination $bundleAppDir -Recurse -Force
 Copy-Item -LiteralPath $extensionOutput -Destination $bundleExtensionDir -Recurse
 
 $summaryPath = Join-Path $releaseRoot "RELEASE.txt"
