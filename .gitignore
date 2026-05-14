@@ -1,10 +1,76 @@
+# User- and IDE-specific files
 .vs/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.DotSettings.user
+
+# Local secrets and machine-specific config
+.env
+.env.*
+*.pfx
+*.publishsettings
+
+# Local .NET state
 .dotnet-home/
 
+# Build output
 **/bin/
 **/obj/
+[Dd]ebug/
+[Rr]elease/
+[Rr]eleases/
+[Oo]ut/
+[Ll]og/
+[Ll]ogs/
+publish/
 
+# Release artifacts
 artifacts/
+.artifacts/
 
-*.user
-*.suo
+# Test and coverage output
+[Tt]est[Rr]esult*/
+*.trx
+coverage*.json
+coverage*.xml
+coverage*.info
+*.coverage
+*.coveragexml
+
+# NuGet and packaging
+*.nupkg
+*.snupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nuget.props
+*.nuget.targets
+
+# MSBuild / temporary files
+*.binlog
+*.log
+*.tlog
+*.tmp
+*.tmp_proj
+*_wpftmp.csproj
+*.cache
+*.pdb
+*.ilk
+*.obj
+*.iobj
+*.ipdb
+
+# Node / browser tooling
+node_modules/
+*.vsix
+
+# OS noise
+Thumbs.db
+Desktop.ini
