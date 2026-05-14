@@ -59,7 +59,7 @@ public static class SettingsStore
     s.Assets.LargeImageText = (s.Assets.LargeImageText ?? "YouTube Music").Trim();
 
     s.PlayerWindow ??= new PlayerWindowSettings();
-    s.PlayerWindow.Width = ClampDouble(s.PlayerWindow.Width, 380, 1200, 460);
+    s.PlayerWindow.Width = ClampDouble(s.PlayerWindow.Width, 460, 1200, 520);
     s.PlayerWindow.Height = ClampDouble(s.PlayerWindow.Height, 200, 900, 250);
 
     if (s.PlayerWindow.Left is double left && !double.IsFinite(left))

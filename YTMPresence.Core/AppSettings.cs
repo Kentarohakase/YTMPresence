@@ -20,7 +20,7 @@ public sealed class PlayerWindowSettings
   public bool AlwaysOnTop { get; set; }
   public double? Left { get; set; }
   public double? Top { get; set; }
-  public double Width { get; set; } = 460;
+  public double Width { get; set; } = 520;
   public double Height { get; set; } = 250;
 }
 
