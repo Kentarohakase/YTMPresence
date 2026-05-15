@@ -83,16 +83,16 @@ Die Tray-App kann über `Nach Updates suchen` im Tray-Menü das neueste GitHub R
 
 ## Release bauen
 
-Voraussetzung: .NET 10 SDK. Fuer den neuen Setup-Installer wird Inno Setup 6 (`ISCC.exe`) verwendet. GitHub Actions installiert Inno Setup automatisch; lokal nutzt `-InstallerMode Auto` Inno Setup, wenn es vorhanden ist, und sonst den bisherigen Legacy-Fallback.
+Voraussetzung: .NET 10 SDK und Inno Setup 6 (`ISCC.exe`) fuer das Setup-EXE. GitHub Actions installiert Inno Setup automatisch.
 
 ```powershell
 .\scripts\package-release.ps1
 ```
 
-Fuer echte Release-Builds sollte Inno Setup erzwungen werden:
+Wenn Inno Setup nicht im `PATH` liegt, kann der Compiler explizit angegeben werden:
 
 ```powershell
-.\scripts\package-release.ps1 -InstallerMode Inno
+.\scripts\package-release.ps1 -InnoSetupCompiler "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
 ```
 
 Der Standard-Build ist framework-dependent. Auf einem anderen Rechner muss also die .NET 10 Desktop Runtime installiert sein.

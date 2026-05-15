@@ -4,7 +4,20 @@ Alle wichtigen Änderungen an YTMPresence werden in dieser Datei dokumentiert.
 
 ## [Unreleased]
 
-Noch keine Änderungen.
+### Changed
+
+- Release-Skript baut Installer nur noch über Inno Setup und ist dadurch einfacher wartbar.
+
+### Fixed
+
+- Release-Skript entfernt veraltete Setup-Artefakte und laesst bei `-SkipInstaller` keine alte Setup-EXE liegen.
+- Update-Fenster deaktiviert Download- und Installationsbuttons, wenn ein Release kein Setup-Asset enthaelt.
+- Companion-Server verwirft nicht-textuelle oder zu grosse WebSocket-Nachrichten fruehzeitig.
+- Einstellungen verhindern URL-artige Hosts und ungueltige WebSocket-Pfade.
+
+### Removed
+
+- Alter IExpress-basierter Installer-Fallback wurde entfernt.
 
 ## [0.8.9] - 2026-05-15
 

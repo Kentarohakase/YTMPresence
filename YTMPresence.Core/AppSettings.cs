@@ -51,6 +51,18 @@ public sealed class AppSettings
   /// </summary>
   public string SecurityToken { get; set; } = "";
 
-  public Uri GetListenUrl() => new($"http://{ListenHost}:{ListenPort}");
-  public string GetWebSocketEndpoint() => $"ws://{ListenHost}:{ListenPort}{WebSocketPath}";
+  public Uri GetListenUrl() => new($"http://{FormatHostForUri(ListenHost)}:{ListenPort}");
+  public string GetWebSocketEndpoint() => $"ws://{FormatHostForUri(ListenHost)}:{ListenPort}{WebSocketPath}";
+
+  private static string FormatHostForUri(string host)
+  {
+    if (System.Net.IPAddress.TryParse(host, out var address) &&
+        address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6 &&
+        !host.StartsWith('['))
+    {
+      return $"[{host}]";
+    }
+
+    return host;
+  }
 }

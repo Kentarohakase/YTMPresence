@@ -82,6 +82,15 @@ public partial class SettingsWindow : Window
       return;
     }
 
+    if (listenHost.Contains("://", StringComparison.Ordinal) ||
+        listenHost.Contains('/') ||
+        listenHost.Contains('\\'))
+    {
+      SetStatus("Host darf nur Hostname oder IP enthalten, keine URL.", isError: true);
+      ListenHostBox.Focus();
+      return;
+    }
+
     var webSocketPath = WebSocketPathBox.Text.Trim();
     if (string.IsNullOrWhiteSpace(webSocketPath))
     {
@@ -92,6 +101,15 @@ public partial class SettingsWindow : Window
 
     if (!webSocketPath.StartsWith('/'))
       webSocketPath = "/" + webSocketPath;
+
+    if (webSocketPath.Any(char.IsWhiteSpace) ||
+        webSocketPath.Contains('?') ||
+        webSocketPath.Contains('#'))
+    {
+      SetStatus("WebSocket-Pfad darf keine Leerzeichen, Query oder Fragment enthalten.", isError: true);
+      WebSocketPathBox.Focus();
+      return;
+    }
 
     var discordClientId = DiscordClientIdBox.Text.Trim();
     if (string.IsNullOrWhiteSpace(discordClientId))

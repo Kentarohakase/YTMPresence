@@ -70,7 +70,7 @@ jobs:
 
       - name: Package release
         shell: pwsh
-        run: ./scripts/package-release.ps1 -InstallerMode Inno -InnoSetupCompiler "$env:INNO_SETUP_COMPILER"
+        run: ./scripts/package-release.ps1 -InnoSetupCompiler "$env:INNO_SETUP_COMPILER"
 
       - name: Prepare release notes
         shell: pwsh

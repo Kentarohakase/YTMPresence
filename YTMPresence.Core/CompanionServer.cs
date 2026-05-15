@@ -13,6 +13,8 @@ namespace YTMPresence.Core;
 
 public sealed class CompanionServer : IAsyncDisposable
 {
+  private const int MaxWebSocketMessageBytes = 256 * 1024;
+
   private readonly AppSettings _settings;
   private readonly DiscordIpcClient _discord;
   private readonly PresenceService _presence;
@@ -360,6 +362,7 @@ public sealed class CompanionServer : IAsyncDisposable
   private static async Task<string?> ReceiveTextAsync(WebSocket ws, byte[] buffer, CancellationToken ct)
   {
     var sb = new StringBuilder();
+    var receivedBytes = 0;
 
     while (true)
     {
@@ -383,6 +386,13 @@ public sealed class CompanionServer : IAsyncDisposable
       }
 
       if (result.MessageType == WebSocketMessageType.Close)
+        return null;
+
+      if (result.MessageType != WebSocketMessageType.Text)
+        return null;
+
+      receivedBytes += result.Count;
+      if (receivedBytes > MaxWebSocketMessageBytes)
         return null;
 
       sb.Append(Encoding.UTF8.GetString(buffer, 0, result.Count));

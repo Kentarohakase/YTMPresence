@@ -78,9 +78,7 @@ Name: "{group}\YTMPresence deinstallieren"; Filename: "{uninstallexe}"
 
 [Registry]
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Uninstall\YTMPresence"; Flags: deletekey
-
-[UninstallRun]
-Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -Command ""Remove-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' -Name 'YTM Presence' -ErrorAction SilentlyContinue; Remove-Item -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\YTMPresence' -Recurse -Force -ErrorAction SilentlyContinue"""; Flags: runhidden
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueName: "YTM Presence"; Flags: uninsdeletevalue
 
 [Run]
 Filename: "{app}\app\YTMPresence.exe"; Description: "YTMPresence starten"; WorkingDir: "{app}\app"; Flags: nowait postinstall skipifsilent

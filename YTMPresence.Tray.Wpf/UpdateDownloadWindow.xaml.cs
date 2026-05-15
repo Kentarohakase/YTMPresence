@@ -31,8 +31,10 @@ public partial class UpdateDownloadWindow : Window
     SetupFileText.Text = _setupFileName;
     TargetPathText.Text = _targetPath;
 
-    InstallButton.IsEnabled = !string.IsNullOrWhiteSpace(_update.SetupDownloadUrl);
-    if (!InstallButton.IsEnabled)
+    var hasSetupDownload = !string.IsNullOrWhiteSpace(_update.SetupDownloadUrl);
+    InstallButton.IsEnabled = hasSetupDownload;
+    DownloadOnlyButton.IsEnabled = hasSetupDownload;
+    if (!hasSetupDownload)
       SetStatus("Dieses Release enthält kein Setup-Asset. Öffne stattdessen die Release-Seite.", isError: true);
   }
 

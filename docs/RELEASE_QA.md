@@ -7,7 +7,7 @@ Diese Checkliste ist für jeden Release-Tag gedacht, bevor das Release breit get
 - `Directory.Build.props` und `YTMPresence/extension/manifest.json` haben dieselbe Version.
 - `CHANGELOG.md` enthält einen Eintrag für diese Version.
 - `dotnet build YTMPresence.slnx --configuration Release` läuft ohne Fehler.
-- `.\scripts\package-release.ps1 -InstallerMode Inno` erzeugt App, Bundle-ZIP, Extension-ZIP, Inno-Setup-EXE und `SHA256SUMS.txt`.
+- `.\scripts\package-release.ps1` erzeugt App, Bundle-ZIP, Extension-ZIP, Inno-Setup-EXE und `SHA256SUMS.txt`.
 - `.\scripts\verify-release.ps1` meldet die erwartete Version und den erwarteten Runtime-Zieltyp.
 
 ## Release-Artefakte

@@ -4,8 +4,6 @@ param(
     [switch]$SelfContained,
     [switch]$KeepOldArtifacts,
     [switch]$SkipInstaller,
-    [ValidateSet("Auto", "Inno", "Legacy", "None")]
-    [string]$InstallerMode = "Auto",
     [string]$InnoSetupCompiler = ""
 )
 
@@ -22,11 +20,6 @@ $project = Join-Path $repoRoot "YTMPresence.Tray.Wpf\YTMPresence.Tray.Wpf.csproj
 $manifestPath = Join-Path $extensionSource "manifest.json"
 $verifyScript = Join-Path $PSScriptRoot "verify-release.ps1"
 $innoInstallerScript = Join-Path $PSScriptRoot "package-inno-installer.ps1"
-$legacyInstallerScript = Join-Path $PSScriptRoot "package-installer.ps1"
-
-if ($SkipInstaller) {
-    $InstallerMode = "None"
-}
 
 if (-not (Test-Path -LiteralPath $project)) {
     throw "Tray project not found: $project"
@@ -47,6 +40,7 @@ $bundleDir = Join-Path $bundleRoot $bundleName
 $bundleAppDir = Join-Path $bundleDir "app"
 $bundleExtensionDir = Join-Path $bundleDir "extension"
 $bundleZip = Join-Path $releaseRoot "$bundleName.zip"
+$setupPath = Join-Path $releaseRoot "$bundleName-setup.exe"
 
 function Test-PathIsUnderRoot {
     param(
@@ -78,40 +72,6 @@ function Remove-ReleasePath {
     Remove-Item -LiteralPath $targetFullPath -Recurse -Force
 }
 
-function Find-InnoSetupCompiler {
-    param([string]$PreferredPath)
-
-    if (-not [string]::IsNullOrWhiteSpace($PreferredPath)) {
-        if (Test-Path -LiteralPath $PreferredPath) {
-            return (Resolve-Path -LiteralPath $PreferredPath).Path
-        }
-
-        return ""
-    }
-
-    $command = Get-Command "ISCC.exe" -ErrorAction SilentlyContinue
-    if ($command) {
-        return $command.Source
-    }
-
-    $candidates = @()
-    if (-not [string]::IsNullOrWhiteSpace(${env:ProgramFiles(x86)})) {
-        $candidates += (Join-Path ${env:ProgramFiles(x86)} "Inno Setup 6\ISCC.exe")
-    }
-
-    if (-not [string]::IsNullOrWhiteSpace($env:ProgramFiles)) {
-        $candidates += (Join-Path $env:ProgramFiles "Inno Setup 6\ISCC.exe")
-    }
-
-    foreach ($candidate in $candidates) {
-        if (Test-Path -LiteralPath $candidate) {
-            return (Resolve-Path -LiteralPath $candidate).Path
-        }
-    }
-
-    return ""
-}
-
 New-Item -ItemType Directory -Path $releaseRoot -Force | Out-Null
 
 if (-not $KeepOldArtifacts) {
@@ -123,8 +83,13 @@ if (-not $KeepOldArtifacts) {
         Where-Object { [System.IO.Path]::GetFullPath($_.FullName) -ne [System.IO.Path]::GetFullPath($bundleZip) } |
         ForEach-Object { Remove-ReleasePath -Path $_.FullName }
 
+    Get-ChildItem -LiteralPath $releaseRoot -File -Filter "YTMPresence-*-$Runtime-setup.exe" -ErrorAction SilentlyContinue |
+        Where-Object { [System.IO.Path]::GetFullPath($_.FullName) -ne [System.IO.Path]::GetFullPath($setupPath) } |
+        ForEach-Object { Remove-ReleasePath -Path $_.FullName }
+
     Remove-ReleasePath -Path (Join-Path $releaseRoot "YTMPresence-$Runtime")
     Remove-ReleasePath -Path (Join-Path $releaseRoot "YTMPresence-$Runtime.zip")
+    Remove-ReleasePath -Path (Join-Path $releaseRoot "YTMPresence-$Runtime-setup.exe")
 }
 
 foreach ($path in @($appOutput, $extensionOutput, $extensionZip, $bundleRoot)) {
@@ -184,44 +149,16 @@ if (Test-Path -LiteralPath $verifyScript) {
     & $verifyScript -ReleaseRoot $releaseRoot -Version $extensionVersion -Runtime $Runtime
 }
 
-$setupPath = Join-Path $releaseRoot "$bundleName-setup.exe"
-$installerUsed = "None"
+if ($SkipInstaller) {
+    Remove-ReleasePath -Path $setupPath
+    Write-Host "Installer packaging skipped."
+}
+else {
+    if (-not (Test-Path -LiteralPath $innoInstallerScript)) {
+        throw "Inno installer script not found: $innoInstallerScript"
+    }
 
-switch ($InstallerMode) {
-    "None" {
-        Write-Host "Installer packaging skipped."
-    }
-    "Inno" {
-        if (-not (Test-Path -LiteralPath $innoInstallerScript)) {
-            throw "Inno installer script not found: $innoInstallerScript"
-        }
-
-        & $innoInstallerScript -ReleaseRoot $releaseRoot -Version $extensionVersion -Runtime $Runtime -InnoSetupCompiler $InnoSetupCompiler
-        $installerUsed = "Inno Setup"
-    }
-    "Legacy" {
-        if (-not (Test-Path -LiteralPath $legacyInstallerScript)) {
-            throw "Legacy installer script not found: $legacyInstallerScript"
-        }
-
-        & $legacyInstallerScript -ReleaseRoot $releaseRoot -Version $extensionVersion -Runtime $Runtime
-        $installerUsed = "Legacy IExpress"
-    }
-    "Auto" {
-        $iscc = Find-InnoSetupCompiler -PreferredPath $InnoSetupCompiler
-        if (-not [string]::IsNullOrWhiteSpace($iscc) -and (Test-Path -LiteralPath $innoInstallerScript)) {
-            & $innoInstallerScript -ReleaseRoot $releaseRoot -Version $extensionVersion -Runtime $Runtime -InnoSetupCompiler $iscc
-            $installerUsed = "Inno Setup"
-        }
-        elseif (Test-Path -LiteralPath $legacyInstallerScript) {
-            Write-Warning "ISCC.exe was not found. Falling back to legacy IExpress installer. Use -InstallerMode Inno for release builds."
-            & $legacyInstallerScript -ReleaseRoot $releaseRoot -Version $extensionVersion -Runtime $Runtime
-            $installerUsed = "Legacy IExpress"
-        }
-        else {
-            throw "No installer builder is available. Install Inno Setup 6 or restore $legacyInstallerScript."
-        }
-    }
+    & $innoInstallerScript -ReleaseRoot $releaseRoot -Version $extensionVersion -Runtime $Runtime -InnoSetupCompiler $InnoSetupCompiler
 }
 
 Write-Host ""
@@ -229,8 +166,8 @@ Write-Host "Release package created:"
 Write-Host "  App:       $appOutput"
 Write-Host "  Extension: $extensionZip"
 Write-Host "  Bundle:    $bundleZip"
-if ($InstallerMode -ne "None") {
+if (-not $SkipInstaller) {
     Write-Host "  Setup:     $setupPath"
-    Write-Host "  Installer: $installerUsed"
+    Write-Host "  Installer: Inno Setup"
 }
 Write-Host "  Notes:     $summaryPath"
