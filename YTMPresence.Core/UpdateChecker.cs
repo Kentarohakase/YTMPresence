@@ -11,7 +11,9 @@ public sealed record UpdateCheckResult(
   string LatestVersion,
   string ReleaseUrl,
   string? ErrorMessage = null,
-  string? SetupDownloadUrl = null);
+  string? SetupDownloadUrl = null,
+  string? SetupAssetName = null,
+  string? ChecksumsDownloadUrl = null);
 
 public static class UpdateChecker
 {
@@ -52,6 +54,14 @@ public static class UpdateChecker
         .Where(a => a.Name?.EndsWith("-setup.exe", StringComparison.OrdinalIgnoreCase) == true)
         .Select(a => a.BrowserDownloadUrl)
         .FirstOrDefault(url => !string.IsNullOrWhiteSpace(url));
+      var setupAssetName = release.Assets?
+        .Where(a => a.Name?.EndsWith("-setup.exe", StringComparison.OrdinalIgnoreCase) == true)
+        .Select(a => a.Name)
+        .FirstOrDefault(name => !string.IsNullOrWhiteSpace(name));
+      var checksumsDownloadUrl = release.Assets?
+        .Where(a => string.Equals(a.Name, "SHA256SUMS.txt", StringComparison.OrdinalIgnoreCase))
+        .Select(a => a.BrowserDownloadUrl)
+        .FirstOrDefault(url => !string.IsNullOrWhiteSpace(url));
 
       var isNewer = IsNewer(latestVersion, currentVersion);
       return new UpdateCheckResult(
@@ -59,7 +69,9 @@ public static class UpdateChecker
         currentVersion,
         latestVersion,
         releaseUrl,
-        SetupDownloadUrl: setupDownloadUrl);
+        SetupDownloadUrl: setupDownloadUrl,
+        SetupAssetName: setupAssetName,
+        ChecksumsDownloadUrl: checksumsDownloadUrl);
     }
     catch (OperationCanceledException) when (ct.IsCancellationRequested)
     {

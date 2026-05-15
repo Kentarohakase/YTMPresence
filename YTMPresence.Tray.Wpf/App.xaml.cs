@@ -37,6 +37,7 @@ public partial class App : System.Windows.Application
   private ToolStripMenuItem? _openLatestReleaseItem;
   private SettingsWindow? _settingsWindow;
   private OnboardingWindow? _onboardingWindow;
+  private UpdateDownloadWindow? _updateDownloadWindow;
   private PlayerWindow? _playerWindow;
   private DiagnosticsWindow? _diagnosticsWindow;
 
@@ -251,7 +252,7 @@ public partial class App : System.Windows.Application
     _checkUpdatesItem.Click += async (_, __) => await CheckForUpdatesAsync(showUpToDate: true);
 
     _openLatestReleaseItem = new ToolStripMenuItem(UiText.OpenLatestRelease) { Visible = false };
-    _openLatestReleaseItem.Click += (_, __) => OpenUrl(_openLatestReleaseItem.Tag?.ToString() ?? "https://github.com/Kentarohakase/YTMPresence/releases");
+    _openLatestReleaseItem.Click += (_, __) => OpenUpdateTarget();
 
     var openYtmItem = new ToolStripMenuItem(UiText.OpenYtm);
     openYtmItem.Click += (_, __) => OpenUrl("https://music.youtube.com/");
@@ -478,6 +479,20 @@ public partial class App : System.Windows.Application
     _onboardingWindow.Activate();
   }
 
+  private void ShowUpdateDownloadWindow(UpdateCheckResult update)
+  {
+    if (_updateDownloadWindow is not null)
+    {
+      _updateDownloadWindow.Activate();
+      return;
+    }
+
+    _updateDownloadWindow = new UpdateDownloadWindow(update);
+    _updateDownloadWindow.Closed += (_, __) => _updateDownloadWindow = null;
+    _updateDownloadWindow.Show();
+    _updateDownloadWindow.Activate();
+  }
+
   private void ShowPlayerWindow()
   {
     if (_playerWindow is not null)
@@ -631,7 +646,9 @@ public partial class App : System.Windows.Application
           _openLatestReleaseItem.Text = string.IsNullOrWhiteSpace(result.SetupDownloadUrl)
               ? UiText.UpdateAvailable(result.LatestVersion)
               : UiText.DownloadUpdate(result.LatestVersion);
-          _openLatestReleaseItem.Tag = updateUrl;
+          _openLatestReleaseItem.Tag = string.IsNullOrWhiteSpace(result.SetupDownloadUrl)
+              ? updateUrl
+              : result;
           _openLatestReleaseItem.Visible = true;
         }
 
@@ -709,6 +726,18 @@ public partial class App : System.Windows.Application
     {
       Logger.Error(ex, $"Error opening URL: {url}");
     }
+  }
+
+  private void OpenUpdateTarget()
+  {
+    if (_openLatestReleaseItem?.Tag is UpdateCheckResult update &&
+        !string.IsNullOrWhiteSpace(update.SetupDownloadUrl))
+    {
+      ShowUpdateDownloadWindow(update);
+      return;
+    }
+
+    OpenUrl(_openLatestReleaseItem?.Tag?.ToString() ?? "https://github.com/Kentarohakase/YTMPresence/releases");
   }
 
   private static void OpenPath(string path)

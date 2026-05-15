@@ -4,7 +4,13 @@ Alle wichtigen Änderungen an YTMPresence werden in dieser Datei dokumentiert.
 
 ## [Unreleased]
 
-- Noch keine Änderungen.
+### Added
+
+- Update-Installer-Fenster mit Setup-Download, Fortschritt, optionaler SHA256-Prüfung und anschließendem Setup-Start.
+
+### Changed
+
+- Update-Hinweis verweist jetzt auf die direkte Installation über das Tray-Menü.
 
 ## [0.8.4] - 2026-05-15
 

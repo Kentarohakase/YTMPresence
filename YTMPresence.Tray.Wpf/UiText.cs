@@ -252,9 +252,9 @@ internal static class UiText
   );
 
   public static string UpdateAvailableMessage(string version) => T(
-      de: $"YTMPresence {version} ist verfügbar. Öffne das Release über das Tray-Menü.",
-      en: $"YTMPresence {version} is available. Open the release from the tray menu.",
-      es: $"YTMPresence {version} está disponible. Abre la versión desde el menú de la bandeja."
+      de: $"YTMPresence {version} ist verfügbar. Du kannst das Update über das Tray-Menü installieren.",
+      en: $"YTMPresence {version} is available. You can install the update from the tray menu.",
+      es: $"YTMPresence {version} está disponible. Puedes instalar la actualización desde el menú de la bandeja."
   );
 
   public static string NoUpdateAvailable(string version) => T(

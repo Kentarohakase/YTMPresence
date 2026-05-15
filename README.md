@@ -67,7 +67,7 @@ Vorbereitete Store- und Privacy-Texte stehen unter:
 
 ## Updates
 
-Die Tray-App kann über `Nach Updates suchen` im Tray-Menü das neueste GitHub Release prüfen. Beim Start wird automatisch einmal geprüft, sofern `CheckForUpdatesOnStartup` in den Einstellungen aktiv ist.
+Die Tray-App kann über `Nach Updates suchen` im Tray-Menü das neueste GitHub Release prüfen. Wenn ein Setup-EXE im Release vorhanden ist, kann die App das Update direkt herunterladen, die SHA256-Prüfsumme prüfen und das Setup starten. Beim Start wird automatisch einmal geprüft, sofern `CheckForUpdatesOnStartup` in den Einstellungen aktiv ist.
 
 ## Tray-Menü
 

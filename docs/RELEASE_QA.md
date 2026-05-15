@@ -25,6 +25,16 @@ Diese Checkliste ist für jeden Release-Tag gedacht, bevor das Release breit get
 - Windows zeigt YTMPresence unter den installierten Apps.
 - Deinstallation entfernt Startmenü-Eintrag, Autostart-Wert, App-Ordner und Windows-Deinstallationseintrag.
 
+## Update-Test
+
+- Eine ältere Version installieren.
+- `Nach Updates suchen` im Tray-Menü ausführen.
+- Update-Menüeintrag öffnet das Update-Installer-Fenster.
+- Setup-Download zeigt Fortschritt und Zielpfad an.
+- Wenn `SHA256SUMS.txt` vorhanden ist, wird die passende Setup-Prüfsumme akzeptiert.
+- Nach dem Download startet das Setup und YTMPresence beendet sich.
+- Nach der Installation meldet die App die neue Version.
+
 ## Clean-Test
 
 - Auf einem frischen Windows-Profil oder einer VM installieren.
