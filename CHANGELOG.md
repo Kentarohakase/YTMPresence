@@ -4,6 +4,10 @@ Alle wichtigen Änderungen an YTMPresence werden in dieser Datei dokumentiert.
 
 ## [Unreleased]
 
+Noch keine Änderungen.
+
+## [0.8.10] - 2026-05-15
+
 ### Changed
 
 - Release-Skript baut Installer nur noch über Inno Setup und ist dadurch einfacher wartbar.
