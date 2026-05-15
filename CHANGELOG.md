@@ -6,6 +6,22 @@ Alle wichtigen Änderungen an YTMPresence werden in dieser Datei dokumentiert.
 
 - Noch keine Änderungen.
 
+## [0.8.3] - 2026-05-15
+
+### Added
+
+- Windows-Installer registriert YTMPresence jetzt in den Windows-App-Einstellungen mit Version, Icon, Größe und Deinstallationsbefehl.
+
+### Changed
+
+- Installer und Release-Skript prüfen Cleanup-Ziele genauer, bevor alte Artefakte entfernt werden.
+- Installer beendet beim Update nur die installierte YTMPresence-Instanz aus dem Installationsordner.
+
+### Fixed
+
+- Installation bricht früher mit einer klaren Fehlermeldung ab, wenn `YTMPresence.exe` nach dem Entpacken fehlt.
+- Deinstallation entfernt den Windows-Deinstallationseintrag und räumt das temporäre Cleanup-Skript selbst auf.
+
 ## [0.8.2] - 2026-05-15
 
 ### Added

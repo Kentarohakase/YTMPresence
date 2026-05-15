@@ -36,6 +36,19 @@ if (-not (Test-Path -LiteralPath $extensionZip)) {
     throw "Extension ZIP not found: $extensionZip"
 }
 
+function Test-PathIsUnderRoot {
+    param(
+        [Parameter(Mandatory = $true)][string]$TargetPath,
+        [Parameter(Mandatory = $true)][string]$RootPath
+    )
+
+    $rootFullPath = [System.IO.Path]::GetFullPath($RootPath).TrimEnd([char[]]@('\', '/'))
+    $targetFullPath = [System.IO.Path]::GetFullPath($TargetPath)
+
+    return $targetFullPath.Equals($rootFullPath, [System.StringComparison]::OrdinalIgnoreCase) -or
+        $targetFullPath.StartsWith($rootFullPath + [System.IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase)
+}
+
 function Remove-InstallerPath {
     param([Parameter(Mandatory = $true)][string]$Path)
 
@@ -46,7 +59,7 @@ function Remove-InstallerPath {
     $releaseFullPath = [System.IO.Path]::GetFullPath($releaseRoot)
     $targetFullPath = [System.IO.Path]::GetFullPath($Path)
 
-    if (-not $targetFullPath.StartsWith($releaseFullPath, [System.StringComparison]::OrdinalIgnoreCase)) {
+    if (-not (Test-PathIsUnderRoot -TargetPath $targetFullPath -RootPath $releaseFullPath)) {
         throw "Refusing to remove path outside release root: $targetFullPath"
     }
 
@@ -73,13 +86,48 @@ $appDir = Join-Path $installDir "app"
 $appExe = Join-Path $appDir "YTMPresence.exe"
 $programsDir = [Environment]::GetFolderPath("Programs")
 $startMenuDir = Join-Path $programsDir "YTMPresence"
+$uninstallKey = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\YTMPresence"
 
 if (-not (Test-Path -LiteralPath $payloadZip)) {
     throw "Installationspaket nicht gefunden: $payloadZip"
 }
 
-Get-Process -Name "YTMPresence" -ErrorAction SilentlyContinue |
-    Stop-Process -Force -ErrorAction SilentlyContinue
+function Test-PathIsUnderRoot {
+    param(
+        [Parameter(Mandatory = $true)][AllowEmptyString()][string]$TargetPath,
+        [Parameter(Mandatory = $true)][string]$RootPath
+    )
+
+    if ([string]::IsNullOrWhiteSpace($TargetPath)) {
+        return $false
+    }
+
+    try {
+        $rootFullPath = [System.IO.Path]::GetFullPath($RootPath).TrimEnd([char[]]@('\', '/'))
+        $targetFullPath = [System.IO.Path]::GetFullPath($TargetPath)
+
+        return $targetFullPath.Equals($rootFullPath, [System.StringComparison]::OrdinalIgnoreCase) -or
+            $targetFullPath.StartsWith($rootFullPath + [System.IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase)
+    }
+    catch {
+        return $false
+    }
+}
+
+function Stop-InstalledYTMPresence {
+    Get-Process -Name "YTMPresence" -ErrorAction SilentlyContinue |
+        Where-Object {
+            try {
+                Test-PathIsUnderRoot -TargetPath $_.Path -RootPath $installDir
+            }
+            catch {
+                $false
+            }
+        } |
+        Stop-Process -Force -ErrorAction SilentlyContinue
+}
+
+Stop-InstalledYTMPresence
 
 New-Item -ItemType Directory -Path $installDir -Force | Out-Null
 New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
@@ -88,6 +136,10 @@ try {
     Expand-Archive -LiteralPath $payloadZip -DestinationPath $tempDir -Force
     Copy-Item -Path (Join-Path $tempDir "*") -Destination $installDir -Recurse -Force
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "uninstall.ps1") -Destination (Join-Path $installDir "uninstall.ps1") -Force
+
+    if (-not (Test-Path -LiteralPath $appExe)) {
+        throw "YTMPresence.exe wurde nach dem Entpacken nicht gefunden: $appExe"
+    }
 
     New-Item -ItemType Directory -Path $startMenuDir -Force | Out-Null
 
@@ -114,6 +166,24 @@ try {
 
     Set-Content -LiteralPath (Join-Path $installDir "install.json") -Value $installInfo -Encoding UTF8
 
+    $sizeBytes = (Get-ChildItem -LiteralPath $installDir -Recurse -File -ErrorAction SilentlyContinue |
+        Measure-Object -Property Length -Sum).Sum
+    $estimatedSizeKb = if ($null -eq $sizeBytes) { 0 } else { [int][Math]::Ceiling($sizeBytes / 1KB) }
+    $uninstallCommand = "powershell.exe -NoProfile -ExecutionPolicy Bypass -File `"$installDir\uninstall.ps1`""
+
+    New-Item -Path $uninstallKey -Force | Out-Null
+    New-ItemProperty -Path $uninstallKey -Name "DisplayName" -Value "YTMPresence" -PropertyType String -Force | Out-Null
+    New-ItemProperty -Path $uninstallKey -Name "DisplayVersion" -Value "{{VERSION}}" -PropertyType String -Force | Out-Null
+    New-ItemProperty -Path $uninstallKey -Name "Publisher" -Value "YTMPresence" -PropertyType String -Force | Out-Null
+    New-ItemProperty -Path $uninstallKey -Name "InstallLocation" -Value $installDir -PropertyType String -Force | Out-Null
+    New-ItemProperty -Path $uninstallKey -Name "DisplayIcon" -Value "$appExe,0" -PropertyType String -Force | Out-Null
+    New-ItemProperty -Path $uninstallKey -Name "UninstallString" -Value $uninstallCommand -PropertyType String -Force | Out-Null
+    New-ItemProperty -Path $uninstallKey -Name "QuietUninstallString" -Value $uninstallCommand -PropertyType String -Force | Out-Null
+    New-ItemProperty -Path $uninstallKey -Name "InstallDate" -Value (Get-Date -Format "yyyyMMdd") -PropertyType String -Force | Out-Null
+    New-ItemProperty -Path $uninstallKey -Name "EstimatedSize" -Value $estimatedSizeKb -PropertyType DWord -Force | Out-Null
+    New-ItemProperty -Path $uninstallKey -Name "NoModify" -Value 1 -PropertyType DWord -Force | Out-Null
+    New-ItemProperty -Path $uninstallKey -Name "NoRepair" -Value 1 -PropertyType DWord -Force | Out-Null
+
     if ($StartApp -and (Test-Path -LiteralPath $appExe)) {
         Start-Process -FilePath $appExe -WorkingDirectory $appDir
     }
@@ -135,19 +205,59 @@ $installDir = Join-Path $env:LOCALAPPDATA "Programs\YTMPresence"
 $programsDir = [Environment]::GetFolderPath("Programs")
 $startMenuDir = Join-Path $programsDir "YTMPresence"
 $runKey = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run"
+$uninstallKey = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\YTMPresence"
+
+function Test-PathIsUnderRoot {
+    param(
+        [Parameter(Mandatory = $true)][AllowEmptyString()][string]$TargetPath,
+        [Parameter(Mandatory = $true)][string]$RootPath
+    )
+
+    if ([string]::IsNullOrWhiteSpace($TargetPath)) {
+        return $false
+    }
+
+    try {
+        $rootFullPath = [System.IO.Path]::GetFullPath($RootPath).TrimEnd([char[]]@('\', '/'))
+        $targetFullPath = [System.IO.Path]::GetFullPath($TargetPath)
+
+        return $targetFullPath.Equals($rootFullPath, [System.StringComparison]::OrdinalIgnoreCase) -or
+            $targetFullPath.StartsWith($rootFullPath + [System.IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase)
+    }
+    catch {
+        return $false
+    }
+}
+
+function ConvertTo-SingleQuotedPowerShellLiteral {
+    param([Parameter(Mandatory = $true)][string]$Value)
+
+    return "'" + $Value.Replace("'", "''") + "'"
+}
 
 Get-Process -Name "YTMPresence" -ErrorAction SilentlyContinue |
-    Where-Object { $_.Path -like "$installDir*" } |
+    Where-Object {
+        try {
+            Test-PathIsUnderRoot -TargetPath $_.Path -RootPath $installDir
+        }
+        catch {
+            $false
+        }
+    } |
     Stop-Process -Force -ErrorAction SilentlyContinue
 
 Remove-ItemProperty -Path $runKey -Name "YTM Presence" -ErrorAction SilentlyContinue
+Remove-Item -Path $uninstallKey -Recurse -Force -ErrorAction SilentlyContinue
 Remove-Item -LiteralPath $startMenuDir -Recurse -Force -ErrorAction SilentlyContinue
 
 if (Test-Path -LiteralPath $installDir) {
     $cleanupScript = Join-Path $env:TEMP ("YTMPresence-cleanup-" + [Guid]::NewGuid().ToString("N") + ".ps1")
+    $installDirLiteral = ConvertTo-SingleQuotedPowerShellLiteral -Value $installDir
     @"
+`$cleanupScriptPath = `$MyInvocation.MyCommand.Path
 Start-Sleep -Seconds 1
-Remove-Item -LiteralPath '$installDir' -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item -LiteralPath $installDirLiteral -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item -LiteralPath `$cleanupScriptPath -Force -ErrorAction SilentlyContinue
 "@ | Set-Content -LiteralPath $cleanupScript -Encoding UTF8
 
     Start-Process -FilePath "powershell.exe" -WindowStyle Hidden -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$cleanupScript`""

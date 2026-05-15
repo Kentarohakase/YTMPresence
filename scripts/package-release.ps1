@@ -40,6 +40,19 @@ $bundleAppDir = Join-Path $bundleDir "app"
 $bundleExtensionDir = Join-Path $bundleDir "extension"
 $bundleZip = Join-Path $releaseRoot "$bundleName.zip"
 
+function Test-PathIsUnderRoot {
+    param(
+        [Parameter(Mandatory = $true)][string]$TargetPath,
+        [Parameter(Mandatory = $true)][string]$RootPath
+    )
+
+    $rootFullPath = [System.IO.Path]::GetFullPath($RootPath).TrimEnd([char[]]@('\', '/'))
+    $targetFullPath = [System.IO.Path]::GetFullPath($TargetPath)
+
+    return $targetFullPath.Equals($rootFullPath, [System.StringComparison]::OrdinalIgnoreCase) -or
+        $targetFullPath.StartsWith($rootFullPath + [System.IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase)
+}
+
 function Remove-ReleasePath {
     param([Parameter(Mandatory = $true)][string]$Path)
 
@@ -50,7 +63,7 @@ function Remove-ReleasePath {
     $releaseFullPath = [System.IO.Path]::GetFullPath($releaseRoot)
     $targetFullPath = [System.IO.Path]::GetFullPath($Path)
 
-    if (-not $targetFullPath.StartsWith($releaseFullPath, [System.StringComparison]::OrdinalIgnoreCase)) {
+    if (-not (Test-PathIsUnderRoot -TargetPath $targetFullPath -RootPath $releaseFullPath)) {
         throw "Refusing to remove path outside release root: $targetFullPath"
     }
 
