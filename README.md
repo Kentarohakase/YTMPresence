@@ -83,10 +83,16 @@ Die Tray-App kann über `Nach Updates suchen` im Tray-Menü das neueste GitHub R
 
 ## Release bauen
 
-Voraussetzung: .NET 10 SDK.
+Voraussetzung: .NET 10 SDK. Fuer den neuen Setup-Installer wird Inno Setup 6 (`ISCC.exe`) verwendet. GitHub Actions installiert Inno Setup automatisch; lokal nutzt `-InstallerMode Auto` Inno Setup, wenn es vorhanden ist, und sonst den bisherigen Legacy-Fallback.
 
 ```powershell
 .\scripts\package-release.ps1
+```
+
+Fuer echte Release-Builds sollte Inno Setup erzwungen werden:
+
+```powershell
+.\scripts\package-release.ps1 -InstallerMode Inno
 ```
 
 Der Standard-Build ist framework-dependent. Auf einem anderen Rechner muss also die .NET 10 Desktop Runtime installiert sein.
@@ -107,6 +113,8 @@ artifacts\release\YTMPresence-<version>-win-x64-setup.exe
 artifacts\release\extension\
 artifacts\release\SHA256SUMS.txt
 ```
+
+Das Setup-EXE wird in Release-Builds mit Inno Setup gebaut und bleibt beim Dateinamen `YTMPresence-<version>-win-x64-setup.exe`, damit der App-Update-Flow kompatibel bleibt.
 
 Für eine normale Weitergabe ist das Setup-EXE am bequemsten. Es installiert YTMPresence ohne Adminrechte nach `%LOCALAPPDATA%\Programs\YTMPresence` und legt Startmenü-Verknüpfungen an. Das versionierte Komplett-ZIP enthält weiterhin die App, die Extension und eine `RELEASE.txt`.
 Das Release-Skript prüft das Paket nach dem Build automatisch. Alte versionierte App-/ZIP-Artefakte für denselben Runtime-Zieltyp werden standardmäßig entfernt. Mit `-KeepOldArtifacts` bleiben sie erhalten.

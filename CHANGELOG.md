@@ -4,7 +4,13 @@ Alle wichtigen Änderungen an YTMPresence werden in dieser Datei dokumentiert.
 
 ## [Unreleased]
 
-Noch keine Änderungen.
+### Added
+
+- Inno-Setup-Installer-Pipeline mit GitHub-Actions-Integration fuer Release-Builds.
+
+### Changed
+
+- Release-Skript nutzt Inno Setup bevorzugt und faellt lokal bei fehlendem `ISCC.exe` auf den bisherigen Legacy-Installer zurueck.
 
 ## [0.8.8] - 2026-05-15
 
