@@ -4,6 +4,10 @@ Alle wichtigen Änderungen an YTMPresence werden in dieser Datei dokumentiert.
 
 ## [Unreleased]
 
+Noch keine Änderungen.
+
+## [0.8.9] - 2026-05-15
+
 ### Added
 
 - Inno-Setup-Installer-Pipeline mit GitHub-Actions-Integration fuer Release-Builds.
