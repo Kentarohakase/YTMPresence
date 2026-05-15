@@ -73,7 +73,7 @@ Die Tray-App kann über `Nach Updates suchen` im Tray-Menü das neueste GitHub R
 
 - `Einstellungen...`: öffnet das Settings-Fenster für Token, Server, Presence und Discord Client ID
 - `Mini-Player öffnen`: zeigt aktuellen Track, Cover, Fortschritt, Play/Pause, Zurück/Weiter und einen Button zum Öffnen des Tracks
-- `Diagnose öffnen`: zeigt Server-, Extension-, Discord-, Track- und Security-Status
+- `Diagnose öffnen`: zeigt Server-, Extension-, Discord-, Track- und Security-Status und kann einen Diagnosebericht ohne Security Token erstellen
 - `Presence nur wenn Musik läuft`: löscht die Discord-Presence sofort beim Pausieren
 - `Werbung ignorieren`: sendet bei Werbung kein Discord-Update
 - `Autostart aktivieren`: startet YTMPresence beim Windows-Login

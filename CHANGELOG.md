@@ -4,7 +4,9 @@ Alle wichtigen Änderungen an YTMPresence werden in dieser Datei dokumentiert.
 
 ## [Unreleased]
 
-- Noch keine Änderungen.
+### Added
+
+- Diagnosefenster kann jetzt einen Diagnosebericht als ZIP mit Status, Umgebung, redacted Settings und Logs erstellen.
 
 ## [0.8.7] - 2026-05-15
 

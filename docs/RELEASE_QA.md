@@ -41,6 +41,7 @@ Diese Checkliste ist für jeden Release-Tag gedacht, bevor das Release breit get
 - Token und Companion-URL lassen sich kopieren.
 - Extension verbindet sich nach Speichern von Token und URL.
 - Diagnosefenster zeigt Server, Extension und Discord sinnvoll an.
+- Diagnosebericht-ZIP lässt sich erstellen und enthält keine rohe `SecurityToken`-Zeile.
 
 ## Nach dem Push
 

@@ -1,5 +1,9 @@
+using System.Diagnostics;
+using System.IO;
+using System.IO.Compression;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -9,6 +13,8 @@ namespace YTMPresence.TrayWpf;
 
 public partial class DiagnosticsWindow : Window
 {
+  private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
+
   private readonly Func<CompanionStatus?> _getStatus;
   private readonly AppSettings _settings;
   private readonly string _settingsPath;
@@ -157,6 +163,124 @@ public partial class DiagnosticsWindow : Window
     catch
     {
       StatusText.Text = "Kopieren fehlgeschlagen.";
+    }
+  }
+
+  private void CreateReportButton_Click(object sender, RoutedEventArgs e)
+  {
+    try
+    {
+      UpdateStatus();
+      var reportPath = CreateDiagnosticPackage();
+      StatusText.Text = $"Bericht erstellt: {reportPath}";
+      OpenPath(Path.GetDirectoryName(reportPath) ?? reportPath);
+    }
+    catch (Exception ex)
+    {
+      Logger.Error(ex, "Error creating diagnostic package.");
+      StatusText.Text = $"Bericht fehlgeschlagen: {ex.Message}";
+    }
+  }
+
+  private string CreateDiagnosticPackage()
+  {
+    var logDirectory = Logger.GetLogDirectoryPath();
+    var appDataDirectory = Directory.GetParent(logDirectory)?.FullName ?? logDirectory;
+    var diagnosticsDirectory = Path.Combine(appDataDirectory, "diagnostics");
+    Directory.CreateDirectory(diagnosticsDirectory);
+
+    var reportPath = Path.Combine(
+        diagnosticsDirectory,
+        $"YTMPresence-diagnostics-{DateTime.Now:yyyyMMdd-HHmmss}.zip");
+
+    if (File.Exists(reportPath))
+      File.Delete(reportPath);
+
+    using var archive = ZipFile.Open(reportPath, ZipArchiveMode.Create);
+
+    AddTextEntry(archive, "diagnostics.txt", _lastReport);
+    AddTextEntry(archive, "environment.txt", BuildEnvironmentReport());
+    AddTextEntry(archive, "settings.redacted.json", JsonSerializer.Serialize(BuildRedactedSettings(), JsonOptions));
+
+    var status = _getStatus();
+    if (status is not null)
+      AddTextEntry(archive, "status.json", JsonSerializer.Serialize(status, JsonOptions));
+
+    foreach (var logPath in Directory.GetFiles(logDirectory, "app*.log").OrderBy(Path.GetFileName))
+      AddFileEntry(archive, logPath, $"logs/{Path.GetFileName(logPath)}");
+
+    Logger.Info($"Diagnostic package created: {reportPath}");
+    return reportPath;
+  }
+
+  private object BuildRedactedSettings() => new
+  {
+    _settings.DiscordClientId,
+    _settings.ListenHost,
+    _settings.ListenPort,
+    _settings.WebSocketPath,
+    _settings.MinDiscordUpdateSeconds,
+    _settings.IdleClearSeconds,
+    _settings.PausedClearSeconds,
+    _settings.OnlyShowWhenPlaying,
+    _settings.AdBehavior,
+    _settings.Assets,
+    _settings.PlayerWindow,
+    _settings.CheckForUpdatesOnStartup,
+    _settings.UpdateApiUrl,
+    _settings.HasSeenOnboarding,
+    SecurityToken = "<redacted>",
+    SecurityTokenLength = _settings.SecurityToken?.Length ?? 0
+  };
+
+  private static string BuildEnvironmentReport()
+  {
+    var assembly = Assembly.GetExecutingAssembly();
+    var sb = new StringBuilder();
+    sb.AppendLine("YTMPresence Environment");
+    sb.AppendLine($"Generated local: {DateTimeOffset.Now:O}");
+    sb.AppendLine($"Generated UTC: {DateTimeOffset.UtcNow:O}");
+    sb.AppendLine($"App version: {GetAppVersion()}");
+    sb.AppendLine($"Assembly: {assembly.FullName}");
+    sb.AppendLine($"Process path: {Environment.ProcessPath ?? ""}");
+    sb.AppendLine($"OS: {Environment.OSVersion}");
+    sb.AppendLine($".NET: {Environment.Version}");
+    sb.AppendLine($"64-bit process: {Environment.Is64BitProcess}");
+    sb.AppendLine($"Machine name: {Environment.MachineName}");
+    sb.AppendLine($"User interactive: {Environment.UserInteractive}");
+    return sb.ToString();
+  }
+
+  private static void AddTextEntry(ZipArchive archive, string entryName, string content)
+  {
+    var entry = archive.CreateEntry(entryName, CompressionLevel.Optimal);
+    using var stream = entry.Open();
+    using var writer = new StreamWriter(stream, Encoding.UTF8);
+    writer.Write(content);
+  }
+
+  private static void AddFileEntry(ZipArchive archive, string sourcePath, string entryName)
+  {
+    var entry = archive.CreateEntry(entryName, CompressionLevel.Optimal);
+
+    using var source = new FileStream(sourcePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+    using var destination = entry.Open();
+    source.CopyTo(destination);
+  }
+
+  private static void OpenPath(string path)
+  {
+    try
+    {
+      if (string.IsNullOrWhiteSpace(path))
+        return;
+
+      if (Directory.Exists(path) || File.Exists(path))
+        Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+    }
+    catch (Exception ex)
+    {
+      Logger.Error(ex, $"Error opening path: {path}");
     }
   }
 

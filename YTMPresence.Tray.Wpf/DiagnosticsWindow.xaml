@@ -87,6 +87,11 @@
                     Width="96"
                     DockPanel.Dock="Right"
                     Click="CopyButton_Click" />
+            <Button Content="Bericht erstellen"
+                    Width="122"
+                    Margin="8,0,0,0"
+                    DockPanel.Dock="Right"
+                    Click="CreateReportButton_Click" />
             <Button Content="Schliessen"
                     Width="96"
                     Margin="8,0,0,0"
