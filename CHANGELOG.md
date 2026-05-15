@@ -4,7 +4,9 @@ Alle wichtigen Änderungen an YTMPresence werden in dieser Datei dokumentiert.
 
 ## [Unreleased]
 
-- Noch keine Änderungen.
+### Fixed
+
+- Update-Installer startet das Setup jetzt mit explizitem Arbeitsverzeichnis und beendet die App nicht mehr selbst, bevor der Installer sichtbar läuft.
 
 ## [0.8.6] - 2026-05-15
 

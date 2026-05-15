@@ -5,6 +5,7 @@ using System.Net.Http.Headers;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Windows;
+using System.Windows.Interop;
 
 using YTMPresence.Core;
 
@@ -74,14 +75,13 @@ public partial class UpdateDownloadWindow : Window
         return;
       }
 
-      SetStatus("Setup wird gestartet. YTM Presence beendet sich gleich.", isError: false);
-      Logger.Info($"Starting downloaded update setup: {_targetPath}");
-      Process.Start(new ProcessStartInfo(_targetPath) { UseShellExecute = true });
-
+      SetStatus("Setup wird gestartet...", isError: false);
+      StartSetupInstaller(_targetPath);
       _isInstalling = true;
-      _ = System.Windows.Application.Current.Dispatcher.BeginInvoke(
-        (Action)(() => System.Windows.Application.Current.Shutdown()));
-      Close();
+      SetStatus("Setup wurde gestartet. Folge den Installationsschritten; YTM Presence wird vom Installer beendet.", isError: false);
+      ProgressText.Text = "Falls kein Setup-Fenster sichtbar ist, prüfe die Taskleiste oder starte die Datei aus dem Zielordner.";
+      OpenReleaseButton.IsEnabled = true;
+      CancelButton.Content = "Schließen";
     }
     catch (OperationCanceledException)
     {
@@ -112,6 +112,28 @@ public partial class UpdateDownloadWindow : Window
       Logger.Error(ex, $"Error opening release URL: {_update.ReleaseUrl}");
       SetStatus("Release-Seite konnte nicht geöffnet werden.", isError: true);
     }
+  }
+
+  private void StartSetupInstaller(string setupPath)
+  {
+    if (!File.Exists(setupPath))
+      throw new FileNotFoundException("Setup-Datei wurde nicht gefunden.", setupPath);
+
+    var startInfo = new ProcessStartInfo
+    {
+      FileName = setupPath,
+      WorkingDirectory = Path.GetDirectoryName(setupPath) ?? Path.GetTempPath(),
+      UseShellExecute = true,
+      Verb = "open",
+      ErrorDialog = true,
+      ErrorDialogParentHandle = new WindowInteropHelper(this).Handle
+    };
+
+    var process = Process.Start(startInfo);
+    if (process is null)
+      Logger.Warn($"Setup launch was handed to Windows but no process handle was returned: {setupPath}");
+    else
+      Logger.Info($"Started update setup process {process.Id}: {setupPath}");
   }
 
   private void CancelButton_Click(object sender, RoutedEventArgs e)
