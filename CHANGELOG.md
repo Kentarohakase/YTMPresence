@@ -15,6 +15,7 @@ Alle wichtigen Änderungen an YTMPresence werden in dieser Datei dokumentiert.
 ### Changed
 
 - Update-Hinweis verweist jetzt auf die direkte Installation über das Tray-Menü.
+- Update-Installer kann Setups auch nur herunterladen und prüfen, ohne die App zu beenden.
 
 ## [0.8.4] - 2026-05-15
 

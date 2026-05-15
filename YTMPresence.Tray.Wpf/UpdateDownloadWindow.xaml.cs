@@ -37,10 +37,21 @@ public partial class UpdateDownloadWindow : Window
 
   private async void InstallButton_Click(object sender, RoutedEventArgs e)
   {
+    await DownloadAndVerifyAsync(startInstaller: true);
+  }
+
+  private async void DownloadOnlyButton_Click(object sender, RoutedEventArgs e)
+  {
+    await DownloadAndVerifyAsync(startInstaller: false);
+  }
+
+  private async Task DownloadAndVerifyAsync(bool startInstaller)
+  {
     if (string.IsNullOrWhiteSpace(_update.SetupDownloadUrl))
       return;
 
     InstallButton.IsEnabled = false;
+    DownloadOnlyButton.IsEnabled = false;
     OpenReleaseButton.IsEnabled = false;
     CancelButton.Content = "Abbrechen";
     _downloadCts = new CancellationTokenSource();
@@ -55,6 +66,13 @@ public partial class UpdateDownloadWindow : Window
 
       await DownloadFileAsync(_update.SetupDownloadUrl, _targetPath, _downloadCts.Token);
       await VerifyChecksumIfAvailableAsync(_targetPath, _downloadCts.Token);
+
+      if (!startInstaller)
+      {
+        SetStatus($"Setup wurde heruntergeladen und geprüft: {_targetPath}", isError: false);
+        ResetButtons();
+        return;
+      }
 
       SetStatus("Setup wird gestartet. YTM Presence beendet sich gleich.", isError: false);
       Logger.Info($"Starting downloaded update setup: {_targetPath}");
@@ -259,6 +277,7 @@ public partial class UpdateDownloadWindow : Window
   private void ResetButtons()
   {
     InstallButton.IsEnabled = !string.IsNullOrWhiteSpace(_update.SetupDownloadUrl);
+    DownloadOnlyButton.IsEnabled = !string.IsNullOrWhiteSpace(_update.SetupDownloadUrl);
     OpenReleaseButton.IsEnabled = true;
     CancelButton.Content = "Schließen";
   }

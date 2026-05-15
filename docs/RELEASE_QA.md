@@ -30,9 +30,8 @@ Diese Checkliste ist für jeden Release-Tag gedacht, bevor das Release breit get
 - Eine ältere Version installieren.
 - `Nach Updates suchen` im Tray-Menü ausführen.
 - Update-Menüeintrag öffnet das Update-Installer-Fenster.
-- Setup-Download zeigt Fortschritt und Zielpfad an.
-- Wenn `SHA256SUMS.txt` vorhanden ist, wird die passende Setup-Prüfsumme akzeptiert.
-- Nach dem Download startet das Setup und YTMPresence beendet sich.
+- `Nur herunterladen` zeigt Fortschritt, Zielpfad und eine erfolgreiche Prüfsummenprüfung, ohne die App zu beenden.
+- `Installieren` startet nach Download und Prüfsummenprüfung das Setup und beendet YTMPresence.
 - Nach der Installation meldet die App die neue Version.
 
 ## Clean-Test

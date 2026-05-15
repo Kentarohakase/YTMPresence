@@ -83,9 +83,15 @@
                     Margin="8,0,0,0"
                     DockPanel.Dock="Right"
                     Click="OpenReleaseButton_Click" />
+            <Button x:Name="DownloadOnlyButton"
+                    Content="Nur herunterladen"
+                    Width="124"
+                    Margin="8,0,0,0"
+                    DockPanel.Dock="Right"
+                    Click="DownloadOnlyButton_Click" />
             <Button x:Name="InstallButton"
-                    Content="Herunterladen und installieren"
-                    Width="178"
+                    Content="Installieren"
+                    Width="96"
                     DockPanel.Dock="Right"
                     Click="InstallButton_Click" />
         </DockPanel>
