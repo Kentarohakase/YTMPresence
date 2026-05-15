@@ -141,7 +141,7 @@
                                 HorizontalAlignment="Right">
                         <Button x:Name="PreviousButton"
                                 Content="&lt;&lt;"
-                                ToolTip="Zurueck"
+                                ToolTip="Zurück"
                                 MinWidth="44"
                                 Margin="0,0,8,0"
                                 Click="PreviousButton_Click" />
@@ -158,7 +158,7 @@
                                 Margin="0,0,8,0"
                                 Click="NextButton_Click" />
                         <Button x:Name="OpenTrackButton"
-                                Content="Oeffnen"
+                                Content="Öffnen"
                                 ToolTip="Track öffnen"
                                 MinWidth="86"
                                 Click="OpenTrackButton_Click" />

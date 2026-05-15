@@ -80,7 +80,7 @@ public partial class DiagnosticsWindow : Window
 
     ProgressText.Text = FormatProgress(status.LastPositionSeconds, status.LastDurationSeconds, status.LastIsPlaying);
     SecurityText.Text = status.UnauthorizedMessages > 0
-        ? $"{status.UnauthorizedMessages} ungueltige Token, zuletzt: {AgeText(status.LastUnauthorizedUtc)}"
+        ? $"{status.UnauthorizedMessages} ungültige Token, zuletzt: {AgeText(status.LastUnauthorizedUtc)}"
         : "OK";
 
     _lastReport = BuildReport(status, version, endpoint, logPath);

@@ -10,10 +10,10 @@ Alle wichtigen Änderungen an YTMPresence werden in dieser Datei dokumentiert.
 
 ### Fixed
 
-- Release-Skript entfernt veraltete Setup-Artefakte und laesst bei `-SkipInstaller` keine alte Setup-EXE liegen.
-- Update-Fenster deaktiviert Download- und Installationsbuttons, wenn ein Release kein Setup-Asset enthaelt.
-- Companion-Server verwirft nicht-textuelle oder zu grosse WebSocket-Nachrichten fruehzeitig.
-- Einstellungen verhindern URL-artige Hosts und ungueltige WebSocket-Pfade.
+- Release-Skript entfernt veraltete Setup-Artefakte und lässt bei `-SkipInstaller` keine alte Setup-EXE liegen.
+- Update-Fenster deaktiviert Download- und Installationsbuttons, wenn ein Release kein Setup-Asset enthält.
+- Companion-Server verwirft nicht-textuelle oder zu große WebSocket-Nachrichten frühzeitig.
+- Einstellungen verhindern URL-artige Hosts und ungültige WebSocket-Pfade.
 
 ### Removed
 
@@ -23,11 +23,11 @@ Alle wichtigen Änderungen an YTMPresence werden in dieser Datei dokumentiert.
 
 ### Added
 
-- Inno-Setup-Installer-Pipeline mit GitHub-Actions-Integration fuer Release-Builds.
+- Inno-Setup-Installer-Pipeline mit GitHub-Actions-Integration für Release-Builds.
 
 ### Changed
 
-- Release-Skript nutzt Inno Setup bevorzugt und faellt lokal bei fehlendem `ISCC.exe` auf den bisherigen Legacy-Installer zurueck.
+- Release-Skript nutzt Inno Setup bevorzugt und fällt lokal bei fehlendem `ISCC.exe` auf den bisherigen Legacy-Installer zurück.
 
 ## [0.8.8] - 2026-05-15
 
