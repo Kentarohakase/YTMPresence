@@ -1,0 +1,122 @@
+<Window x:Class="YTMPresence.TrayWpf.OnboardingWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="YTM Presence Erste Schritte"
+        Width="540"
+        Height="420"
+        MinWidth="500"
+        MinHeight="380"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0"
+                   Text="YTM Presence einrichten"
+                   FontSize="22"
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,10" />
+
+        <TextBlock Grid.Row="1"
+                   Text="Companion läuft. Verbinde jetzt die Browser-Extension mit diesen Daten."
+                   TextWrapping="Wrap"
+                   Margin="0,0,0,14" />
+
+        <GroupBox Grid.Row="2"
+                  Header="Extension-Daten"
+                  Padding="12"
+                  Margin="0,0,0,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="140" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0"
+                           Grid.Column="0"
+                           Text="Security Token"
+                           VerticalAlignment="Center" />
+                <DockPanel Grid.Row="0"
+                           Grid.Column="1"
+                           LastChildFill="True">
+                    <Button Content="Kopieren"
+                            Width="86"
+                            Margin="8,0,0,0"
+                            DockPanel.Dock="Right"
+                            Click="CopyTokenButton_Click" />
+                    <TextBox x:Name="SecurityTokenBox"
+                             IsReadOnly="True"
+                             FontFamily="Consolas"
+                             VerticalContentAlignment="Center" />
+                </DockPanel>
+
+                <TextBlock Grid.Row="1"
+                           Grid.Column="0"
+                           Text="Companion URL"
+                           Margin="0,10,0,0"
+                           VerticalAlignment="Center" />
+                <DockPanel Grid.Row="1"
+                           Grid.Column="1"
+                           Margin="0,10,0,0"
+                           LastChildFill="True">
+                    <Button Content="Kopieren"
+                            Width="86"
+                            Margin="8,0,0,0"
+                            DockPanel.Dock="Right"
+                            Click="CopyUrlButton_Click" />
+                    <TextBox x:Name="CompanionUrlBox"
+                             IsReadOnly="True"
+                             FontFamily="Consolas"
+                             VerticalContentAlignment="Center" />
+                </DockPanel>
+
+                <TextBlock Grid.Row="2"
+                           Grid.Column="0"
+                           Grid.ColumnSpan="2"
+                           Text="In Chrome oder Edge: Erweiterungen öffnen, Entwicklermodus aktivieren, extension-Ordner laden, Token und URL in den Optionen speichern."
+                           TextWrapping="Wrap"
+                           Margin="0,14,0,0" />
+            </Grid>
+        </GroupBox>
+
+        <TextBlock x:Name="StatusText"
+                   Grid.Row="3"
+                   Foreground="#0a7a2f"
+                   VerticalAlignment="Center"
+                   Margin="0,0,0,12" />
+
+        <DockPanel Grid.Row="4" LastChildFill="False">
+            <Button Content="Später"
+                    Width="90"
+                    Margin="8,0,0,0"
+                    DockPanel.Dock="Right"
+                    IsCancel="True"
+                    Click="LaterButton_Click" />
+            <Button Content="Fertig"
+                    Width="90"
+                    Margin="8,0,0,0"
+                    DockPanel.Dock="Right"
+                    IsDefault="True"
+                    Click="DoneButton_Click" />
+            <Button Content="Einstellungen"
+                    Width="112"
+                    Margin="8,0,0,0"
+                    DockPanel.Dock="Right"
+                    Click="OpenSettingsButton_Click" />
+            <Button Content="YouTube Music"
+                    Width="112"
+                    DockPanel.Dock="Right"
+                    Click="OpenYtmButton_Click" />
+        </DockPanel>
+    </Grid>
+</Window>

@@ -159,7 +159,7 @@
                                 Click="NextButton_Click" />
                         <Button x:Name="OpenTrackButton"
                                 Content="Oeffnen"
-                                ToolTip="Track oeffnen"
+                                ToolTip="Track öffnen"
                                 MinWidth="86"
                                 Click="OpenTrackButton_Click" />
                     </StackPanel>

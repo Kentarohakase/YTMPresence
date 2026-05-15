@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "YTM Discord Presence Bridge",
   "short_name": "YTM Presence",
-  "version": "0.8.3",
+  "version": "0.8.4",
   "description": "Zeigt YouTube Music als Discord Rich Presence über einen lokalen Companion.",
   "homepage_url": "https://github.com/Kentarohakase/YTMPresence",
   "icons": {

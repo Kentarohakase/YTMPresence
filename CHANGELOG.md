@@ -6,6 +6,23 @@ Alle wichtigen Änderungen an YTMPresence werden in dieser Datei dokumentiert.
 
 - Noch keine Änderungen.
 
+## [0.8.4] - 2026-05-15
+
+### Added
+
+- Erste-Schritte-Fenster mit Token, Companion-URL, YouTube-Music-Link und direktem Zugriff auf die Einstellungen.
+- Release-QA-Checkliste für Installations-, Update-, Deinstallations- und GitHub-Release-Prüfungen.
+
+### Changed
+
+- Update-Menü öffnet bei verfügbaren Releases direkt das Setup-EXE, wenn GitHub ein passendes Installer-Asset liefert.
+- Lokale `.lscache`-Builddateien werden ignoriert.
+
+### Fixed
+
+- Installer wartet jetzt, bis die Setup-EXE nach der IExpress-Erzeugung lesbar ist, bevor SHA256-Prüfsummen berechnet werden.
+- Mini-Player-Tooltip verwendet wieder den korrekten Umlaut in `Track öffnen`.
+
 ## [0.8.3] - 2026-05-15
 
 ### Added

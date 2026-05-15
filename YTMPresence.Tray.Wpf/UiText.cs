@@ -245,6 +245,12 @@ internal static class UiText
       es: $"Actualización disponible: {version}"
   );
 
+  public static string DownloadUpdate(string version) => T(
+      de: $"Update herunterladen: {version}",
+      en: $"Download update: {version}",
+      es: $"Descargar actualización: {version}"
+  );
+
   public static string UpdateAvailableMessage(string version) => T(
       de: $"YTMPresence {version} ist verfügbar. Öffne das Release über das Tray-Menü.",
       en: $"YTMPresence {version} is available. Open the release from the tray menu.",
@@ -267,6 +273,12 @@ internal static class UiText
       de: "Neuestes Release öffnen",
       en: "Open latest release",
       es: "Abrir última versión"
+  );
+
+  public static string OpenOnboarding => T(
+      de: "Erste Schritte öffnen",
+      en: "Open first steps",
+      es: "Abrir primeros pasos"
   );
 
   public static string OpenYtm => T(

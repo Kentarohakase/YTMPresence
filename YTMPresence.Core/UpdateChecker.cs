@@ -10,7 +10,8 @@ public sealed record UpdateCheckResult(
   string CurrentVersion,
   string LatestVersion,
   string ReleaseUrl,
-  string? ErrorMessage = null);
+  string? ErrorMessage = null,
+  string? SetupDownloadUrl = null);
 
 public static class UpdateChecker
 {
@@ -47,9 +48,18 @@ public static class UpdateChecker
       var releaseUrl = string.IsNullOrWhiteSpace(release.HtmlUrl)
         ? "https://github.com/Kentarohakase/YTMPresence/releases"
         : release.HtmlUrl;
+      var setupDownloadUrl = release.Assets?
+        .Where(a => a.Name?.EndsWith("-setup.exe", StringComparison.OrdinalIgnoreCase) == true)
+        .Select(a => a.BrowserDownloadUrl)
+        .FirstOrDefault(url => !string.IsNullOrWhiteSpace(url));
 
       var isNewer = IsNewer(latestVersion, currentVersion);
-      return new UpdateCheckResult(isNewer, currentVersion, latestVersion, releaseUrl);
+      return new UpdateCheckResult(
+        isNewer,
+        currentVersion,
+        latestVersion,
+        releaseUrl,
+        SetupDownloadUrl: setupDownloadUrl);
     }
     catch (OperationCanceledException) when (ct.IsCancellationRequested)
     {
@@ -129,5 +139,17 @@ public static class UpdateChecker
 
     [JsonPropertyName("draft")]
     public bool Draft { get; set; }
+
+    [JsonPropertyName("assets")]
+    public List<GitHubReleaseAsset>? Assets { get; set; }
+  }
+
+  private sealed class GitHubReleaseAsset
+  {
+    [JsonPropertyName("name")]
+    public string? Name { get; set; }
+
+    [JsonPropertyName("browser_download_url")]
+    public string? BrowserDownloadUrl { get; set; }
   }
 }

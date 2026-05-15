@@ -66,6 +66,37 @@ function Remove-InstallerPath {
     Remove-Item -LiteralPath $targetFullPath -Recurse -Force
 }
 
+function Wait-FileReady {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [int]$TimeoutSeconds = 30
+    )
+
+    $deadline = [DateTimeOffset]::UtcNow.AddSeconds($TimeoutSeconds)
+    $lastError = $null
+
+    while ([DateTimeOffset]::UtcNow -lt $deadline) {
+        if (Test-Path -LiteralPath $Path) {
+            try {
+                $stream = [System.IO.File]::Open($Path, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::Read)
+                $stream.Dispose()
+                return
+            }
+            catch {
+                $lastError = $_.Exception.Message
+            }
+        }
+
+        Start-Sleep -Milliseconds 250
+    }
+
+    if ($lastError) {
+        throw "File was not ready before timeout: $Path ($lastError)"
+    }
+
+    throw "File was not created before timeout: $Path"
+}
+
 Remove-InstallerPath -Path $installerRoot
 Remove-InstallerPath -Path $setupExe
 
@@ -322,9 +353,7 @@ while (-not (Test-Path -LiteralPath $setupExe) -and [DateTimeOffset]::UtcNow -lt
     Start-Sleep -Milliseconds 250
 }
 
-if (-not (Test-Path -LiteralPath $setupExe)) {
-    throw "Setup EXE was not created: $setupExe"
-}
+Wait-FileReady -Path $setupExe -TimeoutSeconds 30
 
 $checksumPath = Join-Path $releaseRoot "SHA256SUMS.txt"
 $checksumFiles = @($bundleZip, $extensionZip, $setupExe)

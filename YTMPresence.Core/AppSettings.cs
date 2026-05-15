@@ -43,6 +43,7 @@ public sealed class AppSettings
 
   public bool CheckForUpdatesOnStartup { get; set; } = true;
   public string UpdateApiUrl { get; set; } = "https://api.github.com/repos/Kentarohakase/YTMPresence/releases/latest";
+  public bool HasSeenOnboarding { get; set; }
 
   /// <summary>
   /// Shared Secret: muss von Extension mitgesendet werden.

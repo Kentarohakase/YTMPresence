@@ -36,6 +36,7 @@ public partial class App : System.Windows.Application
   private ToolStripMenuItem? _checkUpdatesItem;
   private ToolStripMenuItem? _openLatestReleaseItem;
   private SettingsWindow? _settingsWindow;
+  private OnboardingWindow? _onboardingWindow;
   private PlayerWindow? _playerWindow;
   private DiagnosticsWindow? _diagnosticsWindow;
 
@@ -91,6 +92,8 @@ public partial class App : System.Windows.Application
 
       if (_settings.CheckForUpdatesOnStartup)
         _ = CheckForUpdatesAsync(showUpToDate: false);
+
+      ShowOnboardingIfNeeded();
 
       Logger.Info("App started successfully.");
     }
@@ -235,6 +238,9 @@ public partial class App : System.Windows.Application
     var settingsItem = new ToolStripMenuItem(UiText.Settings);
     settingsItem.Click += (_, __) => ShowSettingsWindow();
 
+    var onboardingItem = new ToolStripMenuItem(UiText.OpenOnboarding);
+    onboardingItem.Click += (_, __) => ShowOnboardingWindow();
+
     var playerItem = new ToolStripMenuItem(UiText.OpenPlayer);
     playerItem.Click += (_, __) => ShowPlayerWindow();
 
@@ -285,6 +291,7 @@ public partial class App : System.Windows.Application
     menu.Items.Add(playerItem);
     menu.Items.Add(diagnosticsItem);
     menu.Items.Add(settingsItem);
+    menu.Items.Add(onboardingItem);
     menu.Items.Add(_checkUpdatesItem);
     menu.Items.Add(_openLatestReleaseItem);
     menu.Items.Add(copyTokenItem);
@@ -448,6 +455,29 @@ public partial class App : System.Windows.Application
     _settingsWindow.Activate();
   }
 
+  private void ShowOnboardingIfNeeded()
+  {
+    if (_settings.HasSeenOnboarding)
+      return;
+
+    Dispatcher.BeginInvoke((Action)ShowOnboardingWindow, DispatcherPriority.ApplicationIdle);
+  }
+
+  private void ShowOnboardingWindow()
+  {
+    if (_onboardingWindow is not null)
+    {
+      _onboardingWindow.Activate();
+      return;
+    }
+
+    _onboardingWindow = new OnboardingWindow(_settings, _settingsPath);
+    _onboardingWindow.OpenSettingsRequested += (_, __) => ShowSettingsWindow();
+    _onboardingWindow.Closed += (_, __) => _onboardingWindow = null;
+    _onboardingWindow.Show();
+    _onboardingWindow.Activate();
+  }
+
   private void ShowPlayerWindow()
   {
     if (_playerWindow is not null)
@@ -590,12 +620,18 @@ public partial class App : System.Windows.Application
 
       if (result.IsUpdateAvailable)
       {
-        Logger.Info($"Update available: {result.LatestVersion} ({result.ReleaseUrl}).");
+        var updateUrl = string.IsNullOrWhiteSpace(result.SetupDownloadUrl)
+            ? result.ReleaseUrl
+            : result.SetupDownloadUrl;
+
+        Logger.Info($"Update available: {result.LatestVersion} ({updateUrl}).");
 
         if (_openLatestReleaseItem is not null)
         {
-          _openLatestReleaseItem.Text = UiText.UpdateAvailable(result.LatestVersion);
-          _openLatestReleaseItem.Tag = result.ReleaseUrl;
+          _openLatestReleaseItem.Text = string.IsNullOrWhiteSpace(result.SetupDownloadUrl)
+              ? UiText.UpdateAvailable(result.LatestVersion)
+              : UiText.DownloadUpdate(result.LatestVersion);
+          _openLatestReleaseItem.Tag = updateUrl;
           _openLatestReleaseItem.Visible = true;
         }
 

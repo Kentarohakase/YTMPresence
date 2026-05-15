@@ -61,6 +61,7 @@ coverage*.info
 *.tmp_proj
 *_wpftmp.csproj
 *.cache
+*.lscache
 *.pdb
 *.ilk
 *.obj

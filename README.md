@@ -110,6 +110,7 @@ artifacts\release\SHA256SUMS.txt
 
 Für eine normale Weitergabe ist das Setup-EXE am bequemsten. Es installiert YTMPresence ohne Adminrechte nach `%LOCALAPPDATA%\Programs\YTMPresence` und legt Startmenü-Verknüpfungen an. Das versionierte Komplett-ZIP enthält weiterhin die App, die Extension und eine `RELEASE.txt`.
 Das Release-Skript prüft das Paket nach dem Build automatisch. Alte versionierte App-/ZIP-Artefakte für denselben Runtime-Zieltyp werden standardmäßig entfernt. Mit `-KeepOldArtifacts` bleiben sie erhalten.
+Vor dem Tagging hilft die [Release-QA-Checkliste](docs/RELEASE_QA.md), Installation, Update, Deinstallation und GitHub-Release-Artefakte einmal geordnet zu prüfen.
 
 Ein vorhandenes Release kannst du auch separat prüfen:
 
