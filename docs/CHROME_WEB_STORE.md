@@ -53,6 +53,7 @@ https://github.com/Kentarohakase/YTMPresence/blob/main/docs/EXTENSION_PRIVACY.md
 4. Privacy-Hinweis als URL im Store-Dashboard hinterlegen.
 5. Screenshots aus Popup, Optionsseite, Mini-Player und Discord Presence hinzufügen.
 6. Prüfen, ob Version in `YTMPresence/extension/manifest.json` zur Release-Version passt.
+7. Die vollständige [Store-Submission-Checkliste](STORE_SUBMISSION_CHECKLIST.md) abhaken.
 
 ## Noch offen vor Store-Upload
 

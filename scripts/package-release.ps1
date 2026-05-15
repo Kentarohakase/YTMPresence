@@ -2,7 +2,8 @@ param(
     [string]$Configuration = "Release",
     [string]$Runtime = "win-x64",
     [switch]$SelfContained,
-    [switch]$KeepOldArtifacts
+    [switch]$KeepOldArtifacts,
+    [switch]$SkipInstaller
 )
 
 $ErrorActionPreference = "Stop"
@@ -17,6 +18,7 @@ $bundleRoot = Join-Path $releaseRoot "bundle"
 $project = Join-Path $repoRoot "YTMPresence.Tray.Wpf\YTMPresence.Tray.Wpf.csproj"
 $manifestPath = Join-Path $extensionSource "manifest.json"
 $verifyScript = Join-Path $PSScriptRoot "verify-release.ps1"
+$installerScript = Join-Path $PSScriptRoot "package-installer.ps1"
 
 if (-not (Test-Path -LiteralPath $project)) {
     throw "Tray project not found: $project"
@@ -127,9 +129,16 @@ if (Test-Path -LiteralPath $verifyScript) {
     & $verifyScript -ReleaseRoot $releaseRoot -Version $extensionVersion -Runtime $Runtime
 }
 
+if (-not $SkipInstaller -and (Test-Path -LiteralPath $installerScript)) {
+    & $installerScript -ReleaseRoot $releaseRoot -Version $extensionVersion -Runtime $Runtime
+}
+
 Write-Host ""
 Write-Host "Release package created:"
 Write-Host "  App:       $appOutput"
 Write-Host "  Extension: $extensionZip"
 Write-Host "  Bundle:    $bundleZip"
+if (-not $SkipInstaller) {
+    Write-Host "  Setup:     $(Join-Path $releaseRoot "$bundleName-setup.exe")"
+}
 Write-Host "  Notes:     $summaryPath"

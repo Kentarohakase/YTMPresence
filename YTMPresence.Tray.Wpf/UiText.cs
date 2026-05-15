@@ -227,6 +227,48 @@ internal static class UiText
       es: "Abrir diagnostico"
   );
 
+  public static string CheckForUpdates => T(
+      de: "Nach Updates suchen",
+      en: "Check for updates",
+      es: "Buscar actualizaciones"
+  );
+
+  public static string UpdateChecking => T(
+      de: "Suche nach Updates…",
+      en: "Checking for updates…",
+      es: "Buscando actualizaciones…"
+  );
+
+  public static string UpdateAvailable(string version) => T(
+      de: $"Update verfügbar: {version}",
+      en: $"Update available: {version}",
+      es: $"Actualización disponible: {version}"
+  );
+
+  public static string UpdateAvailableMessage(string version) => T(
+      de: $"YTMPresence {version} ist verfügbar. Öffne das Release über das Tray-Menü.",
+      en: $"YTMPresence {version} is available. Open the release from the tray menu.",
+      es: $"YTMPresence {version} está disponible. Abre la versión desde el menú de la bandeja."
+  );
+
+  public static string NoUpdateAvailable(string version) => T(
+      de: $"Du verwendest bereits die aktuelle Version ({version}).",
+      en: $"You are already using the latest version ({version}).",
+      es: $"Ya estás usando la versión actual ({version})."
+  );
+
+  public static string UpdateCheckFailed(string message) => T(
+      de: $"Update-Check fehlgeschlagen: {message}",
+      en: $"Update check failed: {message}",
+      es: $"La comprobación de actualizaciones falló: {message}"
+  );
+
+  public static string OpenLatestRelease => T(
+      de: "Neuestes Release öffnen",
+      en: "Open latest release",
+      es: "Abrir última versión"
+  );
+
   public static string OpenYtm => T(
       de: "YouTube Music öffnen",
       en: "Open YouTube Music",

@@ -66,7 +66,7 @@ public partial class PlayerWindow : Window
 
     PositionText.Text = FormatTime(position);
     DurationText.Text = duration > 0 ? FormatTime(duration) : "--:--";
-    PlayStateText.Text = status.LastIsPlaying == true ? "Laeuft" : "Pausiert";
+    PlayStateText.Text = status.LastIsPlaying == true ? "Läuft" : "Pausiert";
     PlayPauseButton.Content = status.LastIsPlaying == true ? "Pause" : "Play";
 
     _currentTrackUrl = status.LastTrackUrl;
@@ -254,7 +254,7 @@ public partial class PlayerWindow : Window
 
   private async void PreviousButton_Click(object sender, RoutedEventArgs e)
   {
-    await SendCommandAsync("previous", "Zurueck");
+    await SendCommandAsync("previous", "Zurück");
   }
 
   private async void PlayPauseButton_Click(object sender, RoutedEventArgs e)

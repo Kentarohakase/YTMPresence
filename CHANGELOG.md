@@ -6,6 +6,19 @@ Alle wichtigen Änderungen an YTMPresence werden in dieser Datei dokumentiert.
 
 - Noch keine Änderungen.
 
+## [0.8.2] - 2026-05-15
+
+### Added
+
+- User-level Windows-Installer-Paketierung mit Setup-EXE und Startmenü-Verknüpfung.
+- Update-Check über GitHub Releases direkt im Tray-Menü.
+- Store-Submission-Checkliste für Chrome Web Store und kompatible Browser-Stores.
+
+### Changed
+
+- Release-Workflow lädt künftig auch das Setup-Artefakt hoch.
+- Extension-Manifest ergänzt `short_name` und `homepage_url` für Store-Veröffentlichungen.
+
 ## [0.8.1] - 2026-05-15
 
 ### Added

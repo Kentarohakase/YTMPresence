@@ -71,6 +71,7 @@ jobs:
           name: YTMPresence-${{ steps.version.outputs.value }}-release
           path: |
             artifacts/release/YTMPresence-${{ steps.version.outputs.value }}-win-x64.zip
+            artifacts/release/YTMPresence-${{ steps.version.outputs.value }}-win-x64-setup.exe
             artifacts/release/YTMPresence-extension.zip
             artifacts/release/SHA256SUMS.txt
 
@@ -84,14 +85,15 @@ jobs:
           $repo = "${{ github.repository }}"
           $version = "${{ steps.version.outputs.value }}"
           $bundle = "artifacts/release/YTMPresence-$version-win-x64.zip"
+          $setup = "artifacts/release/YTMPresence-$version-win-x64-setup.exe"
           $extension = "artifacts/release/YTMPresence-extension.zip"
           $checksums = "artifacts/release/SHA256SUMS.txt"
           $notes = "artifacts/release/GITHUB_RELEASE_NOTES.md"
 
           gh release view $tag --repo $repo *> $null
           if ($LASTEXITCODE -eq 0) {
-            gh release upload $tag $bundle $extension $checksums --repo $repo --clobber
+            gh release upload $tag $bundle $setup $extension $checksums --repo $repo --clobber
             gh release edit $tag --repo $repo --title "YTMPresence $version" --notes-file $notes
           } else {
-            gh release create $tag $bundle $extension $checksums --repo $repo --target "${{ github.sha }}" --title "YTMPresence $version" --notes-file $notes
+            gh release create $tag $bundle $setup $extension $checksums --repo $repo --target "${{ github.sha }}" --title "YTMPresence $version" --notes-file $notes
           }

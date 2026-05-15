@@ -41,6 +41,9 @@ public sealed class AppSettings
   public DiscordAssetKeys Assets { get; set; } = new();
   public PlayerWindowSettings PlayerWindow { get; set; } = new();
 
+  public bool CheckForUpdatesOnStartup { get; set; } = true;
+  public string UpdateApiUrl { get; set; } = "https://api.github.com/repos/Kentarohakase/YTMPresence/releases/latest";
+
   /// <summary>
   /// Shared Secret: muss von Extension mitgesendet werden.
   /// Wird automatisch generiert, wenn leer.

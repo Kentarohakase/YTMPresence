@@ -59,7 +59,7 @@ public partial class DiagnosticsWindow : Window
       return;
     }
 
-    ServerText.Text = status.IsRunning ? "Laeuft" : "Gestoppt";
+    ServerText.Text = status.IsRunning ? "Läuft" : "Gestoppt";
     ExtensionText.Text = status.ConnectedClients > 0
         ? $"Verbunden ({status.ConnectedClients}), letzte Daten: {AgeText(status.LastMessageUtc)}"
         : $"Nicht verbunden, letzte Daten: {AgeText(status.LastMessageUtc)}";

@@ -63,6 +63,11 @@ Vorbereitete Store- und Privacy-Texte stehen unter:
 
 - [Chrome Web Store Vorbereitung](docs/CHROME_WEB_STORE.md)
 - [Extension Privacy-Hinweis](docs/EXTENSION_PRIVACY.md)
+- [Store-Submission-Checkliste](docs/STORE_SUBMISSION_CHECKLIST.md)
+
+## Updates
+
+Die Tray-App kann über `Nach Updates suchen` im Tray-Menü das neueste GitHub Release prüfen. Beim Start wird automatisch einmal geprüft, sofern `CheckForUpdatesOnStartup` in den Einstellungen aktiv ist.
 
 ## Tray-Menü
 
@@ -98,11 +103,12 @@ Das Skript erstellt:
 artifacts\release\YTMPresence-<version>-win-x64-app\
 artifacts\release\YTMPresence-extension.zip
 artifacts\release\YTMPresence-<version>-win-x64.zip
+artifacts\release\YTMPresence-<version>-win-x64-setup.exe
 artifacts\release\extension\
 artifacts\release\SHA256SUMS.txt
 ```
 
-Für eine normale Weitergabe ist das versionierte Komplett-ZIP am bequemsten. Es enthält die App, die Extension und eine `RELEASE.txt`.
+Für eine normale Weitergabe ist das Setup-EXE am bequemsten. Es installiert YTMPresence ohne Adminrechte nach `%LOCALAPPDATA%\Programs\YTMPresence` und legt Startmenü-Verknüpfungen an. Das versionierte Komplett-ZIP enthält weiterhin die App, die Extension und eine `RELEASE.txt`.
 Das Release-Skript prüft das Paket nach dem Build automatisch. Alte versionierte App-/ZIP-Artefakte für denselben Runtime-Zieltyp werden standardmäßig entfernt. Mit `-KeepOldArtifacts` bleiben sie erhalten.
 
 Ein vorhandenes Release kannst du auch separat prüfen:

@@ -33,6 +33,8 @@ public partial class App : System.Windows.Application
   private ToolStripMenuItem? _autostartItem;
   private ToolStripMenuItem? _onlyShowWhenPlayingItem;
   private ToolStripMenuItem? _ignoreAdsItem;
+  private ToolStripMenuItem? _checkUpdatesItem;
+  private ToolStripMenuItem? _openLatestReleaseItem;
   private SettingsWindow? _settingsWindow;
   private PlayerWindow? _playerWindow;
   private DiagnosticsWindow? _diagnosticsWindow;
@@ -86,6 +88,9 @@ public partial class App : System.Windows.Application
           Dispatcher);
 
       _statusTimer.Start();
+
+      if (_settings.CheckForUpdatesOnStartup)
+        _ = CheckForUpdatesAsync(showUpToDate: false);
 
       Logger.Info("App started successfully.");
     }
@@ -236,6 +241,12 @@ public partial class App : System.Windows.Application
     var diagnosticsItem = new ToolStripMenuItem(UiText.Diagnostics);
     diagnosticsItem.Click += (_, __) => ShowDiagnosticsWindow();
 
+    _checkUpdatesItem = new ToolStripMenuItem(UiText.CheckForUpdates);
+    _checkUpdatesItem.Click += async (_, __) => await CheckForUpdatesAsync(showUpToDate: true);
+
+    _openLatestReleaseItem = new ToolStripMenuItem(UiText.OpenLatestRelease) { Visible = false };
+    _openLatestReleaseItem.Click += (_, __) => OpenUrl(_openLatestReleaseItem.Tag?.ToString() ?? "https://github.com/Kentarohakase/YTMPresence/releases");
+
     var openYtmItem = new ToolStripMenuItem(UiText.OpenYtm);
     openYtmItem.Click += (_, __) => OpenUrl("https://music.youtube.com/");
 
@@ -274,6 +285,8 @@ public partial class App : System.Windows.Application
     menu.Items.Add(playerItem);
     menu.Items.Add(diagnosticsItem);
     menu.Items.Add(settingsItem);
+    menu.Items.Add(_checkUpdatesItem);
+    menu.Items.Add(_openLatestReleaseItem);
     menu.Items.Add(copyTokenItem);
     menu.Items.Add(rotateTokenItem);
     menu.Items.Add(openYtmItem);
@@ -545,6 +558,91 @@ public partial class App : System.Windows.Application
 
     _server = new CompanionServer(_settings);
     await StartServerSafeAsync();
+  }
+
+  private async Task CheckForUpdatesAsync(bool showUpToDate)
+  {
+    if (_checkUpdatesItem is not null)
+    {
+      _checkUpdatesItem.Enabled = false;
+      _checkUpdatesItem.Text = UiText.UpdateChecking;
+    }
+
+    try
+    {
+      var result = await UpdateChecker.CheckLatestAsync(GetAppVersion(), _settings, CancellationToken.None);
+
+      if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
+      {
+        Logger.Warn(result.ErrorMessage);
+
+        if (showUpToDate)
+        {
+          _trayIcon?.ShowBalloonTip(
+              4500,
+              UiText.ErrorTitle,
+              UiText.UpdateCheckFailed(result.ErrorMessage),
+              ToolTipIcon.Warning);
+        }
+
+        return;
+      }
+
+      if (result.IsUpdateAvailable)
+      {
+        Logger.Info($"Update available: {result.LatestVersion} ({result.ReleaseUrl}).");
+
+        if (_openLatestReleaseItem is not null)
+        {
+          _openLatestReleaseItem.Text = UiText.UpdateAvailable(result.LatestVersion);
+          _openLatestReleaseItem.Tag = result.ReleaseUrl;
+          _openLatestReleaseItem.Visible = true;
+        }
+
+        _trayIcon?.ShowBalloonTip(
+            6500,
+            UiText.UpdateAvailable(result.LatestVersion),
+            UiText.UpdateAvailableMessage(result.LatestVersion),
+            ToolTipIcon.Info);
+
+        return;
+      }
+
+      if (_openLatestReleaseItem is not null)
+        _openLatestReleaseItem.Visible = false;
+
+      Logger.Info($"No update available. Current version: {result.CurrentVersion}.");
+
+      if (showUpToDate)
+      {
+        _trayIcon?.ShowBalloonTip(
+            3500,
+            UiText.AppName,
+            UiText.NoUpdateAvailable(result.CurrentVersion),
+            ToolTipIcon.Info);
+      }
+    }
+    catch (Exception ex)
+    {
+      Logger.Error(ex, "Update check failed.");
+
+      if (showUpToDate)
+      {
+        _trayIcon?.ShowBalloonTip(
+            4500,
+            UiText.ErrorTitle,
+            UiText.UpdateCheckFailed(ex.Message),
+            ToolTipIcon.Warning);
+      }
+    }
+    finally
+    {
+      if (_checkUpdatesItem is not null)
+      {
+        _checkUpdatesItem.Enabled = true;
+        _checkUpdatesItem.Text = UiText.CheckForUpdates;
+      }
+    }
   }
 
   private static string AgeText(TimeSpan age)
