@@ -6,6 +6,12 @@ Alle wichtigen Änderungen an YTMPresence werden in dieser Datei dokumentiert.
 
 Noch keine Änderungen.
 
+## [0.8.11] - 2026-06-01
+
+### Fixed
+
+- Inno-Setup-Update beendet nur noch YTMPresence selbst und nicht mehr das daraus gestartete Setup.
+
 ## [0.8.10] - 2026-05-15
 
 ### Changed

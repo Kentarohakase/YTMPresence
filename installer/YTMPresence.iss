@@ -46,6 +46,7 @@ SolidCompression=yes
 WizardStyle=modern
 SetupIconFile={#AppIcon}
 UninstallDisplayIcon={app}\app\YTMPresence.exe
+CloseApplications=no
 VersionInfoVersion={#AppVersion}
 VersionInfoCompany={#AppPublisher}
 VersionInfoDescription=YTMPresence Setup
@@ -88,7 +89,8 @@ procedure StopYTMPresence();
 var
   ResultCode: Integer;
 begin
-  Exec(ExpandConstant('{cmd}'), '/C taskkill /IM YTMPresence.exe /F /T >NUL 2>NUL', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Exec(ExpandConstant('{cmd}'), '/C taskkill /IM YTMPresence.exe /F >NUL 2>NUL', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Sleep(500);
 end;
 
 function PrepareToInstall(var NeedsRestart: Boolean): String;
