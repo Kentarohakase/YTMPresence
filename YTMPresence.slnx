@@ -10,6 +10,9 @@
   <Project Path="YTMPresence.Core/YTMPresence.Core.csproj">
     <BuildType Solution="All|*" Project="Debug" />
   </Project>
+  <Project Path="YTMPresence.Core.Tests/YTMPresence.Core.Tests.csproj">
+    <BuildType Solution="All|*" Project="Debug" />
+  </Project>
   <Project Path="YTMPresence.Tray.Wpf/YTMPresence.Tray.Wpf.csproj">
     <BuildType Solution="All|*" Project="Debug" />
   </Project>

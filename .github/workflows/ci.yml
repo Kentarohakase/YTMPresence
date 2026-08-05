@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build, test & lint
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Verify version consistency
+        shell: pwsh
+        run: ./scripts/verify-version-consistency.ps1
+
+      - name: Restore
+        run: dotnet restore YTMPresence.slnx
+
+      - name: Build (Release)
+        run: dotnet build YTMPresence.slnx -c Release --no-restore
+
+      - name: Test
+        run: dotnet test YTMPresence.Core.Tests/YTMPresence.Core.Tests.csproj -c Release --no-build
+
+      - name: Validate extension manifests
+        shell: pwsh
+        run: |
+          $manifests = @(
+            "YTMPresence/extension/manifest.json",
+            "YTMPresence/extension/manifest.firefox.json"
+          )
+          foreach ($m in $manifests) {
+            if (Test-Path -LiteralPath $m) {
+              try { Get-Content -LiteralPath $m -Raw | ConvertFrom-Json | Out-Null }
+              catch { throw "Invalid JSON in $m : $_" }
+              Write-Host "OK: $m"
+            }
+          }
+
+      - name: Lint extension (web-ext)
+        shell: pwsh
+        run: |
+          # web-ext prüft Firefox-Regeln, daher die Firefox-Variante erzeugen und linten.
+          ./scripts/make-firefox-extension.ps1 -SourceDir YTMPresence/extension -DestDir artifacts/ci/extension-firefox
+          npx --yes web-ext lint --source-dir artifacts/ci/extension-firefox
