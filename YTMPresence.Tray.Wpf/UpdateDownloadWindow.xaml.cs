@@ -1,106 +1,192 @@
 using System.Diagnostics;
 using System.IO;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Reflection;
-using System.Security.Cryptography;
 using System.Windows;
-using System.Windows.Interop;
 
 using YTMPresence.Core;
+using YTMPresence.Core.Updates;
 
 namespace YTMPresence.TrayWpf;
 
+/// <summary>
+/// Zeigt Fortschritt und Status des Update-Downloads an. Download, Verifikation
+/// und Prüfungen laufen vollständig in <see cref="UpdateDownloadService"/>;
+/// dieses Fenster startet nur noch das bereits verifizierte Setup und beendet
+/// die App erst, wenn der Start tatsächlich gelungen ist.
+/// </summary>
 public partial class UpdateDownloadWindow : Window
 {
   private readonly UpdateCheckResult _update;
-  private readonly string _setupFileName;
-  private readonly string _targetPath;
+  private readonly AppSettings _settings;
   private CancellationTokenSource? _downloadCts;
-  private bool _isInstalling;
+  private VerifiedSetupPackage? _package;
+  private Task? _activeOperation;
+  private bool _isBusy;
+  private bool _setupStarted;
 
-  public UpdateDownloadWindow(UpdateCheckResult update)
+  public UpdateDownloadWindow(UpdateCheckResult update, AppSettings settings)
   {
     InitializeComponent();
 
     _update = update;
-    _setupFileName = GetSetupFileName(update);
-    _targetPath = Path.Combine(Path.GetTempPath(), "YTMPresence", "updates", update.LatestVersion, _setupFileName);
+    _settings = settings;
 
-    SummaryText.Text = $"YTMPresence {_update.LatestVersion} ist verfügbar. Das Setup wird heruntergeladen, geprüft und anschließend gestartet.";
-    SetupFileText.Text = _setupFileName;
-    TargetPathText.Text = _targetPath;
+    SummaryText.Text = UiText.UpdateSummary(_update.LatestVersion);
+    SetupFileText.Text = _update.SetupAssetName ?? "";
+    TargetPathText.Text = TemporaryUpdateWorkspace.GetDefaultRoot();
 
-    var hasSetupDownload = !string.IsNullOrWhiteSpace(_update.SetupDownloadUrl);
+    var hasSetupDownload = HasCompleteUpdateAssets();
     InstallButton.IsEnabled = hasSetupDownload;
     DownloadOnlyButton.IsEnabled = hasSetupDownload;
     if (!hasSetupDownload)
-      SetStatus("Dieses Release enthält kein Setup-Asset. Öffne stattdessen die Release-Seite.", isError: true);
+      SetStatus(string.IsNullOrWhiteSpace(_update.ChecksumsDownloadUrl)
+        ? UiText.UpdateNoChecksumsAsset
+        : UiText.UpdateNoSetupAsset, isError: true);
   }
 
   private async void InstallButton_Click(object sender, RoutedEventArgs e)
   {
-    await DownloadAndVerifyAsync(startInstaller: true);
+    await StartUpdateOperationAsync(startInstaller: true);
   }
 
   private async void DownloadOnlyButton_Click(object sender, RoutedEventArgs e)
   {
-    await DownloadAndVerifyAsync(startInstaller: false);
+    await StartUpdateOperationAsync(startInstaller: false);
   }
 
-  private async Task DownloadAndVerifyAsync(bool startInstaller)
+  private async Task StartUpdateOperationAsync(bool startInstaller)
   {
-    if (string.IsNullOrWhiteSpace(_update.SetupDownloadUrl))
+    if (_activeOperation is not null)
       return;
 
+    var operation = RunUpdateAsync(startInstaller);
+    _activeOperation = operation;
+    try
+    {
+      await operation;
+    }
+    finally
+    {
+      if (ReferenceEquals(_activeOperation, operation))
+        _activeOperation = null;
+    }
+  }
+
+  /// <summary>Behandelt alle Fehler selbst; die aufrufenden Eventhandler bleiben dadurch sicher.</summary>
+  private async Task RunUpdateAsync(bool startInstaller)
+  {
+    if (_isBusy || _setupStarted || !HasCompleteUpdateAssets())
+      return;
+
+    _isBusy = true;
     InstallButton.IsEnabled = false;
     DownloadOnlyButton.IsEnabled = false;
     OpenReleaseButton.IsEnabled = false;
-    CancelButton.Content = "Abbrechen";
+    CancelButton.Content = UiText.ButtonCancel;
     _downloadCts = new CancellationTokenSource();
+
+    // Kein Wiederverwenden eines früheren Downloads: jeder Versuch lädt und
+    // verifiziert neu in einem eigenen Verzeichnis.
+    DisposePackage();
 
     try
     {
-      SetStatus("Download wird vorbereitet...", isError: false);
-      Directory.CreateDirectory(Path.GetDirectoryName(_targetPath)!);
+      SetStatus(UiText.UpdateStatusPreparing, isError: false);
+      DownloadProgress.IsIndeterminate = true;
+      DownloadProgress.Value = 0;
 
-      if (File.Exists(_targetPath))
-        File.Delete(_targetPath);
+      var options = new UpdateDownloadOptions
+      {
+        UrlValidator = UpdateUrlValidator.ForSettings(_settings)
+      };
 
-      await DownloadFileAsync(_update.SetupDownloadUrl, _targetPath, _downloadCts.Token);
-      await VerifyChecksumIfAvailableAsync(_targetPath, _downloadCts.Token);
+      VerifiedSetupPackage package;
+      using (var service = new UpdateDownloadService(options))
+      {
+        var progress = new Progress<UpdateDownloadProgress>(UpdateProgressDisplay);
+        package = await service.DownloadAndVerifyAsync(_update, progress, _downloadCts.Token);
+      }
+
+      _package = package;
+      DownloadProgress.IsIndeterminate = false;
+      DownloadProgress.Value = 100;
+      ProgressText.Text = UiText.UpdateProgressComplete(FormatBytes(package.Length));
+      TargetPathText.Text = package.FilePath;
+      SetupFileText.Text = package.FileName;
 
       if (!startInstaller)
       {
-        SetStatus($"Setup wurde heruntergeladen und geprüft: {_targetPath}", isError: false);
+        SetStatus(UiText.UpdateStatusDownloadedOnly(package.FilePath), isError: false);
         ResetButtons();
         return;
       }
 
-      SetStatus("Setup wird gestartet...", isError: false);
-      StartSetupInstaller(_targetPath);
-      _isInstalling = true;
-      SetStatus("Setup wurde gestartet. Folge den Installationsschritten; YTM Presence wird vom Installer beendet.", isError: false);
-      ProgressText.Text = "Falls kein Setup-Fenster sichtbar ist, prüfe die Taskleiste oder starte die Datei aus dem Zielordner.";
-      OpenReleaseButton.IsEnabled = true;
-      CancelButton.Content = "Schließen";
+      SetStatus(UiText.UpdateStatusStartingSetup, isError: false);
+
+      // Erneute Prüfung (Existenz, Name, Größe, Hash) direkt vor dem Start;
+      // die Datei bleibt während des Starts gegen Veränderung gesperrt.
+      await UpdateInstaller.LaunchVerifiedSetupAsync(package, StartSetupProcess, _downloadCts.Token);
+
+      _setupStarted = true;
+      SetStatus(UiText.UpdateStatusSetupStarted, isError: false);
+      CancelButton.Content = UiText.ButtonClose;
+
+      // Kurz anzeigen lassen, dann die App regulär beenden: Der Installer
+      // muss die laufende Instanz dann nicht mehr beenden.
+      await Task.Delay(TimeSpan.FromSeconds(1.5));
+      System.Windows.Application.Current.Shutdown();
     }
     catch (OperationCanceledException)
     {
-      SetStatus("Download abgebrochen.", isError: true);
+      DownloadProgress.IsIndeterminate = false;
+      SetStatus(UiText.UpdateStatusCancelled, isError: true);
+      ResetButtons();
+    }
+    catch (Exception ex) when (ex is UpdateSecurityException or UpdateDownloadException)
+    {
+      Logger.Error(ex, "Update download or verification failed.");
+      DownloadProgress.IsIndeterminate = false;
+      SetStatus(UiText.UpdateStatusFailed(ex.Message), isError: true);
       ResetButtons();
     }
     catch (Exception ex)
     {
-      Logger.Error(ex, "Update download or install failed.");
-      SetStatus($"Update konnte nicht installiert werden: {ex.Message}", isError: true);
+      Logger.Error(ex, "Unexpected update failure.");
+      DownloadProgress.IsIndeterminate = false;
+      SetStatus(UiText.UpdateStatusFailed(ex.Message), isError: true);
       ResetButtons();
     }
     finally
     {
+      _isBusy = false;
       _downloadCts?.Dispose();
       _downloadCts = null;
     }
+  }
+
+  /// <summary>
+  /// Startet ausschließlich den übergebenen, bereits verifizierten absoluten Pfad.
+  /// Keine Argumente, keine Shell-Interpolation, kein cmd/PowerShell.
+  /// </summary>
+  private static bool StartSetupProcess(string setupPath)
+  {
+    var startInfo = new ProcessStartInfo
+    {
+      FileName = setupPath,
+      WorkingDirectory = Path.GetDirectoryName(setupPath) ?? Path.GetTempPath(),
+      // ShellExecute ist für den Installer-Start nötig (u. a. für eine mögliche
+      // UAC-Abfrage); gestartet wird nur der verifizierte absolute Pfad.
+      UseShellExecute = true
+    };
+
+    using var process = Process.Start(startInfo);
+    if (process is null)
+    {
+      Logger.Warn($"Setup launch returned no process handle: {setupPath}");
+      return false;
+    }
+
+    Logger.Info($"Started update setup process {process.Id}: {setupPath}");
+    return true;
   }
 
   private void OpenReleaseButton_Click(object sender, RoutedEventArgs e)
@@ -112,35 +198,13 @@ public partial class UpdateDownloadWindow : Window
     catch (Exception ex)
     {
       Logger.Error(ex, $"Error opening release URL: {_update.ReleaseUrl}");
-      SetStatus("Release-Seite konnte nicht geöffnet werden.", isError: true);
+      SetStatus(UiText.UpdateOpenReleaseFailed, isError: true);
     }
-  }
-
-  private void StartSetupInstaller(string setupPath)
-  {
-    if (!File.Exists(setupPath))
-      throw new FileNotFoundException("Setup-Datei wurde nicht gefunden.", setupPath);
-
-    var startInfo = new ProcessStartInfo
-    {
-      FileName = setupPath,
-      WorkingDirectory = Path.GetDirectoryName(setupPath) ?? Path.GetTempPath(),
-      UseShellExecute = true,
-      Verb = "open",
-      ErrorDialog = true,
-      ErrorDialogParentHandle = new WindowInteropHelper(this).Handle
-    };
-
-    var process = Process.Start(startInfo);
-    if (process is null)
-      Logger.Warn($"Setup launch was handed to Windows but no process handle was returned: {setupPath}");
-    else
-      Logger.Info($"Started update setup process {process.Id}: {setupPath}");
   }
 
   private void CancelButton_Click(object sender, RoutedEventArgs e)
   {
-    if (_downloadCts is not null)
+    if (_isBusy && _downloadCts is { IsCancellationRequested: false })
     {
       _downloadCts.Cancel();
       return;
@@ -151,136 +215,80 @@ public partial class UpdateDownloadWindow : Window
 
   protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
   {
-    if (_downloadCts is not null && !_downloadCts.IsCancellationRequested && !_isInstalling)
+    if (_isBusy && _downloadCts is { IsCancellationRequested: false } && !_setupStarted)
       _downloadCts.Cancel();
 
     base.OnClosing(e);
   }
 
-  private async Task DownloadFileAsync(string url, string targetPath, CancellationToken ct)
+  protected override void OnClosed(EventArgs e)
   {
-    using var http = CreateHttpClient();
-    using var response = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
-    response.EnsureSuccessStatusCode();
-
-    var totalBytes = response.Content.Headers.ContentLength;
-    DownloadProgress.IsIndeterminate = totalBytes is null;
-    DownloadProgress.Value = 0;
-
-    await using var source = await response.Content.ReadAsStreamAsync(ct);
-    await using var destination = new FileStream(targetPath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-
-    var buffer = new byte[128 * 1024];
-    long downloadedBytes = 0;
-
-    while (true)
-    {
-      var read = await source.ReadAsync(buffer, ct);
-      if (read == 0)
-        break;
-
-      await destination.WriteAsync(buffer.AsMemory(0, read), ct);
-      downloadedBytes += read;
-      UpdateProgress(downloadedBytes, totalBytes);
-    }
-
-    DownloadProgress.IsIndeterminate = false;
-    DownloadProgress.Value = 100;
-    ProgressText.Text = $"Download abgeschlossen: {FormatBytes(downloadedBytes)}";
+    // Bei laufender I/O übernimmt CancelAndCleanupAsync nach dem Abbruch das
+    // Aufräumen; ein synchrones Löschen könnte sonst mit dem offenen Stream
+    // kollidieren und ein verwaistes Verzeichnis hinterlassen.
+    if (!_isBusy)
+      DisposePackage();
+    base.OnClosed(e);
   }
 
-  private async Task VerifyChecksumIfAvailableAsync(string setupPath, CancellationToken ct)
+  public async Task CancelAndCleanupAsync()
   {
-    if (string.IsNullOrWhiteSpace(_update.ChecksumsDownloadUrl))
+    // Shutdown() wird nach erfolgreichem Start innerhalb von RunUpdateAsync
+    // aufgerufen. Auf genau diese Task zu warten würde den Shutdown zyklisch
+    // blockieren; der Launch-Lock ist zu diesem Zeitpunkt bereits freigegeben.
+    if (_setupStarted)
     {
-      SetStatus("Keine SHA256SUMS.txt gefunden. Setup wird ohne Prüfsummenvergleich gestartet.", isError: false);
+      DisposePackage();
       return;
     }
 
-    SetStatus("SHA256-Prüfsumme wird geprüft...", isError: false);
-    using var http = CreateHttpClient();
-    var checksumsText = await http.GetStringAsync(_update.ChecksumsDownloadUrl, ct);
-    var expectedHash = FindExpectedHash(checksumsText, _setupFileName);
+    if (_downloadCts is { IsCancellationRequested: false })
+      _downloadCts.Cancel();
 
-    if (string.IsNullOrWhiteSpace(expectedHash))
+    var operation = _activeOperation;
+    if (operation is not null)
     {
-      SetStatus("Keine passende SHA256-Zeile gefunden. Setup wird ohne Prüfsummenvergleich gestartet.", isError: false);
-      return;
+      try
+      {
+        await operation;
+      }
+      catch (Exception ex)
+      {
+        Logger.Warn($"Update operation did not finish cleanly during shutdown: {ex.Message}");
+      }
     }
 
-    var actualHash = await ComputeSha256Async(setupPath, ct);
-    if (!string.Equals(expectedHash, actualHash, StringComparison.OrdinalIgnoreCase))
-      throw new InvalidOperationException("SHA256-Prüfsumme stimmt nicht überein.");
-
-    SetStatus("SHA256-Prüfsumme ist gültig.", isError: false);
+    DisposePackage();
   }
 
-  private static HttpClient CreateHttpClient()
+  private void DisposePackage()
   {
-    var http = new HttpClient();
-    var version = Assembly.GetExecutingAssembly()
-      .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
-      .InformationalVersion;
-
-    http.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("YTMPresence", string.IsNullOrWhiteSpace(version) ? "dev" : version));
-    return http;
-  }
-
-  private static string? FindExpectedHash(string checksumsText, string fileName)
-  {
-    using var reader = new StringReader(checksumsText);
-
-    while (reader.ReadLine() is { } line)
+    try
     {
-      var trimmed = line.Trim();
-      if (string.IsNullOrWhiteSpace(trimmed))
-        continue;
-
-      var parts = trimmed.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-      if (parts.Length < 2)
-        continue;
-
-      if (string.Equals(parts[^1], fileName, StringComparison.OrdinalIgnoreCase))
-        return parts[0];
+      _package?.Dispose();
+    }
+    catch (Exception ex)
+    {
+      Logger.Warn($"Update package cleanup failed: {ex.Message}");
     }
 
-    return null;
+    _package = null;
   }
 
-  private static async Task<string> ComputeSha256Async(string path, CancellationToken ct)
+  private void UpdateProgressDisplay(UpdateDownloadProgress progress)
   {
-    await using var stream = File.OpenRead(path);
-    var hash = await SHA256.HashDataAsync(stream, ct);
-    return Convert.ToHexString(hash).ToLowerInvariant();
-  }
+    DownloadProgress.IsIndeterminate = progress.TotalBytes is null;
 
-  private static string GetSetupFileName(UpdateCheckResult update)
-  {
-    if (!string.IsNullOrWhiteSpace(update.SetupAssetName))
-      return Path.GetFileName(update.SetupAssetName);
-
-    if (!string.IsNullOrWhiteSpace(update.SetupDownloadUrl) &&
-        Uri.TryCreate(update.SetupDownloadUrl, UriKind.Absolute, out var uri))
+    if (progress.TotalBytes is > 0)
     {
-      var fileName = Path.GetFileName(uri.LocalPath);
-      if (!string.IsNullOrWhiteSpace(fileName))
-        return fileName;
-    }
-
-    return $"YTMPresence-{update.LatestVersion}-setup.exe";
-  }
-
-  private void UpdateProgress(long downloadedBytes, long? totalBytes)
-  {
-    if (totalBytes is > 0)
-    {
-      var percent = Math.Clamp(downloadedBytes * 100.0 / totalBytes.Value, 0, 100);
+      var percent = Math.Clamp(progress.BytesDownloaded * 100.0 / progress.TotalBytes.Value, 0, 100);
       DownloadProgress.Value = percent;
-      ProgressText.Text = $"{percent:0}% · {FormatBytes(downloadedBytes)} von {FormatBytes(totalBytes.Value)}";
+      ProgressText.Text = UiText.UpdateProgressWithTotal(
+        percent, FormatBytes(progress.BytesDownloaded), FormatBytes(progress.TotalBytes.Value));
       return;
     }
 
-    ProgressText.Text = $"{FormatBytes(downloadedBytes)} heruntergeladen";
+    ProgressText.Text = UiText.UpdateProgressPlain(FormatBytes(progress.BytesDownloaded));
   }
 
   private static string FormatBytes(long bytes)
@@ -300,11 +308,16 @@ public partial class UpdateDownloadWindow : Window
 
   private void ResetButtons()
   {
-    InstallButton.IsEnabled = !string.IsNullOrWhiteSpace(_update.SetupDownloadUrl);
-    DownloadOnlyButton.IsEnabled = !string.IsNullOrWhiteSpace(_update.SetupDownloadUrl);
+    var hasSetupDownload = HasCompleteUpdateAssets();
+    InstallButton.IsEnabled = hasSetupDownload && !_setupStarted;
+    DownloadOnlyButton.IsEnabled = hasSetupDownload && !_setupStarted;
     OpenReleaseButton.IsEnabled = true;
-    CancelButton.Content = "Schließen";
+    CancelButton.Content = UiText.ButtonClose;
   }
+
+  private bool HasCompleteUpdateAssets()
+    => !string.IsNullOrWhiteSpace(_update.SetupDownloadUrl) &&
+       !string.IsNullOrWhiteSpace(_update.ChecksumsDownloadUrl);
 
   private void SetStatus(string text, bool isError)
   {

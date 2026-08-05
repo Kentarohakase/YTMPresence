@@ -43,6 +43,15 @@ public sealed class AppSettings
 
   public bool CheckForUpdatesOnStartup { get; set; } = true;
   public string UpdateApiUrl { get; set; } = "https://api.github.com/repos/Kentarohakase/YTMPresence/releases/latest";
+
+  /// <summary>
+  /// Nur für automatisierte Update-Tests (scripts/test-update-flow.ps1):
+  /// erlaubt HTTP-Updatequellen auf Loopback-Adressen. In Produktion muss
+  /// dieser Wert false bleiben; reale Updates akzeptieren ausschließlich
+  /// HTTPS zu den erlaubten GitHub-Hosts.
+  /// </summary>
+  public bool AllowLoopbackUpdateSource { get; set; }
+
   public bool HasSeenOnboarding { get; set; }
 
   /// <summary>

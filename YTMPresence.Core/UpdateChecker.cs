@@ -1,7 +1,10 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+
+using YTMPresence.Core.Updates;
 
 namespace YTMPresence.Core;
 
@@ -25,31 +28,54 @@ public static class UpdateChecker
   public static async Task<UpdateCheckResult> CheckLatestAsync(
     string currentVersion,
     AppSettings settings,
-    CancellationToken ct)
+    CancellationToken ct,
+    HttpMessageHandler? handler = null)
   {
     if (string.IsNullOrWhiteSpace(settings.UpdateApiUrl))
       return Error(currentVersion, "Update-URL ist leer.");
 
+    var urlValidator = UpdateUrlValidator.ForSettings(settings);
+    if (!urlValidator.TryValidate(settings.UpdateApiUrl, "Update-Check", out var apiUri))
+      return Error(currentVersion, "Update-URL ist nicht als Updatequelle erlaubt (nur HTTPS zu GitHub).");
+
     try
     {
-      using var http = new HttpClient();
+      // Im Test kann ein Fake-Handler injiziert werden; der Handler-Lebenszyklus
+      // bleibt dann beim Aufrufer (disposeHandler: false).
+      using var http = handler is null
+        ? new HttpClient(new SocketsHttpHandler { AllowAutoRedirect = false }, disposeHandler: true)
+        : new HttpClient(handler, disposeHandler: false);
+      http.Timeout = Timeout.InfiniteTimeSpan;
       http.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("YTMPresence", GetProductVersion()));
       http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
 
-      using var response = await http.GetAsync(settings.UpdateApiUrl, ct);
+      using var overallCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+      overallCts.CancelAfter(TimeSpan.FromMinutes(2));
+
+      using var response = await SendWithValidatedRedirectsAsync(
+        http, apiUri!, urlValidator, overallCts.Token);
       if (!response.IsSuccessStatusCode)
         return Error(currentVersion, $"Update-Check fehlgeschlagen: HTTP {(int)response.StatusCode}.");
 
+      var maxMetadataBytes = DownloadSizePolicy.Default.MaxMetadataBytes;
+      if (response.Content.Headers.ContentLength is > 0 && response.Content.Headers.ContentLength > maxMetadataBytes)
+        return Error(currentVersion, "Update-Check fehlgeschlagen: Release-Antwort ist zu groß.");
+
+      // Begrenztes Einlesen: Das Limit gilt auch ohne Content-Length-Header.
       await using var stream = await response.Content.ReadAsStreamAsync(ct);
-      var release = await JsonSerializer.DeserializeAsync<GitHubRelease>(stream, JsonOptions, ct);
+      var body = await ReadBoundedAsync(stream, maxMetadataBytes, overallCts.Token);
+      if (body is null)
+        return Error(currentVersion, "Update-Check fehlgeschlagen: Release-Antwort ist zu groß.");
+
+      var release = JsonSerializer.Deserialize<GitHubRelease>(body, JsonOptions);
 
       if (release is null || release.Draft || string.IsNullOrWhiteSpace(release.TagName))
         return Error(currentVersion, "Keine gültige Release-Antwort erhalten.");
 
       var latestVersion = NormalizeVersionText(release.TagName);
-      var releaseUrl = string.IsNullOrWhiteSpace(release.HtmlUrl)
-        ? "https://github.com/Kentarohakase/YTMPresence/releases"
-        : release.HtmlUrl;
+      var releaseUrl = release.HtmlUrl is { Length: > 0 } htmlUrl && urlValidator.TryValidate(htmlUrl, "Release-Seite", out _)
+        ? htmlUrl
+        : "https://github.com/Kentarohakase/YTMPresence/releases";
       var setupDownloadUrl = release.Assets?
         .Where(a => a.Name?.EndsWith("-setup.exe", StringComparison.OrdinalIgnoreCase) == true)
         .Select(a => a.BrowserDownloadUrl)
@@ -62,6 +88,14 @@ public static class UpdateChecker
         .Where(a => string.Equals(a.Name, "SHA256SUMS.txt", StringComparison.OrdinalIgnoreCase))
         .Select(a => a.BrowserDownloadUrl)
         .FirstOrDefault(url => !string.IsNullOrWhiteSpace(url));
+
+      // Asset-URLs, die die Update-Richtlinie verletzen, machen den ganzen
+      // Check sichtbar ungültig, statt still einen Download anzubieten.
+      if (setupDownloadUrl is not null && !urlValidator.TryValidate(setupDownloadUrl, "Setup-Asset", out _))
+        return Error(currentVersion, "Update-Check fehlgeschlagen: Die Setup-Download-URL ist nicht als Updatequelle erlaubt.");
+
+      if (checksumsDownloadUrl is not null && !urlValidator.TryValidate(checksumsDownloadUrl, "Prüfsummen-Asset", out _))
+        return Error(currentVersion, "Update-Check fehlgeschlagen: Die Prüfsummen-URL ist nicht als Updatequelle erlaubt.");
 
       var isNewer = IsNewer(latestVersion, currentVersion);
       return new UpdateCheckResult(
@@ -77,11 +111,88 @@ public static class UpdateChecker
     {
       throw;
     }
+    catch (OperationCanceledException)
+    {
+      return Error(currentVersion, "Update-Check fehlgeschlagen: Zeitüberschreitung beim Laden der Release-Metadaten.");
+    }
     catch (Exception ex)
     {
       return Error(currentVersion, $"Update-Check fehlgeschlagen: {ex.Message}");
     }
   }
+
+  /// <summary>Liest höchstens <paramref name="maxBytes"/>; null bei Überschreitung.</summary>
+  private static async Task<byte[]?> ReadBoundedAsync(Stream stream, long maxBytes, CancellationToken ct)
+  {
+    using var buffer = new MemoryStream();
+    var chunk = new byte[64 * 1024];
+
+    while (true)
+    {
+      using var stallCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+      stallCts.CancelAfter(TimeSpan.FromSeconds(30));
+      var read = await stream.ReadAsync(chunk, stallCts.Token);
+      if (read == 0)
+        return buffer.ToArray();
+
+      if (buffer.Length + read > maxBytes)
+        return null;
+
+      buffer.Write(chunk, 0, read);
+    }
+  }
+
+  private static async Task<HttpResponseMessage> SendWithValidatedRedirectsAsync(
+    HttpClient http,
+    Uri initialUri,
+    UpdateUrlValidator validator,
+    CancellationToken ct)
+  {
+    const int maxRedirects = 5;
+    var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    var current = initialUri;
+
+    for (var hop = 0; ; hop++)
+    {
+      current = validator.Validate(current, hop == 0 ? "Update-Check" : "Update-Check-Redirect");
+      if (!visited.Add(current.AbsoluteUri))
+        throw new UpdateSecurityException("Update-Check fehlgeschlagen: Redirect-Schleife erkannt.");
+
+      using var request = new HttpRequestMessage(HttpMethod.Get, current);
+      HttpResponseMessage response;
+
+      using (var headerCts = CancellationTokenSource.CreateLinkedTokenSource(ct))
+      {
+        headerCts.CancelAfter(TimeSpan.FromSeconds(30));
+        response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, headerCts.Token);
+      }
+
+      if (!IsRedirect(response.StatusCode))
+        return response;
+
+      try
+      {
+        if (hop >= maxRedirects)
+          throw new UpdateSecurityException("Update-Check fehlgeschlagen: Zu viele Redirects.");
+
+        var location = response.Headers.Location
+          ?? throw new UpdateSecurityException("Update-Check fehlgeschlagen: Redirect ohne Location-Header.");
+
+        current = location.IsAbsoluteUri ? location : new Uri(current, location);
+      }
+      finally
+      {
+        response.Dispose();
+      }
+    }
+  }
+
+  private static bool IsRedirect(HttpStatusCode statusCode) => statusCode is
+    HttpStatusCode.MovedPermanently or
+    HttpStatusCode.Found or
+    HttpStatusCode.SeeOther or
+    HttpStatusCode.TemporaryRedirect or
+    HttpStatusCode.PermanentRedirect;
 
   private static UpdateCheckResult Error(string currentVersion, string message)
     => new(false, currentVersion, currentVersion, "https://github.com/Kentarohakase/YTMPresence/releases", message);
