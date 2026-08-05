@@ -1,0 +1,35 @@
+# Zeilenenden vereinheitlichen: im Repository immer LF, im Working Tree nativ.
+# Verhindert, dass CRLF/LF-Unterschiede echte Diffs unlesbar machen.
+* text=auto
+
+# Quellcode und Konfiguration
+*.cs      text diff=csharp
+*.xaml    text
+*.csproj  text
+*.slnx    text
+*.props   text
+*.js      text
+*.json    text
+*.html    text
+*.css     text
+*.md      text
+*.yml     text
+*.yaml    text
+*.txt     text
+
+# Windows-Tooling: muss im Working Tree CRLF bleiben
+*.ps1  text eol=crlf
+*.psm1 text eol=crlf
+*.cmd  text eol=crlf
+*.bat  text eol=crlf
+*.iss  text eol=crlf
+
+# Binärdateien nie anfassen
+*.png binary
+*.ico binary
+*.jpg binary
+*.gif binary
+*.zip binary
+*.exe binary
+*.dll binary
+*.pdb binary
