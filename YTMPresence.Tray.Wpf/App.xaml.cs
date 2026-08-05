@@ -9,6 +9,7 @@ using System.Windows;
 using System.Windows.Threading;
 
 using YTMPresence.Core;
+using YTMPresence.Core.Updates;
 
 using ContextMenuStrip = System.Windows.Forms.ContextMenuStrip;
 using NotifyIcon = System.Windows.Forms.NotifyIcon;
@@ -38,17 +39,26 @@ public partial class App : System.Windows.Application
   private SettingsWindow? _settingsWindow;
   private OnboardingWindow? _onboardingWindow;
   private UpdateDownloadWindow? _updateDownloadWindow;
+  private Task _updateCleanupTask = Task.CompletedTask;
   private PlayerWindow? _playerWindow;
   private DiagnosticsWindow? _diagnosticsWindow;
 
   private readonly string _settingsPath = SettingsStore.GetDefaultSettingsPath();
   private AppSettings _settings = new();
   private CompanionServer? _server;
+  private readonly SemaphoreSlim _serverLifecycleGate = new(1, 1);
+  private bool _isExiting;
 
   private DispatcherTimer? _statusTimer;
 
   private Mutex? _singleInstanceMutex;
   private bool _ownsSingleInstanceMutex;
+
+  // Installer-Koordination: pfadgebundener Running-Mutex + Shutdown-Event,
+  // damit der Installer genau diese Instanz höflich beenden kann.
+  private Mutex? _installerRunningMutex;
+  private EventWaitHandle? _installerShutdownEvent;
+  private RegisteredWaitHandle? _installerShutdownWait;
 
   protected override async void OnStartup(StartupEventArgs e)
   {
@@ -73,15 +83,20 @@ public partial class App : System.Windows.Application
       return;
     }
 
+    StartInstallerCoordination();
+
     try
     {
       _settings = SettingsStore.LoadOrCreateDefault(_settingsPath);
       SettingsStore.Save(_settingsPath, _settings);
 
+      // Verwaiste Update-Verzeichnisse früherer Läufe altersbasiert entfernen.
+      _ = Task.Run(() => TemporaryUpdateWorkspace.TryCleanupStale());
+
       CreateTray();
 
       _server = new CompanionServer(_settings);
-      await StartServerSafeAsync();
+      await StartServerSafeAsync(_server);
 
       _statusTimer = new DispatcherTimer(
           TimeSpan.FromSeconds(1),
@@ -115,16 +130,33 @@ public partial class App : System.Windows.Application
   protected override async void OnExit(ExitEventArgs e)
   {
     Logger.Info("App is shutting down.");
+    _isExiting = true;
 
     try { _statusTimer?.Stop(); } catch { }
     try { _trayIcon?.Dispose(); } catch { }
 
-    if (_server is not null)
+    if (_updateDownloadWindow is not null)
+      await _updateDownloadWindow.CancelAndCleanupAsync();
+    await _updateCleanupTask;
+
+    await _serverLifecycleGate.WaitAsync();
+    try
     {
-      try { await _server.DisposeAsync(); }
-      catch (Exception ex) { Logger.Error(ex, "Error while disposing server."); }
+      var server = _server;
+      _server = null;
+
+      if (server is not null)
+      {
+        try { await server.DisposeAsync(); }
+        catch (Exception ex) { Logger.Error(ex, "Error while disposing server."); }
+      }
+    }
+    finally
+    {
+      _serverLifecycleGate.Release();
     }
 
+    StopInstallerCoordination();
     ReleaseSingleInstanceMutex();
 
     base.OnExit(e);
@@ -185,6 +217,67 @@ public partial class App : System.Windows.Application
     catch (Exception ex)
     {
       Logger.Error(ex, "Error releasing single instance mutex.");
+    }
+  }
+
+  /// <summary>
+  /// Macht diese Instanz für den Installer auffindbar (pfadgebundener Mutex)
+  /// und wartet auf dessen Shutdown-Signal. Der Installer signalisiert nur
+  /// die Instanz, die aus dem Zielverzeichnis der Installation läuft.
+  /// </summary>
+  private void StartInstallerCoordination()
+  {
+    try
+    {
+      var appDirectory = AppContext.BaseDirectory;
+
+      _installerRunningMutex = new Mutex(
+          initiallyOwned: false,
+          InstallerCoordination.GetRunningMutexName(appDirectory));
+
+      _installerShutdownEvent = new EventWaitHandle(
+          initialState: false,
+          EventResetMode.ManualReset,
+          InstallerCoordination.GetShutdownEventName(appDirectory));
+
+      _installerShutdownWait = ThreadPool.RegisterWaitForSingleObject(
+          _installerShutdownEvent,
+          (_, _) => Dispatcher.BeginInvoke(() =>
+          {
+            if (_isExiting)
+              return;
+
+            Logger.Info("Shutdown was requested by the installer.");
+            Shutdown();
+          }),
+          state: null,
+          Timeout.Infinite,
+          executeOnlyOnce: true);
+    }
+    catch (Exception ex)
+    {
+      // Ohne Koordination läuft die App normal weiter; der Installer nutzt
+      // dann den Restart Manager als Rückfallebene.
+      Logger.Error(ex, "Error starting installer coordination.");
+    }
+  }
+
+  private void StopInstallerCoordination()
+  {
+    try
+    {
+      _installerShutdownWait?.Unregister(null);
+      _installerShutdownWait = null;
+
+      _installerShutdownEvent?.Dispose();
+      _installerShutdownEvent = null;
+
+      _installerRunningMutex?.Dispose();
+      _installerRunningMutex = null;
+    }
+    catch (Exception ex)
+    {
+      Logger.Error(ex, "Error stopping installer coordination.");
     }
   }
 
@@ -325,11 +418,11 @@ public partial class App : System.Windows.Application
     }
   }
 
-  private async Task StartServerSafeAsync()
+  private static async Task StartServerSafeAsync(CompanionServer server)
   {
     try
     {
-      await _server!.StartAsync();
+      await server.StartAsync();
       Logger.Info("Server started successfully.");
     }
     catch (Exception ex)
@@ -487,10 +580,16 @@ public partial class App : System.Windows.Application
       return;
     }
 
-    _updateDownloadWindow = new UpdateDownloadWindow(update);
-    _updateDownloadWindow.Closed += (_, __) => _updateDownloadWindow = null;
-    _updateDownloadWindow.Show();
-    _updateDownloadWindow.Activate();
+    var window = new UpdateDownloadWindow(update, _settings);
+    _updateDownloadWindow = window;
+    window.Closed += (_, __) =>
+    {
+      _updateCleanupTask = window.CancelAndCleanupAsync();
+      if (ReferenceEquals(_updateDownloadWindow, window))
+        _updateDownloadWindow = null;
+    };
+    window.Show();
+    window.Activate();
   }
 
   private void ShowPlayerWindow()
@@ -589,20 +688,35 @@ public partial class App : System.Windows.Application
 
   private async Task RestartServerAsync()
   {
+    await _serverLifecycleGate.WaitAsync();
     try
     {
+      if (_isExiting)
+        return;
+
       Logger.Info("Server restarting.");
 
-      if (_server is not null)
-        await _server.StopAsync(CancellationToken.None);
+      var previousServer = _server;
+      _server = null;
+
+      if (previousServer is not null)
+        await previousServer.DisposeAsync();
+
+      if (_isExiting)
+        return;
+
+      var replacementServer = new CompanionServer(_settings);
+      _server = replacementServer;
+      await StartServerSafeAsync(replacementServer);
     }
     catch (Exception ex)
     {
-      Logger.Error(ex, "Error stopping server before restart.");
+      Logger.Error(ex, "Error while restarting server.");
     }
-
-    _server = new CompanionServer(_settings);
-    await StartServerSafeAsync();
+    finally
+    {
+      _serverLifecycleGate.Release();
+    }
   }
 
   private async Task CheckForUpdatesAsync(bool showUpToDate)

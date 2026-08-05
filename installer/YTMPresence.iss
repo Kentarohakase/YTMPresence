@@ -46,7 +46,11 @@ SolidCompression=yes
 WizardStyle=modern
 SetupIconFile={#AppIcon}
 UninstallDisplayIcon={app}\app\YTMPresence.exe
-CloseApplications=no
+; Rückfallebene über den Windows Restart Manager: schließt ausschließlich
+; Prozesse, die Dateien unter {app} tatsächlich geöffnet halten – nie fremde
+; oder portable Prozesse, die nur denselben Dateinamen tragen.
+CloseApplications=force
+RestartApplications=no
 VersionInfoVersion={#AppVersion}
 VersionInfoCompany={#AppPublisher}
 VersionInfoDescription=YTMPresence Setup
@@ -85,22 +89,115 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueName: 
 Filename: "{app}\app\YTMPresence.exe"; Description: "YTMPresence starten"; WorkingDir: "{app}\app"; Flags: nowait postinstall skipifsilent
 
 [Code]
-procedure StopYTMPresence();
+// Beenden der laufenden installierten App – in dieser Reihenfolge:
+//
+// 1. Höfliche Aufforderung: Ein pfadgebundenes Named Event
+//    (Local\YTMPresence.Shutdown.<schlüssel>) signalisiert genau der Instanz,
+//    die aus dem Zielverzeichnis (app-Unterordner) läuft, sich regulär zu
+//    beenden. Danach wird auf das Verschwinden des zugehörigen Mutex
+//    (Local\YTMPresence.Running.<schlüssel>) gewartet.
+// 2. Rückfallebene: CloseApplications=force (Windows Restart Manager)
+//    schließt nur Prozesse, die Dateien im Zielverzeichnis geöffnet halten.
+//
+// Es wird bewusst kein taskkill nach Prozessnamen verwendet: Eine portable
+// Kopie in einem anderen Ordner oder ein fremder Prozess mit demselben
+// Dateinamen darf nicht beendet werden.
+//
+// Die Schlüsselberechnung muss exakt InstallerCoordination.GetInstanceKey in
+// YTMPresence.Core entsprechen (ASCII-Lowercase, SHA256 über UTF-16LE).
+
+const
+  EVENT_MODIFY_STATE = $0002;
+  ShutdownWaitTotalMs = 10000;
+  ShutdownPollMs = 250;
+
+function OpenEventW(dwDesiredAccess: DWORD; bInheritHandle: BOOL; lpName: String): THandle;
+  external 'OpenEventW@kernel32.dll stdcall';
+function SetEvent(hEvent: THandle): BOOL;
+  external 'SetEvent@kernel32.dll stdcall';
+function CloseHandle(hObject: THandle): BOOL;
+  external 'CloseHandle@kernel32.dll stdcall';
+
+function MakeInstanceKey(Path: String): String;
 var
-  ResultCode: Integer;
+  I: Integer;
+  C: Char;
 begin
-  Exec(ExpandConstant('{cmd}'), '/C taskkill /IM YTMPresence.exe /F >NUL 2>NUL', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-  Sleep(500);
+  { Abschließende Pfadtrenner entfernen, wie auf der App-Seite. }
+  while (Length(Path) > 0) and ((Path[Length(Path)] = '\') or (Path[Length(Path)] = '/')) do
+    SetLength(Path, Length(Path) - 1);
+
+  Result := '';
+  for I := 1 to Length(Path) do
+  begin
+    C := Path[I];
+    if ((C >= 'a') and (C <= 'z')) or ((C >= '0') and (C <= '9')) then
+      Result := Result + C
+    else if (C >= 'A') and (C <= 'Z') then
+      Result := Result + Chr(Ord(C) + 32)
+    else
+      Result := Result + C;
+  end;
+
+  { GetSHA256OfUnicodeString has the same UTF-16LE input representation as
+    Encoding.Unicode + SHA256 on the .NET side. The fixed-length result also
+    avoids collisions caused by replacing all punctuation with underscores. }
+  Result := GetSHA256OfUnicodeString(Result);
+end;
+
+function GetInstanceKey(): String;
+begin
+  Result := MakeInstanceKey(ExpandConstant('{app}') + '\app');
+end;
+
+function IsInstalledInstanceRunning(): Boolean;
+begin
+  Result := CheckForMutexes('Local\YTMPresence.Running.' + GetInstanceKey());
+end;
+
+procedure RequestInstalledInstanceShutdown();
+var
+  EventHandle: THandle;
+begin
+  EventHandle := OpenEventW(EVENT_MODIFY_STATE, False, 'Local\YTMPresence.Shutdown.' + GetInstanceKey());
+  if EventHandle <> 0 then
+  begin
+    SetEvent(EventHandle);
+    CloseHandle(EventHandle);
+  end;
+end;
+
+procedure StopInstalledInstance();
+var
+  WaitedMs: Integer;
+begin
+  if not IsInstalledInstanceRunning() then
+    exit;
+
+  RequestInstalledInstanceShutdown();
+
+  WaitedMs := 0;
+  while IsInstalledInstanceRunning() and (WaitedMs < ShutdownWaitTotalMs) do
+  begin
+    Sleep(ShutdownPollMs);
+    WaitedMs := WaitedMs + ShutdownPollMs;
+  end;
+
+  if not IsInstalledInstanceRunning() then
+    // Kurze Karenz, bis der Prozess seine Datei-Handles vollständig freigegeben hat.
+    Sleep(500);
+  // Reagiert die Instanz nicht, übernimmt CloseApplications=force (Restart
+  // Manager) und schließt nur Prozesse mit offenen Dateien im Zielverzeichnis.
 end;
 
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 begin
-  StopYTMPresence();
+  StopInstalledInstance();
   Result := '';
 end;
 
 function InitializeUninstall(): Boolean;
 begin
-  StopYTMPresence();
+  StopInstalledInstance();
   Result := True;
 end;
