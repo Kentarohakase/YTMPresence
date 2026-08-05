@@ -17,7 +17,39 @@
     }
 
     function getAudioElement() {
-        return document.querySelector("audio");
+        // YouTube Music nutzt je nach Layout <audio> oder <video>. Ohne den
+        // Rueckfall liefert die Suche null, und Position, Dauer und
+        // Wiedergabestatus haetten keine verlaessliche Quelle mehr.
+        return document.querySelector("audio") || document.querySelector("video");
+    }
+
+    /**
+     * Ermittelt, ob gerade tatsaechlich abgespielt wird.
+     *
+     * Das Medienelement hat Vorrang: `paused` ist der reale Zustand des
+     * Players. `navigator.mediaSession.playbackState` ist dagegen ein Wert, den
+     * die Seite selbst pflegt - YouTube Music aktualisiert ihn beim Pausieren
+     * nicht zuverlaessig. Wird ihm der Vorrang gelassen, meldet die Extension
+     * dauerhaft "laeuft", und der Companion sieht keinen Grund, die Presence
+     * abzuraeumen.
+     *
+     * Waehrend eines Sprungs in der Zeitleiste ist `paused` kurzzeitig true,
+     * ohne dass der Nutzer pausiert hat. Dieser Fall wird uebersprungen, damit
+     * die Presence beim Spulen nicht flackert.
+     */
+    function readIsPlaying(media, mediaSession) {
+        if (media && media.seeking !== true && typeof media.paused === "boolean") {
+            return !media.paused;
+        }
+
+        const sessionState = mediaSession?.playbackState;
+        if (sessionState === "playing" || sessionState === "paused") {
+            return sessionState === "playing";
+        }
+
+        // Nichts Belastbares vorhanden: konservativ als "nicht laufend" werten,
+        // damit keine veraltete Presence stehen bleibt.
+        return false;
     }
 
     function getVisibleText(selectors) {
@@ -486,9 +518,7 @@
         const position = Number.isFinite(audio?.currentTime) ? audio.currentTime : null;
         const duration = Number.isFinite(audio?.duration) ? audio.duration : null;
 
-        const playbackState =
-            mediaSession?.playbackState || (audio?.paused ? "paused" : "playing");
-        const isPlaying = playbackState === "playing";
+        const isPlaying = readIsPlaying(audio, mediaSession);
 
         let { title, artist, album } = mergeMetadata(metadata, domMetadata);
         const albumArtUrl = getBestArtworkUrl(metadata?.artwork);
