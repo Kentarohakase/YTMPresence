@@ -57,9 +57,24 @@ jobs:
             }
           }
 
-      - name: Lint extension (web-ext)
+      # Ab hier wird geprüft, was tatsächlich ausgeliefert wird. Ein reiner
+      # Lint gegen den Quellordner übersieht Verpackungsfehler, weil er die
+      # gebauten Archive nie anfasst.
+      - name: Package release artifacts
+        shell: pwsh
+        run: ./scripts/package-release.ps1 -SkipInstaller
+
+      - name: Verify release artifacts
+        shell: pwsh
+        run: ./scripts/verify-release.ps1
+
+      - name: Verify extension archives
+        shell: pwsh
+        run: ./scripts/verify-extension-archives.ps1
+
+      - name: Lint packaged extension (web-ext)
         shell: pwsh
         run: |
-          # web-ext prüft Firefox-Regeln, daher die Firefox-Variante erzeugen und linten.
-          ./scripts/make-firefox-extension.ps1 -SourceDir YTMPresence/extension -DestDir artifacts/ci/extension-firefox
-          npx --yes web-ext lint --source-dir artifacts/ci/extension-firefox
+          # web-ext prüft Firefox-Regeln, daher die entpackte Firefox-Variante
+          # aus dem gebauten Archiv linten - nicht den Quellordner.
+          npx --yes web-ext lint --source-dir artifacts/release/archive-check/YTMPresence-extension-firefox

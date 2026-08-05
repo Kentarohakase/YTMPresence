@@ -4,6 +4,11 @@ Alle wichtigen Änderungen an YTMPresence werden in dieser Datei dokumentiert.
 
 ## [Unreleased]
 
+### Added
+
+- `scripts/verify-extension-archives.ps1` prüft die gebauten Extension-Archive so, wie eine Store-Uploadverarbeitung sie sieht: Eintragsnamen (Pfadtrenner, absolute Pfade, Traversal), echtes Entpacken auf die Platte und Auflösung aller `__MSG_*__`-Platzhalter gegen den Katalog der Standardsprache.
+- CI baut die Release-Artefakte jetzt selbst (`package-release.ps1 -SkipInstaller`), verifiziert sie und lintet die **entpackte** Firefox-Variante aus dem gebauten Archiv statt des Quellordners. Ein Lint gegen die Quelle übersieht Verpackungsfehler, weil er die Archive nie anfasst.
+
 ### Fixed
 
 - Release-ZIPs verwenden jetzt Forward Slashes als Pfadtrenner. `Compress-Archive` schreibt unter Windows PowerShell 5.1 Backslashes, was gegen die ZIP-Spezifikation verstößt: Spezifikationstreue Entpacker – darunter die Uploadverarbeitung von Chrome Web Store und addons.mozilla.org – lesen `_locales\en\messages.json` als flachen Dateinamen statt als Verzeichnis, wodurch die `__MSG_*__`-Platzhalter im Manifest nicht auflösen. Betroffen waren beide Extension-ZIPs und das Bundle-ZIP.
