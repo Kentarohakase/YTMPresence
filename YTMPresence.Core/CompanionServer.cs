@@ -17,6 +17,28 @@ public sealed class CompanionServer : IAsyncDisposable
   private const int MaxWebSocketMessageBytes = 256 * 1024;
   private const int MaxMetadataTextLength = 256;
   private const int MaxUrlLength = 2048;
+
+  /// <summary>
+  /// Frist, in der ein Socket ein gültiges Token vorzeigen muss. Danach wird er
+  /// geschlossen, damit fremde Verbindungen nicht unbegrenzt offen bleiben.
+  /// Großzügig bemessen: Die Extension meldet sich spätestens mit dem
+  /// Keepalive nach 20 Sekunden.
+  /// </summary>
+  private static readonly TimeSpan UnauthenticatedSocketTimeout = TimeSpan.FromSeconds(60);
+
+  /// <summary>
+  /// WebSocket-Verbindungen unterliegen nicht der Same-Origin-Policy: Ohne
+  /// Prüfung könnte jede besuchte Webseite den lokalen Companion ansprechen.
+  /// Legitime Clients laufen im Extension-Kontext und senden entsprechend einen
+  /// Extension-Origin; ein fehlender Origin stammt von lokalen Nicht-Browser-
+  /// Clients (Tests, CLI), die ohnehin volle Benutzerrechte haben.
+  /// </summary>
+  private static readonly string[] AllowedOriginSchemes =
+  [
+    "chrome-extension",
+    "moz-extension",
+    "safari-web-extension"
+  ];
   private static readonly UTF8Encoding StrictUtf8 = new(
       encoderShouldEmitUTF8Identifier: false,
       throwOnInvalidBytes: true);
@@ -34,6 +56,7 @@ public sealed class CompanionServer : IAsyncDisposable
 
   private int _connectedClients;
   private int _unauthorizedCount;
+  private int _rejectedOriginCount;
   private DateTimeOffset? _lastUnauthorizedUtc;
   private readonly object _statusSync = new();
 
@@ -126,12 +149,38 @@ public sealed class CompanionServer : IAsyncDisposable
         return;
       }
 
+      var origin = ctx.Request.Headers["Origin"].ToString();
+      if (!IsAllowedOrigin(origin))
+      {
+        var rejected = Interlocked.Increment(ref _rejectedOriginCount);
+        if (rejected <= 3 || rejected % 10 == 0)
+          Logger.Warn($"WebSocket-Verbindung mit unzulässigem Origin '{origin}' abgelehnt. Gesamtzahl: {rejected}");
+
+        ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+        return;
+      }
+
       using var ws = await ctx.WebSockets.AcceptWebSocketAsync();
 
       var socketId = Interlocked.Increment(ref _socketIdCounter);
       _activeSockets[socketId] = ws;
 
       var countedClient = false;
+
+      // Eigene Frist bis zum ersten gültigen Token. Nach der Authentifizierung
+      // wird sie abgeschaltet und wieder gegen RequestAborted gelaufen.
+      using var authCts = CancellationTokenSource.CreateLinkedTokenSource(ctx.RequestAborted);
+      authCts.CancelAfter(UnauthenticatedSocketTimeout);
+      var authenticated = false;
+
+      void MarkAuthenticated()
+      {
+        if (authenticated)
+          return;
+
+        authenticated = true;
+        authCts.CancelAfter(Timeout.InfiniteTimeSpan);
+      }
 
       Logger.Info("Extension Socket verbunden.");
 
@@ -141,12 +190,23 @@ public sealed class CompanionServer : IAsyncDisposable
 
         while (ws.State == WebSocketState.Open && !ctx.RequestAborted.IsCancellationRequested)
         {
-          var json = await ReceiveTextAsync(ws, buffer, ctx.RequestAborted);
+          var receiveToken = authenticated ? ctx.RequestAborted : authCts.Token;
+
+          var json = await ReceiveTextAsync(ws, buffer, receiveToken);
           if (json is null)
             break;
 
-          if (await TryHandleTestMessageAsync(ws, json, ctx.RequestAborted))
+          var testOutcome = await TryHandleTestMessageAsync(ws, json, ctx.RequestAborted);
+          if (testOutcome != TestMessageOutcome.NotATestMessage)
+          {
+            // Ein gültiges Token im Verbindungstest zählt als Nachweis: Die
+            // Extension haelt die Verbindung bei pausierter Wiedergabe genau
+            // darueber offen.
+            if (testOutcome == TestMessageOutcome.ValidToken)
+              MarkAuthenticated();
+
             continue;
+          }
 
           YtmState? state;
           try
@@ -175,6 +235,8 @@ public sealed class CompanionServer : IAsyncDisposable
 
             continue;
           }
+
+          MarkAuthenticated();
 
           if (!TryNormalizeState(state, out var normalizedState))
             continue;
@@ -214,6 +276,11 @@ public sealed class CompanionServer : IAsyncDisposable
         {
           Interlocked.Decrement(ref _connectedClients);
           Logger.Info($"Extension Client getrennt. Clients aktiv: {Volatile.Read(ref _connectedClients)}");
+        }
+        else if (!authenticated && authCts.IsCancellationRequested && !ctx.RequestAborted.IsCancellationRequested)
+        {
+          Logger.Warn(
+            $"Socket ohne gültiges Token nach {UnauthenticatedSocketTimeout.TotalSeconds:0} Sekunden geschlossen (Origin '{origin}').");
         }
         else
         {
@@ -395,7 +462,14 @@ public sealed class CompanionServer : IAsyncDisposable
     }
   }
 
-  private async Task<bool> TryHandleTestMessageAsync(WebSocket ws, string json, CancellationToken ct)
+  private enum TestMessageOutcome
+  {
+    NotATestMessage,
+    ValidToken,
+    InvalidToken
+  }
+
+  private async Task<TestMessageOutcome> TryHandleTestMessageAsync(WebSocket ws, string json, CancellationToken ct)
   {
     try
     {
@@ -405,7 +479,7 @@ public sealed class CompanionServer : IAsyncDisposable
       if (!root.TryGetProperty("type", out var typeElement) ||
           !string.Equals(typeElement.GetString(), "YTM_TEST", StringComparison.Ordinal))
       {
-        return false;
+        return TestMessageOutcome.NotATestMessage;
       }
 
       var token = root.TryGetProperty("token", out var tokenElement)
@@ -432,12 +506,35 @@ public sealed class CompanionServer : IAsyncDisposable
       });
 
       await SendTextAsync(ws, response, ct);
-      return true;
+      return ok ? TestMessageOutcome.ValidToken : TestMessageOutcome.InvalidToken;
     }
     catch (Exception ex) when (ex is JsonException or InvalidOperationException)
     {
-      return false;
+      return TestMessageOutcome.NotATestMessage;
     }
+  }
+
+  /// <summary>
+  /// Prüft den Origin des WebSocket-Handshakes. Fehlender Origin ist zulässig
+  /// (lokale Nicht-Browser-Clients); Browser senden hier immer einen Wert, und
+  /// Web-Origins werden abgelehnt.
+  /// </summary>
+  public static bool IsAllowedOrigin(string? origin)
+  {
+    if (string.IsNullOrWhiteSpace(origin))
+      return true;
+
+    // Opaker Origin (sandboxed iframe, data:/file:-Kontext) ist kein gültiger URI.
+    if (!Uri.TryCreate(origin.Trim(), UriKind.Absolute, out var uri))
+      return false;
+
+    foreach (var scheme in AllowedOriginSchemes)
+    {
+      if (string.Equals(uri.Scheme, scheme, StringComparison.OrdinalIgnoreCase))
+        return true;
+    }
+
+    return false;
   }
 
   private static async Task<string?> ReceiveTextAsync(WebSocket ws, byte[] buffer, CancellationToken ct)

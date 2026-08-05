@@ -31,9 +31,12 @@ public class CompanionServerTests
     DiscordClientId = "0"
   };
 
-  private static async Task<ClientWebSocket> ConnectAsync(int port, CancellationToken ct)
+  private static async Task<ClientWebSocket> ConnectAsync(int port, CancellationToken ct, string? origin = null)
   {
     var client = new ClientWebSocket();
+    if (origin is not null)
+      client.Options.SetRequestHeader("Origin", origin);
+
     await client.ConnectAsync(new Uri($"ws://127.0.0.1:{port}/ws"), ct);
     return client;
   }
@@ -93,6 +96,65 @@ public class CompanionServerTests
     IsAd: false,
     TimestampUnixMs: 0,
     Token: token));
+
+  [Theory]
+  // Kein Origin: lokale Nicht-Browser-Clients.
+  [InlineData(null)]
+  [InlineData("")]
+  // Extension-Kontexte: Service Worker, Optionen, Popup.
+  [InlineData("chrome-extension://abcdefghijklmnopabcdefghijklmnop")]
+  [InlineData("moz-extension://0f9e8d7c-6b5a-4321-8765-0123456789ab")]
+  [InlineData("safari-web-extension://ABCDEF01-2345-6789-ABCD-EF0123456789")]
+  [InlineData("CHROME-EXTENSION://abcdefghijklmnopabcdefghijklmnop")]
+  public void AllowedOrigins_AreAccepted(string? origin)
+  {
+    Assert.True(CompanionServer.IsAllowedOrigin(origin));
+  }
+
+  [Theory]
+  // WebSockets unterliegen nicht der Same-Origin-Policy: Ohne diese Pruefung
+  // koennte jede besuchte Seite den lokalen Companion ansprechen.
+  [InlineData("https://evil.example")]
+  [InlineData("http://localhost:3000")]
+  [InlineData("https://music.youtube.com")]
+  [InlineData("http://127.0.0.1:17373")]
+  // Opaker Origin aus sandboxed iframe oder file:/data:-Kontext.
+  [InlineData("null")]
+  [InlineData("not a uri")]
+  public void WebOrigins_AreRejected(string origin)
+  {
+    Assert.False(CompanionServer.IsAllowedOrigin(origin));
+  }
+
+  [Fact]
+  public async Task Handshake_WithWebOrigin_IsRefused()
+  {
+    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+    var port = GetFreePort();
+    await using var server = new CompanionServer(ServerSettings(port));
+    await server.StartAsync();
+
+    await Assert.ThrowsAnyAsync<WebSocketException>(
+      () => ConnectAsync(port, cts.Token, origin: "https://evil.example"));
+
+    Assert.Equal(0, server.GetStatusSnapshot().ConnectedClients);
+  }
+
+  [Fact]
+  public async Task Handshake_WithExtensionOrigin_IsAccepted()
+  {
+    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+    var port = GetFreePort();
+    await using var server = new CompanionServer(ServerSettings(port));
+    await server.StartAsync();
+
+    using var client = await ConnectAsync(
+      port, cts.Token, origin: "chrome-extension://abcdefghijklmnopabcdefghijklmnop");
+    await SendAsync(client, StateJson(Token), cts.Token);
+
+    await PollUntilAsync(() => server.GetStatusSnapshot().ConnectedClients == 1, TimeSpan.FromSeconds(5));
+    Assert.Equal(1, server.GetStatusSnapshot().ConnectedClients);
+  }
 
   [Fact]
   public async Task TestMessage_WithValidToken_ReturnsOk()
