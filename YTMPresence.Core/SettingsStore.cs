@@ -7,6 +7,7 @@ namespace YTMPresence.Core;
 public static class SettingsStore
 {
   private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
+  private static readonly UTF8Encoding Utf8WithoutBom = new(encoderShouldEmitUTF8Identifier: false);
 
   public static string GetDefaultSettingsPath()
   {
@@ -25,18 +26,120 @@ public static class SettingsStore
       return defaults;
     }
 
-    var json = File.ReadAllText(settingsPath);
-    var loaded = JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
-    Normalize(loaded);
-    Save(settingsPath, loaded);
-    return loaded;
+    try
+    {
+      var json = File.ReadAllText(settingsPath);
+      var loaded = JsonSerializer.Deserialize<AppSettings>(json)
+          ?? throw new JsonException("Settings document must contain a JSON object.");
+
+      Normalize(loaded);
+      Save(settingsPath, loaded);
+      return loaded;
+    }
+    catch (Exception ex) when (ex is JsonException or NotSupportedException)
+    {
+      return RecoverCorruptedSettings(settingsPath);
+    }
   }
 
   public static void Save(string settingsPath, AppSettings settings)
   {
     Normalize(settings);
+
+    var fullPath = Path.GetFullPath(settingsPath);
+    var directory = Path.GetDirectoryName(fullPath)
+        ?? throw new InvalidOperationException("Settings path has no parent directory.");
+
+    Directory.CreateDirectory(directory);
+
     var json = JsonSerializer.Serialize(settings, JsonOptions);
-    File.WriteAllText(settingsPath, json);
+    var temporaryPath = Path.Combine(
+        directory,
+        $".{Path.GetFileName(fullPath)}.{Guid.NewGuid():N}.tmp");
+
+    try
+    {
+      using (var stream = new FileStream(
+          temporaryPath,
+          FileMode.CreateNew,
+          FileAccess.Write,
+          FileShare.None,
+          bufferSize: 16 * 1024,
+          FileOptions.WriteThrough))
+      {
+        using (var writer = new StreamWriter(stream, Utf8WithoutBom, bufferSize: 16 * 1024, leaveOpen: true))
+        {
+          writer.Write(json);
+        }
+
+        stream.Flush(flushToDisk: true);
+      }
+
+      if (File.Exists(fullPath))
+      {
+        File.Replace(
+            temporaryPath,
+            fullPath,
+            destinationBackupFileName: null,
+            ignoreMetadataErrors: true);
+      }
+      else
+      {
+        File.Move(temporaryPath, fullPath);
+      }
+    }
+    finally
+    {
+      try
+      {
+        if (File.Exists(temporaryPath))
+          File.Delete(temporaryPath);
+      }
+      catch
+      {
+        // Eine fehlgeschlagene Temp-Bereinigung darf den ursprünglichen
+        // Speicherfehler nicht verdecken.
+      }
+    }
+  }
+
+  private static AppSettings RecoverCorruptedSettings(string settingsPath)
+  {
+    var fullPath = Path.GetFullPath(settingsPath);
+    var directory = Path.GetDirectoryName(fullPath)
+        ?? throw new InvalidOperationException("Settings path has no parent directory.");
+    var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fullPath);
+    var extension = Path.GetExtension(fullPath);
+    var timestamp = DateTimeOffset.UtcNow.ToString("yyyyMMdd-HHmmssfff");
+    var backupPath = Path.Combine(
+        directory,
+        $"{fileNameWithoutExtension}.corrupt-{timestamp}{extension}");
+
+    for (var suffix = 1; File.Exists(backupPath); suffix++)
+    {
+      backupPath = Path.Combine(
+          directory,
+          $"{fileNameWithoutExtension}.corrupt-{timestamp}-{suffix}{extension}");
+    }
+
+    File.Move(fullPath, backupPath);
+
+    try
+    {
+      var defaults = new AppSettings();
+      Normalize(defaults);
+      Save(fullPath, defaults);
+      return defaults;
+    }
+    catch
+    {
+      // Recovery darf die beschädigte Originaldatei nicht verlieren, falls
+      // das Schreiben der neuen Defaults selbst fehlschlägt.
+      if (!File.Exists(fullPath) && File.Exists(backupPath))
+        File.Move(backupPath, fullPath);
+
+      throw;
+    }
   }
 
   private static void Normalize(AppSettings s)
