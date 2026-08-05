@@ -4,10 +4,12 @@ const DEFAULT_COMPANION_WS_URLS = [
 ];
 const MIN_SEND_INTERVAL_MS = 1500;
 const TEST_TIMEOUT_MS = 4000;
+const KEEPALIVE_INTERVAL_MS = 20_000;
 
 let companionWsUrls = [...DEFAULT_COMPANION_WS_URLS];
 let webSocket = null;
 let reconnectTimer = null;
+let keepAliveTimer = null;
 let reconnectDelayMs = 500;
 let nextReconnectAt = 0;
 let nextCompanionUrlIndex = 0;
@@ -16,17 +18,24 @@ let activeCompanionUrl = "";
 let lastSentKey = "";
 let lastSentAt = 0;
 let pendingPayload = null;
+let lastPayload = null;
 let lastReceivedStateAt = 0;
 let lastStatePreview = null;
 
 let cachedToken = "";
 let configLoaded = false;
+let configLoadPromise = null;
 let missingTokenLogged = false;
 let connectionState = "idle";
 let lastStatusMessage = "";
 let lastError = "";
 let lastConnectedAt = 0;
 let lastDisconnectedAt = 0;
+
+function t(key, subs) {
+    const msg = chrome.i18n.getMessage(key, subs);
+    return msg || key;
+}
 
 function normalizeCompanionUrl(value) {
     let raw = (value || "").trim();
@@ -80,19 +89,19 @@ function updateBadge() {
     if (!cachedToken) {
         text = "!";
         color = "#b00020";
-        title = "YTM Presence: Token fehlt";
+        title = `YTM Presence: ${t("connTokenMissing")}`;
     } else if (connectionState === "connected") {
         text = "OK";
         color = "#0a7a2f";
-        title = "YTM Presence: verbunden";
+        title = `YTM Presence: ${t("connConnected")}`;
     } else if (connectionState === "connecting") {
         text = "...";
         color = "#555555";
-        title = "YTM Presence: verbindet";
+        title = `YTM Presence: ${t("connConnecting")}`;
     } else if (connectionState === "disconnected") {
         text = "OFF";
         color = "#b45309";
-        title = "YTM Presence: Companion getrennt";
+        title = `YTM Presence: ${t("connDisconnected")}`;
     }
 
     try {
@@ -158,19 +167,22 @@ async function loadConfig() {
 
     setConnectionState(
         cachedToken ? connectionState : "idle",
-        cachedToken ? lastStatusMessage : "Token fehlt."
+        cachedToken ? lastStatusMessage : t("bgTokenMissing")
     );
 }
 
 async function ensureConfigLoaded() {
-    if (!configLoaded) {
-        await loadConfig();
+    if (configLoaded) return;
+
+    configLoadPromise ||= loadConfig();
+    try {
+        await configLoadPromise;
+    } finally {
+        configLoadPromise = null;
     }
 }
 
-chrome.storage.onChanged.addListener((changes, area) => {
-    if (area !== "local") return;
-
+function applyStorageChanges(changes) {
     let shouldRestart = false;
 
     if (changes.securityToken) {
@@ -191,8 +203,20 @@ chrome.storage.onChanged.addListener((changes, area) => {
     }
 
     if (shouldRestart) {
+        if (lastPayload) pendingPayload = lastPayload;
         restartConnection();
     }
+}
+
+chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== "local") return;
+
+    ensureConfigLoaded()
+        .then(() => applyStorageChanges(changes))
+        .catch((error) => {
+            lastError = `${t("msgSettingsLoadFailed")} ${error?.message || error}`;
+            updateBadge();
+        });
 });
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
@@ -204,7 +228,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
             .catch((error) => {
                 sendResponse({
                     ...getRuntimeStatus(),
-                    lastError: `Status konnte nicht geladen werden: ${error?.message || error}`
+                    lastError: `${t("msgStatusLoadFailed")} ${error?.message || error}`
                 });
             });
         return true;
@@ -217,7 +241,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
             .catch((error) => {
                 sendResponse({
                     ok: false,
-                    message: `Verbindungstest fehlgeschlagen: ${error?.message || error}`
+                    message: `${t("msgTestFailed")} ${error?.message || error}`
                 });
             });
         return true;
@@ -227,8 +251,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         const ok = Boolean(message.ok);
         const command = clampText(message.command, "unknown");
         lastStatusMessage = ok
-            ? `Command '${command}' ausgeführt.`
-            : `Command '${command}' konnte nicht ausgeführt werden.`;
+            ? t("bgCommandOk", [command])
+            : t("bgCommandFailed", [command]);
         if (!ok) lastError = lastStatusMessage;
         return false;
     }
@@ -247,6 +271,7 @@ async function sendState(payload) {
 
     if (!payload || typeof payload !== "object") return;
     rememberState(payload);
+    lastPayload = payload;
 
     if (!cachedToken) {
         if (!missingTokenLogged) {
@@ -299,7 +324,7 @@ function flushPendingState() {
 
 function connect() {
     if (!cachedToken) {
-        setConnectionState("idle", "Token fehlt.");
+        setConnectionState("idle", t("bgTokenMissing"));
         return null;
     }
 
@@ -313,7 +338,7 @@ function connect() {
 
     try {
         activeCompanionUrl = companionWsUrls[nextCompanionUrlIndex];
-        setConnectionState("connecting", `Verbinde mit ${activeCompanionUrl}.`);
+        setConnectionState("connecting", t("bgConnecting", [activeCompanionUrl]));
         const socket = new WebSocket(activeCompanionUrl);
         webSocket = socket;
 
@@ -322,9 +347,10 @@ function connect() {
             nextReconnectAt = 0;
             lastConnectedAt = Date.now();
             lastError = "";
-            setConnectionState("connected", `Verbunden mit ${activeCompanionUrl}.`);
+            setConnectionState("connected", t("bgConnected", [activeCompanionUrl]));
             console.info(`[YTM Bridge] Connected to ${activeCompanionUrl}.`);
             flushPendingState();
+            if (webSocket === socket) startKeepAlive(socket);
         };
 
         socket.onclose = (event) => {
@@ -336,15 +362,16 @@ function connect() {
             );
 
             webSocket = null;
+            stopKeepAlive();
             lastDisconnectedAt = Date.now();
-            lastError = `Getrennt (${event.code || "?"}): ${event.reason || "n/a"}`;
-            setConnectionState("disconnected", `Getrennt von ${activeCompanionUrl}.`);
+            lastError = t("bgDisconnectReason", [String(event.code || "?"), event.reason || "n/a"]);
+            setConnectionState("disconnected", t("bgDisconnectedFrom", [activeCompanionUrl]));
             nextCompanionUrlIndex = (nextCompanionUrlIndex + 1) % companionWsUrls.length;
             scheduleReconnect();
         };
 
         socket.onerror = () => {
-            lastError = `WebSocket-Fehler bei ${activeCompanionUrl}.`;
+            lastError = t("bgWsError", [activeCompanionUrl]);
             console.warn(`[YTM Bridge] WebSocket error at ${activeCompanionUrl}.`);
         };
 
@@ -357,14 +384,51 @@ function connect() {
 
         return socket;
     } catch (error) {
-        lastError = `WebSocket konnte nicht erstellt werden: ${error?.message || error}`;
+        lastError = `${t("bgWsCreateFailed")} ${error?.message || error}`;
         setConnectionState("disconnected", lastError);
         console.warn(`[YTM Bridge] ${lastError}`);
         webSocket = null;
+        stopKeepAlive();
         nextCompanionUrlIndex = (nextCompanionUrlIndex + 1) % companionWsUrls.length;
         scheduleReconnect();
         return null;
     }
+}
+
+function startKeepAlive(socket) {
+    stopKeepAlive();
+
+    keepAliveTimer = setInterval(() => {
+        if (webSocket !== socket || socket.readyState !== WebSocket.OPEN) {
+            stopKeepAlive();
+            return;
+        }
+
+        if (!cachedToken) return;
+
+        try {
+            // YTM_TEST gehört bereits zum bestehenden Protokoll und verändert
+            // weder Track- noch Pause-/Idle-Zustand im Companion.
+            socket.send(JSON.stringify({
+                type: "YTM_TEST",
+                token: cachedToken,
+                ts: Date.now()
+            }));
+        } catch (error) {
+            lastError = `${t("bgWsError", [activeCompanionUrl])} ${error?.message || error}`;
+            webSocket = null;
+            stopKeepAlive();
+            try { socket.close(); } catch { /* best effort */ }
+            setConnectionState("disconnected", lastError);
+            scheduleReconnect();
+        }
+    }, KEEPALIVE_INTERVAL_MS);
+}
+
+function stopKeepAlive() {
+    if (!keepAliveTimer) return;
+    clearInterval(keepAliveTimer);
+    keepAliveTimer = null;
 }
 
 function scheduleReconnect() {
@@ -390,6 +454,7 @@ function restartConnection() {
 
     reconnectDelayMs = 500;
     nextReconnectAt = 0;
+    stopKeepAlive();
 
     if (webSocket) {
         const socket = webSocket;
@@ -416,7 +481,7 @@ async function handleCompanionMessage(data) {
 
     const result = await forwardCommandToYtmTabs(command);
     lastStatusMessage = result.ok
-        ? `Command '${command}' an YouTube Music gesendet.`
+        ? t("bgCommandSent", [command])
         : result.message;
 
     if (!result.ok) {
@@ -433,7 +498,7 @@ async function forwardCommandToYtmTabs(command) {
     if (!tabs.length) {
         return {
             ok: false,
-            message: "Kein YouTube Music Tab gefunden."
+            message: t("bgNoYtmTab")
         };
     }
 
@@ -452,8 +517,8 @@ async function forwardCommandToYtmTabs(command) {
     }));
 
     return delivered > 0
-        ? { ok: true, message: `Command '${command}' gesendet.` }
-        : { ok: false, message: "YouTube Music Tab hat den Command nicht angenommen." };
+        ? { ok: true, message: t("bgCommandSent", [command]) }
+        : { ok: false, message: t("bgCommandRejected") };
 }
 
 function testConnection() {
@@ -464,7 +529,7 @@ function testConnection() {
         if (!token) {
             resolve({
                 ok: false,
-                message: "Token fehlt. Öffne die Optionen und füge den Tray-Token ein."
+                message: t("errTokenMissingInput")
             });
             return;
         }
@@ -494,7 +559,7 @@ function testConnection() {
         const timeoutId = setTimeout(() => {
             finish({
                 ok: false,
-                message: "Keine Antwort vom Companion. Läuft die Tray-App?"
+                message: t("testNoResponse")
             });
         }, TEST_TIMEOUT_MS);
 
@@ -503,7 +568,7 @@ function testConnection() {
         } catch {
             finish({
                 ok: false,
-                message: "WebSocket konnte nicht erstellt werden."
+                message: t("bgWsCreateFailed")
             });
             return;
         }
@@ -523,7 +588,7 @@ function testConnection() {
             } catch {
                 finish({
                     ok: false,
-                    message: "Unerwartete Antwort vom Companion."
+                    message: t("testUnexpected")
                 });
                 return;
             }
@@ -531,7 +596,7 @@ function testConnection() {
             if (response?.type !== "YTM_TEST_RESULT") {
                 finish({
                     ok: false,
-                    message: "Der Companion hat den Test nicht erkannt."
+                    message: t("testNotRecognized")
                 });
                 return;
             }
@@ -539,27 +604,27 @@ function testConnection() {
             finish({
                 ok: Boolean(response.ok),
                 message: response.ok
-                    ? "Verbindung OK. Token und Companion URL passen."
-                    : "Companion erreichbar, aber der Token ist falsch."
+                    ? t("testOk")
+                    : t("testBadToken")
             });
         };
 
         socket.onerror = () => {
             finish({
                 ok: false,
-                message: "Companion nicht erreichbar. Starte die Tray-App oder prüfe die URL."
+                message: t("testUnreachable")
             });
         };
 
         socket.onclose = () => {
             finish({
                 ok: false,
-                message: "Verbindung wurde geschlossen, bevor der Test beantwortet wurde."
+                message: t("testClosedEarly")
             });
         };
     });
 }
 
-loadConfig().then(connect).catch((error) => {
+ensureConfigLoaded().then(connect).catch((error) => {
     console.warn(`[YTM Bridge] Config could not be loaded: ${error?.message || error}`);
 });

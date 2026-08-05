@@ -2,8 +2,10 @@
 
 public sealed class PresenceService
 {
-  private readonly DiscordIpcClient _discord;
+  private readonly IDiscordPresenceClient _discord;
   private readonly AppSettings _settings;
+  private readonly SemaphoreSlim _operationGate = new(1, 1);
+  private readonly object _statusSync = new();
 
   private string? _lastPresenceKey;
   private DateTimeOffset _lastUpdateUtc = DateTimeOffset.MinValue;
@@ -21,17 +23,51 @@ public sealed class PresenceService
   // Beispiel: 10 => "01:20 / 03:45" wird nur alle 10 Sekunden neu gesetzt.
   private const int ProgressTextStepSeconds = 10;
 
-  public bool DiscordOk { get; private set; } = true;
-  public string? LastDiscordError { get; private set; }
-  public DateTimeOffset? LastDiscordOkUtc { get; private set; }
+  private bool _discordOk = true;
+  private string? _lastDiscordError;
+  private DateTimeOffset? _lastDiscordOkUtc;
 
-  public PresenceService(DiscordIpcClient discord, AppSettings settings)
+  public bool DiscordOk
+  {
+    get { lock (_statusSync) return _discordOk; }
+  }
+
+  public string? LastDiscordError
+  {
+    get { lock (_statusSync) return _lastDiscordError; }
+  }
+
+  public DateTimeOffset? LastDiscordOkUtc
+  {
+    get { lock (_statusSync) return _lastDiscordOkUtc; }
+  }
+
+  public PresenceService(IDiscordPresenceClient discord, AppSettings settings)
   {
     _discord = discord;
     _settings = settings;
   }
 
+  public (bool DiscordOk, string? LastDiscordError, DateTimeOffset? LastDiscordOkUtc) GetStatusSnapshot()
+  {
+    lock (_statusSync)
+      return (_discordOk, _lastDiscordError, _lastDiscordOkUtc);
+  }
+
   public async Task HandleAsync(YtmState state, CancellationToken ct)
+  {
+    await _operationGate.WaitAsync(ct);
+    try
+    {
+      await HandleCoreAsync(state, ct);
+    }
+    finally
+    {
+      _operationGate.Release();
+    }
+  }
+
+  private async Task HandleCoreAsync(YtmState state, CancellationToken ct)
   {
     var now = DateTimeOffset.UtcNow;
     _lastIncomingUtc = now;
@@ -88,6 +124,19 @@ public sealed class PresenceService
   }
 
   public async Task ClearIfIdleAsync(CancellationToken ct)
+  {
+    await _operationGate.WaitAsync(ct);
+    try
+    {
+      await ClearIfIdleCoreAsync(ct);
+    }
+    finally
+    {
+      _operationGate.Release();
+    }
+  }
+
+  private async Task ClearIfIdleCoreAsync(CancellationToken ct)
   {
     if (_lastIncomingUtc == DateTimeOffset.MinValue)
       return;
@@ -431,14 +480,20 @@ public sealed class PresenceService
 
   private void MarkDiscordOk()
   {
-    DiscordOk = true;
-    LastDiscordError = null;
-    LastDiscordOkUtc = DateTimeOffset.UtcNow;
+    lock (_statusSync)
+    {
+      _discordOk = true;
+      _lastDiscordError = null;
+      _lastDiscordOkUtc = DateTimeOffset.UtcNow;
+    }
   }
 
   private void MarkDiscordError(Exception ex)
   {
-    DiscordOk = false;
-    LastDiscordError = ex.Message;
+    lock (_statusSync)
+    {
+      _discordOk = false;
+      _lastDiscordError = ex.Message;
+    }
   }
 }
