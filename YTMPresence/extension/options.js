@@ -62,28 +62,28 @@ function formatAge(timestamp) {
     if (!timestamp) return "-";
 
     const seconds = Math.max(0, Math.round((Date.now() - timestamp) / 1000));
-    if (seconds < 2) return "gerade eben";
-    if (seconds < 60) return `vor ${seconds}s`;
+    if (seconds < 2) return t("ageJustNow");
+    if (seconds < 60) return t("ageSecondsAgo", [String(seconds)]);
 
     const minutes = Math.round(seconds / 60);
-    if (minutes < 60) return `vor ${minutes}m`;
+    if (minutes < 60) return t("ageMinutesAgo", [String(minutes)]);
 
     const hours = Math.round(minutes / 60);
-    return `vor ${hours}h`;
+    return t("ageHoursAgo", [String(hours)]);
 }
 
 function getConnectionLabel(status) {
-    if (!status?.tokenConfigured) return "Token fehlt";
+    if (!status?.tokenConfigured) return t("connTokenMissing");
 
     switch (status.connectionState) {
         case "connected":
-            return "Verbunden";
+            return t("connConnected");
         case "connecting":
-            return "Verbindet";
+            return t("connConnecting");
         case "disconnected":
-            return "Getrennt";
+            return t("connDisconnected");
         default:
-            return "Bereit";
+            return t("connReady");
     }
 }
 
@@ -91,24 +91,24 @@ function renderBadge(status) {
     stateBadge.className = "badge";
 
     if (!status?.tokenConfigured) {
-        stateBadge.textContent = "Setup";
+        stateBadge.textContent = t("badgeSetup");
         stateBadge.classList.add("err");
         return;
     }
 
     if (status.connectionState === "connected") {
-        stateBadge.textContent = "Online";
+        stateBadge.textContent = t("badgeOnline");
         stateBadge.classList.add("ok");
         return;
     }
 
     if (status.connectionState === "connecting") {
-        stateBadge.textContent = "Verbinden";
+        stateBadge.textContent = t("badgeConnecting");
         stateBadge.classList.add("warn");
         return;
     }
 
-    stateBadge.textContent = "Offline";
+    stateBadge.textContent = t("badgeOffline");
     stateBadge.classList.add(status.lastReceivedStateAt ? "warn" : "err");
 }
 
@@ -123,7 +123,7 @@ function renderStatus(status) {
 
     subtitle.textContent = status?.lastStatusMessage || getConnectionLabel(status);
     connectionText.textContent = getConnectionLabel(status);
-    tokenText.textContent = status?.tokenConfigured ? "gesetzt" : "fehlt";
+    tokenText.textContent = status?.tokenConfigured ? t("tokenSet") : t("tokenMissingShort");
     activeUrlText.textContent = activeUrl;
     activeUrlText.title = activeUrl;
     lastTrackText.textContent = track;
@@ -140,7 +140,7 @@ async function refreshStatus() {
         const status = await chrome.runtime.sendMessage({ type: "YTM_GET_STATUS" });
         renderStatus(status);
     } catch (error) {
-        show(`Status konnte nicht geladen werden: ${error?.message || error}`, "err");
+        show(`${t("msgStatusLoadFailed")} ${error?.message || error}`, "err");
     }
 }
 
@@ -160,11 +160,11 @@ function getCurrentSettings() {
     const companionUrl = normalizeCompanionUrl(companionUrlInput.value);
 
     if (!token) {
-        return { error: "Token fehlt. Kopiere ihn aus dem Tray-Menü und füge ihn hier ein." };
+        return { error: t("errTokenMissingInput") };
     }
 
     if (!companionUrl) {
-        return { error: "Ungültige Companion URL. Erlaubt sind localhost oder 127.0.0.1." };
+        return { error: t("errInvalidUrl") };
     }
 
     return { token, companionUrl };
@@ -194,7 +194,7 @@ function testConnection(companionUrl, token) {
         const timeoutId = setTimeout(() => {
             finish({
                 ok: false,
-                message: "Keine Antwort vom Companion. Läuft die Tray-App und ist die URL korrekt?"
+                message: t("testNoResponse")
             });
         }, TEST_TIMEOUT_MS);
 
@@ -203,7 +203,7 @@ function testConnection(companionUrl, token) {
         } catch {
             finish({
                 ok: false,
-                message: "WebSocket konnte nicht erstellt werden. Prüfe die Companion URL."
+                message: t("testWsCreateFailed")
             });
             return;
         }
@@ -223,7 +223,7 @@ function testConnection(companionUrl, token) {
             } catch {
                 finish({
                     ok: false,
-                    message: "Unerwartete Antwort vom Companion."
+                    message: t("testUnexpected")
                 });
                 return;
             }
@@ -231,27 +231,27 @@ function testConnection(companionUrl, token) {
             if (response?.type !== "YTM_TEST_RESULT") {
                 finish({
                     ok: false,
-                    message: "Der Companion hat den Verbindungstest nicht erkannt."
+                    message: t("testNotRecognized")
                 });
                 return;
             }
 
             finish(response.ok
-                ? { ok: true, message: "Verbindung OK. Token und Companion URL passen." }
-                : { ok: false, message: "Companion erreichbar, aber der Token ist falsch." });
+                ? { ok: true, message: t("testOk") }
+                : { ok: false, message: t("testBadToken") });
         };
 
         socket.onerror = () => {
             finish({
                 ok: false,
-                message: "Companion nicht erreichbar. Starte die Tray-App oder prüfe die URL."
+                message: t("testUnreachable")
             });
         };
 
         socket.onclose = () => {
             finish({
                 ok: false,
-                message: "Verbindung wurde geschlossen, bevor der Test beantwortet wurde."
+                message: t("testClosedEarly")
             });
         };
     });
@@ -274,7 +274,7 @@ saveBtn.addEventListener("click", async () => {
         });
 
         companionUrlInput.value = settings.companionUrl;
-        show("Gespeichert. YouTube Music Tab neu laden, falls er schon offen war.", "ok");
+        show(t("msgSaved"), "ok");
         await refreshStatus();
     } finally {
         setBusy(false);
@@ -290,7 +290,7 @@ testBtn.addEventListener("click", async () => {
     }
 
     setBusy(true);
-    show("Teste Verbindung...");
+    show(t("msgTesting"));
 
     try {
         const result = await testConnection(settings.companionUrl, settings.token);
@@ -321,7 +321,8 @@ openYtmBtn.addEventListener("click", () => {
     window.open("https://music.youtube.com/", "_blank", "noopener");
 });
 
-load().catch(() => show("Konnte Einstellungen nicht laden.", "err"));
+localizeDom();
+load().catch(() => show(t("msgSettingsLoadFailed"), "err"));
 setInterval(() => {
     if (document.visibilityState === "visible") {
         refreshStatus();

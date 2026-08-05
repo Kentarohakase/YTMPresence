@@ -1,7 +1,8 @@
 <Window x:Class="YTMPresence.TrayWpf.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="YTM Presence Einstellungen"
+        xmlns:tw="clr-namespace:YTMPresence.TrayWpf"
+        Title="{x:Static tw:UiText.SettingsWindowTitle}"
         Width="560"
         Height="640"
         MinWidth="520"
@@ -18,13 +19,13 @@
             </Grid.RowDefinitions>
 
             <TextBlock Grid.Row="0"
-                       Text="YTM Presence"
+                       Text="{x:Static tw:UiText.AppName}"
                        FontSize="22"
                        FontWeight="SemiBold"
                        Margin="0,0,0,14" />
 
             <GroupBox Grid.Row="1"
-                      Header="Verbindung"
+                      Header="{x:Static tw:UiText.GroupConnection}"
                       Padding="12"
                       Margin="0,0,0,12">
                 <Grid>
@@ -39,16 +40,16 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Security Token" VerticalAlignment="Center" />
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{x:Static tw:UiText.LabelSecurityToken}" VerticalAlignment="Center" />
                     <DockPanel Grid.Row="0" Grid.Column="1" LastChildFill="True">
                         <Button x:Name="CopyTokenButton"
-                                Content="Kopieren"
+                                Content="{x:Static tw:UiText.ButtonCopy}"
                                 Width="86"
                                 Margin="8,0,0,0"
                                 DockPanel.Dock="Right"
                                 Click="CopyTokenButton_Click" />
                         <Button x:Name="GenerateTokenButton"
-                                Content="Neu"
+                                Content="{x:Static tw:UiText.ButtonNew}"
                                 Width="64"
                                 Margin="8,0,0,0"
                                 DockPanel.Dock="Right"
@@ -59,21 +60,21 @@
                                  VerticalContentAlignment="Center" />
                     </DockPanel>
 
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Host" Margin="0,10,0,0" VerticalAlignment="Center" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{x:Static tw:UiText.LabelHost}" Margin="0,10,0,0" VerticalAlignment="Center" />
                     <TextBox x:Name="ListenHostBox"
                              Grid.Row="1"
                              Grid.Column="1"
                              Margin="0,10,0,0"
                              VerticalContentAlignment="Center" />
 
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Port" Margin="0,10,0,0" VerticalAlignment="Center" />
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="{x:Static tw:UiText.LabelPort}" Margin="0,10,0,0" VerticalAlignment="Center" />
                     <TextBox x:Name="ListenPortBox"
                              Grid.Row="2"
                              Grid.Column="1"
                              Margin="0,10,0,0"
                              VerticalContentAlignment="Center" />
 
-                    <TextBlock Grid.Row="3" Grid.Column="0" Text="WebSocket-Pfad" Margin="0,10,0,0" VerticalAlignment="Center" />
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="{x:Static tw:UiText.LabelWebSocketPath}" Margin="0,10,0,0" VerticalAlignment="Center" />
                     <TextBox x:Name="WebSocketPathBox"
                              Grid.Row="3"
                              Grid.Column="1"
@@ -83,7 +84,7 @@
             </GroupBox>
 
             <GroupBox Grid.Row="2"
-                      Header="Presence"
+                      Header="{x:Static tw:UiText.GroupPresence}"
                       Padding="12"
                       Margin="0,0,0,12">
                 <Grid>
@@ -99,48 +100,48 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Discord Update-Intervall" VerticalAlignment="Center" />
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{x:Static tw:UiText.LabelDiscordUpdateInterval}" VerticalAlignment="Center" />
                     <TextBox x:Name="MinUpdateSecondsBox"
                              Grid.Row="0"
                              Grid.Column="1"
                              VerticalContentAlignment="Center" />
 
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Idle-Clear nach Sekunden" Margin="0,10,0,0" VerticalAlignment="Center" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{x:Static tw:UiText.LabelIdleClearSeconds}" Margin="0,10,0,0" VerticalAlignment="Center" />
                     <TextBox x:Name="IdleClearSecondsBox"
                              Grid.Row="1"
                              Grid.Column="1"
                              Margin="0,10,0,0"
                              VerticalContentAlignment="Center" />
 
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Pause-Clear nach Sekunden" Margin="0,10,0,0" VerticalAlignment="Center" />
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="{x:Static tw:UiText.LabelPausedClearSeconds}" Margin="0,10,0,0" VerticalAlignment="Center" />
                     <TextBox x:Name="PausedClearSecondsBox"
                              Grid.Row="2"
                              Grid.Column="1"
                              Margin="0,10,0,0"
                              VerticalContentAlignment="Center" />
 
-                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Werbung" Margin="0,10,0,0" VerticalAlignment="Center" />
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="{x:Static tw:UiText.LabelAds}" Margin="0,10,0,0" VerticalAlignment="Center" />
                     <ComboBox x:Name="AdBehaviorBox"
                               Grid.Row="3"
                               Grid.Column="1"
                               Margin="0,10,0,0"
                               SelectedValuePath="Tag">
-                        <ComboBoxItem Content="Als Werbung anzeigen" Tag="ShowAdvertisement" />
-                        <ComboBoxItem Content="Ignorieren" Tag="Ignore" />
-                        <ComboBoxItem Content="Presence löschen" Tag="Clear" />
+                        <ComboBoxItem Content="{x:Static tw:UiText.AdShowAdvertisement}" Tag="ShowAdvertisement" />
+                        <ComboBoxItem Content="{x:Static tw:UiText.AdIgnore}" Tag="Ignore" />
+                        <ComboBoxItem Content="{x:Static tw:UiText.AdClear}" Tag="Clear" />
                     </ComboBox>
 
                     <CheckBox x:Name="OnlyShowWhenPlayingBox"
                               Grid.Row="4"
                               Grid.Column="0"
                               Grid.ColumnSpan="2"
-                              Content="Presence nur anzeigen, wenn Musik läuft"
+                              Content="{x:Static tw:UiText.SettingsOnlyShowWhenPlaying}"
                               Margin="0,12,0,0" />
                 </Grid>
             </GroupBox>
 
             <GroupBox Grid.Row="3"
-                      Header="Discord"
+                      Header="{x:Static tw:UiText.GroupDiscord}"
                       Padding="12"
                       Margin="0,0,0,12">
                 <Grid>
@@ -149,7 +150,7 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
-                    <TextBlock Grid.Column="0" Text="Client ID" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="0" Text="{x:Static tw:UiText.LabelClientId}" VerticalAlignment="Center" />
                     <TextBox x:Name="DiscordClientIdBox"
                              Grid.Column="1"
                              FontFamily="Consolas"
@@ -162,12 +163,12 @@
                            DockPanel.Dock="Left"
                            VerticalAlignment="Center"
                            Foreground="#0a7a2f" />
-                <Button Content="Abbrechen"
+                <Button Content="{x:Static tw:UiText.ButtonCancel}"
                         Width="96"
                         Margin="8,0,0,0"
                         DockPanel.Dock="Right"
                         IsCancel="True" />
-                <Button Content="Speichern"
+                <Button Content="{x:Static tw:UiText.ButtonSave}"
                         Width="96"
                         DockPanel.Dock="Right"
                         IsDefault="True"

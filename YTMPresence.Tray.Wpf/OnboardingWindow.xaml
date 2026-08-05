@@ -1,7 +1,8 @@
 <Window x:Class="YTMPresence.TrayWpf.OnboardingWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="YTM Presence Erste Schritte"
+        xmlns:tw="clr-namespace:YTMPresence.TrayWpf"
+        Title="{x:Static tw:UiText.OnboardingWindowTitle}"
         Width="540"
         Height="420"
         MinWidth="500"
@@ -17,18 +18,18 @@
         </Grid.RowDefinitions>
 
         <TextBlock Grid.Row="0"
-                   Text="YTM Presence einrichten"
+                   Text="{x:Static tw:UiText.OnboardingHeading}"
                    FontSize="22"
                    FontWeight="SemiBold"
                    Margin="0,0,0,10" />
 
         <TextBlock Grid.Row="1"
-                   Text="Companion läuft. Verbinde jetzt die Browser-Extension mit diesen Daten."
+                   Text="{x:Static tw:UiText.OnboardingIntro}"
                    TextWrapping="Wrap"
                    Margin="0,0,0,14" />
 
         <GroupBox Grid.Row="2"
-                  Header="Extension-Daten"
+                  Header="{x:Static tw:UiText.OnboardingExtensionDataHeader}"
                   Padding="12"
                   Margin="0,0,0,12">
             <Grid>
@@ -44,12 +45,12 @@
 
                 <TextBlock Grid.Row="0"
                            Grid.Column="0"
-                           Text="Security Token"
+                           Text="{x:Static tw:UiText.LabelSecurityToken}"
                            VerticalAlignment="Center" />
                 <DockPanel Grid.Row="0"
                            Grid.Column="1"
                            LastChildFill="True">
-                    <Button Content="Kopieren"
+                    <Button Content="{x:Static tw:UiText.ButtonCopy}"
                             Width="86"
                             Margin="8,0,0,0"
                             DockPanel.Dock="Right"
@@ -62,14 +63,14 @@
 
                 <TextBlock Grid.Row="1"
                            Grid.Column="0"
-                           Text="Companion URL"
+                           Text="{x:Static tw:UiText.LabelCompanionUrl}"
                            Margin="0,10,0,0"
                            VerticalAlignment="Center" />
                 <DockPanel Grid.Row="1"
                            Grid.Column="1"
                            Margin="0,10,0,0"
                            LastChildFill="True">
-                    <Button Content="Kopieren"
+                    <Button Content="{x:Static tw:UiText.ButtonCopy}"
                             Width="86"
                             Margin="8,0,0,0"
                             DockPanel.Dock="Right"
@@ -83,7 +84,7 @@
                 <TextBlock Grid.Row="2"
                            Grid.Column="0"
                            Grid.ColumnSpan="2"
-                           Text="In Chrome oder Edge: Erweiterungen öffnen, Entwicklermodus aktivieren, extension-Ordner laden, Token und URL in den Optionen speichern."
+                           Text="{x:Static tw:UiText.OnboardingInstructions}"
                            TextWrapping="Wrap"
                            Margin="0,14,0,0" />
             </Grid>
@@ -96,24 +97,24 @@
                    Margin="0,0,0,12" />
 
         <DockPanel Grid.Row="4" LastChildFill="False">
-            <Button Content="Später"
+            <Button Content="{x:Static tw:UiText.ButtonLater}"
                     Width="90"
                     Margin="8,0,0,0"
                     DockPanel.Dock="Right"
                     IsCancel="True"
                     Click="LaterButton_Click" />
-            <Button Content="Fertig"
+            <Button Content="{x:Static tw:UiText.ButtonDone}"
                     Width="90"
                     Margin="8,0,0,0"
                     DockPanel.Dock="Right"
                     IsDefault="True"
                     Click="DoneButton_Click" />
-            <Button Content="Einstellungen"
+            <Button Content="{x:Static tw:UiText.ButtonSettingsShort}"
                     Width="112"
                     Margin="8,0,0,0"
                     DockPanel.Dock="Right"
                     Click="OpenSettingsButton_Click" />
-            <Button Content="YouTube Music"
+            <Button Content="{x:Static tw:UiText.ButtonYouTubeMusic}"
                     Width="112"
                     DockPanel.Dock="Right"
                     Click="OpenYtmButton_Click" />

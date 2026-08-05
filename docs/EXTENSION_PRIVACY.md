@@ -35,6 +35,8 @@ Discord erhält die daraus erzeugten Rich-Presence-Informationen über die lokal
 
 Der Security Token und die Companion-URL werden über `chrome.storage.local` lokal im Browserprofil gespeichert. Playback-Daten werden in der Extension nur für den aktuellen Status zwischengespeichert und nicht dauerhaft archiviert.
 
+Firefox weist in Versionen mit eingebauter Consent-Anzeige bei der Installation auf `browsingActivity` und `websiteContent` hin, weil Track-Metadaten und die aktuelle YouTube-Music-URL den Browser zum lokalen Companion verlassen. Diese Übertragung bleibt auf dem Gerät (`localhost`/`127.0.0.1`); YTMPresence sendet sie nicht an einen Remote- oder Analysedienst.
+
 ## Berechtigungen
 
 - `storage`: speichert Token und Companion-URL lokal.

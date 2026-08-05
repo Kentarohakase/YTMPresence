@@ -174,46 +174,47 @@
     <header>
         <div>
             <h1>YTM Presence</h1>
-            <div id="subtitle" class="subtitle">Status wird geladen</div>
+            <div id="subtitle" class="subtitle" data-i18n="popupLoading">Status wird geladen</div>
         </div>
         <div id="stateBadge" class="badge">...</div>
     </header>
 
     <main>
         <section class="track">
-            <div id="trackTitle" class="track-title">Kein Track empfangen</div>
-            <div id="trackMeta" class="track-meta">YouTube Music öffnen und einen Track starten</div>
+            <div id="trackTitle" class="track-title" data-i18n="trackNone">Kein Track empfangen</div>
+            <div id="trackMeta" class="track-meta" data-i18n="trackNoneHint">YouTube Music öffnen und einen Track starten</div>
         </section>
 
         <section class="rows">
             <div class="row">
-                <span>Companion</span>
+                <span data-i18n="labelCompanion">Companion</span>
                 <span id="connectionText">-</span>
             </div>
             <div class="row">
-                <span>Token</span>
+                <span data-i18n="labelToken">Token</span>
                 <span id="tokenText">-</span>
             </div>
             <div class="row">
-                <span>URL</span>
+                <span data-i18n="labelUrl">URL</span>
                 <span id="urlText">-</span>
             </div>
             <div class="row">
-                <span>Letztes Update</span>
+                <span data-i18n="labelLastUpdate">Letztes Update</span>
                 <span id="lastUpdateText">-</span>
             </div>
         </section>
 
         <div class="actions">
-            <button id="testButton" class="primary">Verbindung testen</button>
-            <button id="optionsButton">Optionen</button>
-            <button id="ytmButton">YT Music</button>
-            <button id="refreshButton">Aktualisieren</button>
+            <button id="testButton" class="primary" data-i18n="btnTest">Verbindung testen</button>
+            <button id="optionsButton" data-i18n="btnOptions">Optionen</button>
+            <button id="ytmButton" data-i18n="btnYtm">YT Music</button>
+            <button id="refreshButton" data-i18n="btnRefresh">Aktualisieren</button>
         </div>
 
         <div id="message" class="message"></div>
     </main>
 
+    <script src="i18n.js"></script>
     <script src="popup.js"></script>
 </body>
 </html>

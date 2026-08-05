@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="utf-8">
-    <title>YTM Presence Einstellungen</title>
+    <title data-i18n="optionsTitle">YTM Presence Einstellungen</title>
     <style>
         :root {
             color-scheme: dark;
@@ -217,69 +217,70 @@
         <header>
             <div>
                 <h1>YTM Presence</h1>
-                <div id="subtitle" class="subtitle">Einstellungen werden geladen</div>
+                <div id="subtitle" class="subtitle" data-i18n="optionsLoading">Einstellungen werden geladen</div>
             </div>
             <div id="stateBadge" class="badge">...</div>
         </header>
 
         <div class="layout">
             <section>
-                <h2>Companion</h2>
+                <h2 data-i18n="labelCompanion">Companion</h2>
 
                 <div class="field">
-                    <label for="token">Security Token</label>
-                    <input id="token" autocomplete="off" spellcheck="false" placeholder="Token aus dem Tray-Menü" />
+                    <label for="token" data-i18n="labelSecurityToken">Security Token</label>
+                    <input id="token" autocomplete="off" spellcheck="false" data-i18n-placeholder="placeholderToken" placeholder="Token aus dem Tray-Menü" />
                 </div>
 
                 <div class="field">
-                    <label for="companionUrl">WebSocket URL</label>
-                    <input id="companionUrl" spellcheck="false" placeholder="ws://127.0.0.1:17373/ws" />
+                    <label for="companionUrl" data-i18n="labelWebsocketUrl">WebSocket URL</label>
+                    <input id="companionUrl" spellcheck="false" data-i18n-placeholder="placeholderUrl" placeholder="ws://127.0.0.1:17373/ws" />
                 </div>
 
                 <div class="actions">
-                    <button id="save" class="primary">Speichern</button>
-                    <button id="test">Verbindung testen</button>
-                    <button id="resetUrl">Standard-URL</button>
+                    <button id="save" class="primary" data-i18n="btnSave">Speichern</button>
+                    <button id="test" data-i18n="btnTest">Verbindung testen</button>
+                    <button id="resetUrl" data-i18n="btnResetUrl">Standard-URL</button>
                 </div>
 
                 <div id="msg" class="message"></div>
-                <div class="privacy">YTMPresence speichert Token und URL lokal im Browser. Playback-Daten werden nur an den lokalen Companion auf deinem Rechner gesendet.</div>
+                <div class="privacy" data-i18n="privacyNote">YTMPresence speichert Token und URL lokal im Browser. Playback-Daten werden nur an den lokalen Companion auf deinem Rechner gesendet.</div>
             </section>
 
             <section>
-                <h2>Status</h2>
+                <h2 data-i18n="labelStatus">Status</h2>
 
                 <div class="rows">
                     <div class="row">
-                        <span>Companion</span>
+                        <span data-i18n="labelCompanion">Companion</span>
                         <span id="connectionText">-</span>
                     </div>
                     <div class="row">
-                        <span>Token</span>
+                        <span data-i18n="labelToken">Token</span>
                         <span id="tokenText">-</span>
                     </div>
                     <div class="row">
-                        <span>Aktive URL</span>
+                        <span data-i18n="labelActiveUrl">Aktive URL</span>
                         <span id="activeUrlText">-</span>
                     </div>
                     <div class="row">
-                        <span>Letzter Track</span>
+                        <span data-i18n="labelLastTrack">Letzter Track</span>
                         <span id="lastTrackText">-</span>
                     </div>
                     <div class="row">
-                        <span>Letztes Update</span>
+                        <span data-i18n="labelLastUpdate">Letztes Update</span>
                         <span id="lastUpdateText">-</span>
                     </div>
                 </div>
 
                 <div class="actions">
-                    <button id="refresh">Aktualisieren</button>
-                    <button id="openYtm">YT Music</button>
+                    <button id="refresh" data-i18n="btnRefresh">Aktualisieren</button>
+                    <button id="openYtm" data-i18n="btnYtm">YT Music</button>
                 </div>
             </section>
         </div>
     </div>
 
+    <script src="i18n.js"></script>
     <script src="options.js"></script>
 </body>
 </html>

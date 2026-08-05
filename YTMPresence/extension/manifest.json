@@ -1,9 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "YTM Discord Presence Bridge",
-  "short_name": "YTM Presence",
-  "version": "0.8.11",
-  "description": "Zeigt YouTube Music als Discord Rich Presence über einen lokalen Companion.",
+  "name": "__MSG_appName__",
+  "short_name": "__MSG_appShortName__",
+  "version": "1.0.0",
+  "default_locale": "en",
+  "description": "__MSG_appDescription__",
   "homepage_url": "https://github.com/Kentarohakase/YTMPresence",
   "icons": {
     "16": "icons/icon16.png",
@@ -18,7 +19,7 @@
   ],
   "permissions": [ "storage", "tabs" ],
   "action": {
-    "default_title": "YTM Presence",
+    "default_title": "__MSG_appShortName__",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
