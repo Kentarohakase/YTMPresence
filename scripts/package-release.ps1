@@ -15,11 +15,20 @@ $releaseRoot = Join-Path $artifactsRoot "release"
 $extensionSource = Join-Path $repoRoot "YTMPresence\extension"
 $extensionOutput = Join-Path $releaseRoot "extension"
 $extensionZip = Join-Path $releaseRoot "YTMPresence-extension.zip"
+$extensionFirefoxOutput = Join-Path $releaseRoot "extension-firefox"
+$extensionFirefoxZip = Join-Path $releaseRoot "YTMPresence-extension-firefox.zip"
 $bundleRoot = Join-Path $releaseRoot "bundle"
 $project = Join-Path $repoRoot "YTMPresence.Tray.Wpf\YTMPresence.Tray.Wpf.csproj"
 $manifestPath = Join-Path $extensionSource "manifest.json"
 $verifyScript = Join-Path $PSScriptRoot "verify-release.ps1"
+$versionConsistencyScript = Join-Path $PSScriptRoot "verify-version-consistency.ps1"
 $innoInstallerScript = Join-Path $PSScriptRoot "package-inno-installer.ps1"
+
+if (-not (Test-Path -LiteralPath $versionConsistencyScript)) {
+    throw "Version consistency script not found: $versionConsistencyScript"
+}
+
+& $versionConsistencyScript -RequireChangelog
 
 if (-not (Test-Path -LiteralPath $project)) {
     throw "Tray project not found: $project"
@@ -92,7 +101,7 @@ if (-not $KeepOldArtifacts) {
     Remove-ReleasePath -Path (Join-Path $releaseRoot "YTMPresence-$Runtime-setup.exe")
 }
 
-foreach ($path in @($appOutput, $extensionOutput, $extensionZip, $bundleRoot)) {
+foreach ($path in @($appOutput, $extensionOutput, $extensionZip, $extensionFirefoxOutput, $extensionFirefoxZip, $bundleRoot)) {
     Remove-ReleasePath -Path $path
 }
 
@@ -106,6 +115,11 @@ dotnet publish $project `
 
 Copy-Item -LiteralPath $extensionSource -Destination $extensionOutput -Recurse
 Compress-Archive -Path (Join-Path $extensionOutput "*") -DestinationPath $extensionZip -Force
+
+# Firefox-Variante: identische Dateien, Manifest um browser_specific_settings
+# und background.scripts-Fallback ergaenzt. Version bleibt automatisch synchron.
+& (Join-Path $PSScriptRoot "make-firefox-extension.ps1") -SourceDir $extensionSource -DestDir $extensionFirefoxOutput
+Compress-Archive -Path (Join-Path $extensionFirefoxOutput "*") -DestinationPath $extensionFirefoxZip -Force
 
 Remove-ReleasePath -Path $bundleZip
 
@@ -145,10 +159,6 @@ Set-Content -LiteralPath $summaryPath -Value $summary -Encoding UTF8
 Copy-Item -LiteralPath $summaryPath -Destination (Join-Path $bundleDir "RELEASE.txt") -Force
 Compress-Archive -Path (Join-Path $bundleDir "*") -DestinationPath $bundleZip -Force
 
-if (Test-Path -LiteralPath $verifyScript) {
-    & $verifyScript -ReleaseRoot $releaseRoot -Version $extensionVersion -Runtime $Runtime
-}
-
 if ($SkipInstaller) {
     Remove-ReleasePath -Path $setupPath
     Write-Host "Installer packaging skipped."
@@ -161,10 +171,39 @@ else {
     & $innoInstallerScript -ReleaseRoot $releaseRoot -Version $extensionVersion -Runtime $Runtime -InnoSetupCompiler $InnoSetupCompiler
 }
 
+# Reihenfolge im Release-Prozess: erst alle Artefakte fertigstellen, danach
+# die Prüfsummenliste erzeugen. Ab hier darf kein Artefakt mehr verändert
+# werden; verify-release.ps1 verifiziert die Liste nur noch (kein Neuschreiben).
+$checksumPath = Join-Path $releaseRoot "SHA256SUMS.txt"
+$checksumFiles = @($bundleZip, $extensionZip, $extensionFirefoxZip)
+if (-not $SkipInstaller) {
+    $checksumFiles += $setupPath
+}
+
+$checksumLines = foreach ($file in $checksumFiles) {
+    $hash = Get-FileHash -Algorithm SHA256 -LiteralPath $file
+    "$($hash.Hash.ToLowerInvariant())  $(Split-Path -Leaf $file)"
+}
+
+# Deterministic ASCII avoids a UTF-8 BOM on Windows PowerShell 5.1. A BOM in
+# front of the first hash would make the strict updater parser reject it.
+[System.IO.File]::WriteAllLines($checksumPath, [string[]]$checksumLines, [System.Text.Encoding]::ASCII)
+Write-Host "Checksums written: $checksumPath"
+
+if (Test-Path -LiteralPath $verifyScript) {
+    if ($SkipInstaller) {
+        & $verifyScript -ReleaseRoot $releaseRoot -Version $extensionVersion -Runtime $Runtime
+    }
+    else {
+        & $verifyScript -ReleaseRoot $releaseRoot -Version $extensionVersion -Runtime $Runtime -RequireInstaller
+    }
+}
+
 Write-Host ""
 Write-Host "Release package created:"
 Write-Host "  App:       $appOutput"
 Write-Host "  Extension: $extensionZip"
+Write-Host "  Firefox:   $extensionFirefoxZip"
 Write-Host "  Bundle:    $bundleZip"
 if (-not $SkipInstaller) {
     Write-Host "  Setup:     $setupPath"

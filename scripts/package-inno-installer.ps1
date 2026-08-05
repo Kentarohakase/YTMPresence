@@ -26,12 +26,13 @@ $appFolder = Join-Path $releaseRoot "$bundleName-app"
 $extensionFolder = Join-Path $releaseRoot "extension"
 $bundleZip = Join-Path $releaseRoot "$bundleName.zip"
 $extensionZip = Join-Path $releaseRoot "YTMPresence-extension.zip"
+$extensionFirefoxZip = Join-Path $releaseRoot "YTMPresence-extension-firefox.zip"
 $setupExe = Join-Path $releaseRoot "$bundleName-setup.exe"
 $summaryPath = Join-Path $releaseRoot "RELEASE.txt"
 $issPath = Join-Path $repoRoot "installer\YTMPresence.iss"
 $appIcon = Join-Path $repoRoot "YTMPresence.Tray.Wpf\Assets\app.ico"
 
-foreach ($path in @($appFolder, $extensionFolder, $bundleZip, $extensionZip, $summaryPath, $issPath, $appIcon)) {
+foreach ($path in @($appFolder, $extensionFolder, $bundleZip, $extensionZip, $extensionFirefoxZip, $summaryPath, $issPath, $appIcon)) {
     if (-not (Test-Path -LiteralPath $path)) {
         throw "Required installer input missing: $path"
     }
@@ -128,16 +129,10 @@ if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) {
 
 Wait-FileReady -Path $setupExe -TimeoutSeconds 30
 
-$checksumPath = Join-Path $releaseRoot "SHA256SUMS.txt"
-$checksumFiles = @($bundleZip, $extensionZip, $setupExe)
-$checksumLines = foreach ($file in $checksumFiles) {
-    $hash = Get-FileHash -Algorithm SHA256 -LiteralPath $file
-    "$($hash.Hash.ToLowerInvariant())  $(Split-Path -Leaf $file)"
-}
-
-Set-Content -LiteralPath $checksumPath -Value $checksumLines -Encoding UTF8
+# SHA256SUMS.txt wird bewusst NICHT hier erzeugt: Die Prüfsummenliste entsteht
+# erst in package-release.ps1, nachdem alle finalen Artefakte gebaut wurden,
+# und verify-release.ps1 verifiziert sie anschließend nur noch.
 
 Write-Host "Inno Setup installer package created:"
 Write-Host "  Compiler:  $iscc"
 Write-Host "  Setup:     $setupExe"
-Write-Host "  Checksums: $checksumPath"
