@@ -7,9 +7,16 @@ using System.Text.Json.Serialization;
 
 namespace YTMPresence.Core;
 
-public sealed class DiscordIpcClient : IAsyncDisposable
+public sealed class DiscordIpcClient : IDiscordPresenceClient, IAsyncDisposable
 {
   private const int MaxFrameBytes = 10_000_000;
+  internal const string UnavailableMessage = "Discord IPC nicht erreichbar. Läuft Discord Desktop?";
+
+  // Wenn Discord nicht läuft, würde jeder eingehende State sonst erneut alle
+  // Pipes durchprobieren (bis zu ~5s). Mit einer kurzen Sperre bleibt der
+  // Companion auch ohne Discord flüssig und verbindet sich automatisch neu.
+  private static readonly TimeSpan ConnectCooldown = TimeSpan.FromSeconds(15);
+  private DateTimeOffset _nextConnectAttemptUtc = DateTimeOffset.MinValue;
 
   private readonly string _clientId;
   private Stream? _stream;
@@ -33,7 +40,20 @@ public sealed class DiscordIpcClient : IAsyncDisposable
     {
       if (_stream is not null) return;
 
-      _stream = await ConnectAsync(ct);
+      // Während der Cooldown-Phase nicht erneut alle Pipes durchprobieren.
+      if (DateTimeOffset.UtcNow < _nextConnectAttemptUtc)
+        throw new InvalidOperationException(UnavailableMessage);
+
+      try
+      {
+        _stream = await ConnectAsync(ct);
+      }
+      catch when (!ct.IsCancellationRequested)
+      {
+        _nextConnectAttemptUtc = DateTimeOffset.UtcNow + ConnectCooldown;
+        throw;
+      }
+
       _connectionCts = new CancellationTokenSource();
 
       try
@@ -43,9 +63,12 @@ public sealed class DiscordIpcClient : IAsyncDisposable
       catch
       {
         await ResetAsync();
+        _nextConnectAttemptUtc = DateTimeOffset.UtcNow + ConnectCooldown;
         throw;
       }
 
+      // Verbindung steht: Cooldown zurücksetzen.
+      _nextConnectAttemptUtc = DateTimeOffset.MinValue;
       _ = Task.Run(() => DrainIncomingAsync(_connectionCts.Token));
     }
     finally
@@ -174,7 +197,7 @@ public sealed class DiscordIpcClient : IAsyncDisposable
       catch { }
     }
 
-    throw new InvalidOperationException("Discord IPC nicht erreichbar. Läuft Discord Desktop?");
+    throw new InvalidOperationException(UnavailableMessage);
   }
 
   private static string ResolveUnixIpcPath(int index)
