@@ -20,6 +20,9 @@ public sealed record UpdateCheckResult(
 
 public static class UpdateChecker
 {
+  private const string SetupAssetSuffix = UpdateArtifactNames.SetupFileNameSuffix;
+  private const string ChecksumsAssetName = UpdateArtifactNames.ChecksumsFileName;
+
   private static readonly JsonSerializerOptions JsonOptions = new()
   {
     PropertyNameCaseInsensitive = true
@@ -72,22 +75,41 @@ public static class UpdateChecker
       if (release is null || release.Draft || string.IsNullOrWhiteSpace(release.TagName))
         return Error(currentVersion, "Keine gültige Release-Antwort erhalten.");
 
+      // Vorabversionen sind keine Updateziele. /releases/latest filtert sie
+      // bereits, aber UpdateApiUrl ist konfigurierbar - die Regel gehört daher
+      // in den Code und nicht nur in die Release-Checkliste.
+      if (release.Prerelease)
+        return Error(currentVersion, "Das neueste Release ist als Vorabversion markiert und wird nicht installiert.");
+
       var latestVersion = NormalizeVersionText(release.TagName);
       var releaseUrl = release.HtmlUrl is { Length: > 0 } htmlUrl && urlValidator.TryValidate(htmlUrl, "Release-Seite", out _)
         ? htmlUrl
         : "https://github.com/Kentarohakase/YTMPresence/releases";
-      var setupDownloadUrl = release.Assets?
-        .Where(a => a.Name?.EndsWith("-setup.exe", StringComparison.OrdinalIgnoreCase) == true)
-        .Select(a => a.BrowserDownloadUrl)
-        .FirstOrDefault(url => !string.IsNullOrWhiteSpace(url));
-      var setupAssetName = release.Assets?
-        .Where(a => a.Name?.EndsWith("-setup.exe", StringComparison.OrdinalIgnoreCase) == true)
-        .Select(a => a.Name)
-        .FirstOrDefault(name => !string.IsNullOrWhiteSpace(name));
-      var checksumsDownloadUrl = release.Assets?
-        .Where(a => string.Equals(a.Name, "SHA256SUMS.txt", StringComparison.OrdinalIgnoreCase))
-        .Select(a => a.BrowserDownloadUrl)
-        .FirstOrDefault(url => !string.IsNullOrWhiteSpace(url));
+
+      // Genau ein Asset wird ausgewählt; Name und URL stammen anschließend aus
+      // demselben Objekt. Getrennte Abfragen könnten den Namen des einen und
+      // die URL eines anderen Assets kombinieren.
+      GitHubReleaseAsset? setupAsset;
+      GitHubReleaseAsset? checksumsAsset;
+      try
+      {
+        setupAsset = SelectSingleAsset(
+          release.Assets,
+          a => a.Name?.EndsWith(SetupAssetSuffix, StringComparison.OrdinalIgnoreCase) == true,
+          $"'*{SetupAssetSuffix}'");
+        checksumsAsset = SelectSingleAsset(
+          release.Assets,
+          a => string.Equals(a.Name, ChecksumsAssetName, StringComparison.Ordinal),
+          $"'{ChecksumsAssetName}'");
+      }
+      catch (UpdateSecurityException ex)
+      {
+        return Error(currentVersion, ex.Message);
+      }
+
+      var setupDownloadUrl = NullIfBlank(setupAsset?.BrowserDownloadUrl);
+      var setupAssetName = NullIfBlank(setupAsset?.Name);
+      var checksumsDownloadUrl = NullIfBlank(checksumsAsset?.BrowserDownloadUrl);
 
       // Asset-URLs, die die Update-Richtlinie verletzen, machen den ganzen
       // Check sichtbar ungültig, statt still einen Download anzubieten.
@@ -120,6 +142,31 @@ public static class UpdateChecker
       return Error(currentVersion, $"Update-Check fehlgeschlagen: {ex.Message}");
     }
   }
+
+  /// <summary>
+  /// Wählt höchstens ein passendes Asset aus. Mehrere Treffer werden wie
+  /// mehrere Prüfsummenzeilen als mehrdeutig abgelehnt, statt still den ersten
+  /// zu nehmen: Welches Asset GitHub zuerst liefert, ist nicht zugesichert.
+  /// </summary>
+  private static GitHubReleaseAsset? SelectSingleAsset(
+    List<GitHubReleaseAsset>? assets,
+    Func<GitHubReleaseAsset, bool> predicate,
+    string description)
+  {
+    if (assets is null)
+      return null;
+
+    var matches = assets.Where(predicate).ToList();
+
+    if (matches.Count > 1)
+      throw new UpdateSecurityException(
+        $"Update-Check fehlgeschlagen: Das Release enthält {matches.Count} Assets für {description}. Die Auswahl wäre mehrdeutig.");
+
+    return matches.Count == 1 ? matches[0] : null;
+  }
+
+  private static string? NullIfBlank(string? value)
+    => string.IsNullOrWhiteSpace(value) ? null : value;
 
   /// <summary>Liest höchstens <paramref name="maxBytes"/>; null bei Überschreitung.</summary>
   private static async Task<byte[]?> ReadBoundedAsync(Stream stream, long maxBytes, CancellationToken ct)
@@ -262,6 +309,9 @@ public static class UpdateChecker
 
     [JsonPropertyName("draft")]
     public bool Draft { get; set; }
+
+    [JsonPropertyName("prerelease")]
+    public bool Prerelease { get; set; }
 
     [JsonPropertyName("assets")]
     public List<GitHubReleaseAsset>? Assets { get; set; }

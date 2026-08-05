@@ -9,6 +9,12 @@ Alle wichtigen Änderungen an YTMPresence werden in dieser Datei dokumentiert.
 - `scripts/verify-extension-archives.ps1` prüft die gebauten Extension-Archive so, wie eine Store-Uploadverarbeitung sie sieht: Eintragsnamen (Pfadtrenner, absolute Pfade, Traversal), echtes Entpacken auf die Platte und Auflösung aller `__MSG_*__`-Platzhalter gegen den Katalog der Standardsprache.
 - CI baut die Release-Artefakte jetzt selbst (`package-release.ps1 -SkipInstaller`), verifiziert sie und lintet die **entpackte** Firefox-Variante aus dem gebauten Archiv statt des Quellordners. Ein Lint gegen die Quelle übersieht Verpackungsfehler, weil er die Archive nie anfasst.
 
+### Changed
+
+- Das Setup-Asset eines Releases wird genau einmal ausgewählt; Name und Download-URL stammen anschließend aus demselben Asset. Mehrere Assets mit `-setup.exe` werden wie mehrdeutige Prüfsummenzeilen abgelehnt, statt still das erste zu nehmen – die Reihenfolge der GitHub-Antwort ist nicht zugesichert.
+- Releases mit `prerelease: true` werden nicht mehr als Update angeboten. `/releases/latest` filtert sie zwar bereits, aber `UpdateApiUrl` ist konfigurierbar.
+- Auswahl und Verifikation des Prüfsummen-Assets vergleichen den Dateinamen jetzt beide ordinal. Ein abweichend geschriebenes `sha256sums.txt` wird dadurch gar nicht erst angeboten, statt später mit einer irreführenden Sicherheitsmeldung abzubrechen. Die Artefaktnamen liegen dafür in `UpdateArtifactNames` als gemeinsame Quelle.
+
 ### Fixed
 
 - Release-ZIPs verwenden jetzt Forward Slashes als Pfadtrenner. `Compress-Archive` schreibt unter Windows PowerShell 5.1 Backslashes, was gegen die ZIP-Spezifikation verstößt: Spezifikationstreue Entpacker – darunter die Uploadverarbeitung von Chrome Web Store und addons.mozilla.org – lesen `_locales\en\messages.json` als flachen Dateinamen statt als Verzeichnis, wodurch die `__MSG_*__`-Platzhalter im Manifest nicht auflösen. Betroffen waren beide Extension-ZIPs und das Bundle-ZIP.

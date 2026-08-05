@@ -24,13 +24,19 @@ public class UpdateCheckerTests
     bool draft = false,
     bool withAssets = true,
     string setupUrl = SetupUrl,
-    string checksumsUrl = ChecksumsUrl)
+    string checksumsUrl = ChecksumsUrl,
+    bool prerelease = false,
+    string? assetsJson = null)
   {
+    var defaultAssets = $$"""
+      { "name": "YTMPresence-1.0.0-win-x64-setup.exe", "browser_download_url": "{{setupUrl}}" },
+      { "name": "SHA256SUMS.txt", "browser_download_url": "{{checksumsUrl}}" }
+      """;
+
     var assets = withAssets
       ? $$"""
         "assets": [
-          { "name": "YTMPresence-1.0.0-win-x64-setup.exe", "browser_download_url": "{{setupUrl}}" },
-          { "name": "SHA256SUMS.txt", "browser_download_url": "{{checksumsUrl}}" }
+          {{assetsJson ?? defaultAssets}}
         ],
         """
       : "";
@@ -40,6 +46,7 @@ public class UpdateCheckerTests
         "tag_name": "{{tag}}",
         "html_url": "https://github.com/Kentarohakase/YTMPresence/releases/tag/{{tag}}",
         "draft": {{(draft ? "true" : "false")}},
+        "prerelease": {{(prerelease ? "true" : "false")}},
         {{assets}}
         "name": "release"
       }
@@ -89,6 +96,72 @@ public class UpdateCheckerTests
     var result = await Check("0.8.11", ReleaseJson("v1.0.0", draft: true));
     Assert.False(result.IsUpdateAvailable);
     Assert.NotNull(result.ErrorMessage);
+  }
+
+  [Fact]
+  public async Task Prerelease_ReturnsError()
+  {
+    var result = await Check("0.8.11", ReleaseJson("v1.0.0", prerelease: true));
+
+    Assert.False(result.IsUpdateAvailable);
+    Assert.Contains("Vorabversion", result.ErrorMessage);
+  }
+
+  [Fact]
+  public async Task MultipleSetupAssets_AreRejectedAsAmbiguous()
+  {
+    // Welches Asset GitHub zuerst liefert, ist nicht zugesichert. Eine stille
+    // Auswahl koennte die falsche Architektur ausliefern.
+    const string arm64Url = "https://github.com/Kentarohakase/YTMPresence/releases/download/v1.0.0/YTMPresence-1.0.0-win-arm64-setup.exe";
+    var assets = $$"""
+      { "name": "YTMPresence-1.0.0-win-x64-setup.exe", "browser_download_url": "{{SetupUrl}}" },
+      { "name": "YTMPresence-1.0.0-win-arm64-setup.exe", "browser_download_url": "{{arm64Url}}" },
+      { "name": "SHA256SUMS.txt", "browser_download_url": "{{ChecksumsUrl}}" }
+      """;
+
+    var result = await Check("0.8.11", ReleaseJson("v1.0.0", assetsJson: assets));
+
+    Assert.False(result.IsUpdateAvailable);
+    Assert.Contains("mehrdeutig", result.ErrorMessage);
+    Assert.Null(result.SetupDownloadUrl);
+    Assert.Null(result.SetupAssetName);
+  }
+
+  [Fact]
+  public async Task SetupNameAndUrlComeFromTheSameAsset()
+  {
+    // Das erste Setup-Asset hat keine URL. Getrennte Abfragen wuerden hier den
+    // Namen des ersten mit der URL des zweiten Assets kombinieren; die
+    // Einzelauswahl lehnt den mehrdeutigen Fall stattdessen ab.
+    var assets = $$"""
+      { "name": "YTMPresence-1.0.0-win-x64-setup.exe", "browser_download_url": "" },
+      { "name": "YTMPresence-1.0.0-other-setup.exe", "browser_download_url": "{{SetupUrl}}" },
+      { "name": "SHA256SUMS.txt", "browser_download_url": "{{ChecksumsUrl}}" }
+      """;
+
+    var result = await Check("0.8.11", ReleaseJson("v1.0.0", assetsJson: assets));
+
+    Assert.False(result.IsUpdateAvailable);
+    Assert.Null(result.SetupAssetName);
+    Assert.Null(result.SetupDownloadUrl);
+  }
+
+  [Fact]
+  public async Task ChecksumsAssetNameIsMatchedCaseSensitively()
+  {
+    // Auswahl und spaetere Verifikation vergleichen beide ordinal. Ein
+    // abweichend geschriebenes Asset wird deshalb gar nicht erst angeboten,
+    // statt spaeter mit einer Sicherheitsmeldung abzubrechen.
+    var assets = $$"""
+      { "name": "YTMPresence-1.0.0-win-x64-setup.exe", "browser_download_url": "{{SetupUrl}}" },
+      { "name": "sha256sums.txt", "browser_download_url": "{{ChecksumsUrl}}" }
+      """;
+
+    var result = await Check("0.8.11", ReleaseJson("v1.0.0", assetsJson: assets));
+
+    Assert.True(result.IsUpdateAvailable);
+    Assert.Equal(SetupUrl, result.SetupDownloadUrl);
+    Assert.Null(result.ChecksumsDownloadUrl);
   }
 
   [Fact]

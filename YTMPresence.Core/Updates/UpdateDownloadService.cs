@@ -85,7 +85,7 @@ public sealed class UpdateDownloadService : IDisposable
     var setupUri = _options.UrlValidator.Validate(update.SetupDownloadUrl, "Setup-Download");
     var checksumsUri = _options.UrlValidator.Validate(update.ChecksumsDownloadUrl, "Prüfsummen-Download");
     var fileName = ResolveSetupFileName(update, setupUri);
-    EnsureOriginalAssetFileName(checksumsUri, "SHA256SUMS.txt", "Prüfsummen-Download");
+    EnsureOriginalAssetFileName(checksumsUri, UpdateArtifactNames.ChecksumsFileName, "Prüfsummen-Download");
 
     var workspace = TemporaryUpdateWorkspace.Create(workspaceRoot);
     try
@@ -134,7 +134,7 @@ public sealed class UpdateDownloadService : IDisposable
         candidate.Length > 128 ||
         !string.Equals(Path.GetFileName(candidate), candidate, StringComparison.Ordinal) ||
         candidate.Contains("..", StringComparison.Ordinal) ||
-        !candidate.EndsWith("-setup.exe", StringComparison.OrdinalIgnoreCase) ||
+        !candidate.EndsWith(UpdateArtifactNames.SetupFileNameSuffix, StringComparison.OrdinalIgnoreCase) ||
         !candidate.All(static c => c is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or >= '0' and <= '9' or '.' or '-' or '_'))
     {
       throw new UpdateSecurityException("Der Setup-Dateiname des Releases ist ungültig oder nicht erlaubt.");
