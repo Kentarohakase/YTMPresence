@@ -2,9 +2,51 @@
 
 Alle wichtigen Änderungen an YTMPresence werden in dieser Datei dokumentiert.
 
-## [Unreleased]
+## [1.1.0] - 2026-08-05
 
-Noch keine Änderungen.
+### Added
+
+- Versionskonsistenzprüfung für App, Assembly-Metadaten, Extension und Release-Changelog; CI und Release-Paketierung brechen bei Abweichungen ab.
+- Settings-Recovery sichert beschädigte JSON-Dateien als `settings.corrupt-<timestamp>.json` und erzeugt anschließend gültige Defaults.
+- Update-Sicherheitskomponenten in `YTMPresence.Core.Updates` (URL-Validierung, Prüfsummen-Parser, Größenlimits, temporäre Arbeitsverzeichnisse, Download-Service, Start-Verifikation) mit umfangreichen Tests für Prüfsummen-, Download-, Redirect- und Prozessstart-Fälle.
+- Settings-Flag `AllowLoopbackUpdateSource` (Standard: aus) als explizite Testkonfiguration für den lokalen QA-Update-Server; `scripts/test-update-flow.ps1` setzt es automatisch und stellt die Originaleinstellungen wieder her.
+
+### Changed
+
+- Einstellungen werden über eine temporäre Datei und atomaren Dateiersatz gespeichert.
+- Firefox-Pakete deklarieren die lokale Übertragung von Browsing-Aktivität und Website-Inhalten über Mozillas Consent-Metadaten, ohne die bestehende Mindestversion 126 anzuheben.
+- **Updates werden nur noch nach erfolgreicher SHA256-Verifikation ausgeführt.** Fehlende `SHA256SUMS.txt`, fehlende, doppelte oder widersprüchliche Setup-Zeilen, ungültige oder abweichende Hashes blockieren die Installation; der bisherige Start „ohne Prüfsummenvergleich“ entfällt.
+- Update-Quellen sind auf HTTPS zu `api.github.com`, `github.com`, `release-assets.githubusercontent.com` und `objects.githubusercontent.com` beschränkt; Metadaten- und Asset-Redirects werden einzeln validiert (max. 5, Schleifenerkennung), Downloads haben Größenlimits (Setup 300 MB, Prüfsummen 64 KB, Metadaten 4 MB) sowie Verbindungs-, Stall- und Gesamt-Timeouts. Eigene `UpdateApiUrl`-Werte außerhalb dieser Richtlinie werden mit einer klaren Fehlermeldung abgelehnt.
+- Jeder Updateversuch nutzt ein eindeutiges temporäres Verzeichnis mit `.part`-Datei und atomarem Umbenennen nach der Prüfung; Fehler und Abbrüche räumen auf, verwaiste Verzeichnisse werden beim App-Start altersbasiert bereinigt.
+- Unmittelbar vor dem Setup-Start werden Existenz, Name, Größe und SHA256 erneut geprüft und die Datei während des Starts gegen Veränderung gesperrt; YTMPresence beendet sich erst nach tatsächlich gestartetem Setup und bleibt bei einem Fehlstart benutzbar.
+- Der Inno-Setup-Installer beendet keine Prozesse mehr per `taskkill` nach Dateinamen: Er bittet die installierte Instanz über ein mit SHA256 kollisionsresistent an den Zielpfad gebundenes Shutdown-Event, sich regulär zu beenden, und nutzt sonst den Windows Restart Manager (`CloseApplications=force`), der nur Prozesse mit offenen Dateien im Installationsordner schließt. Portable Kopien und fremde gleichnamige Prozesse bleiben unberührt.
+- `verify-release.ps1` verifiziert `SHA256SUMS.txt` nur noch (Existenz, exakt eine gültige Zeile pro Artefakt, korrekte Hashes, keine veralteten/doppelten/unbekannten Zeilen) statt sie neu zu schreiben; erzeugt wird die Liste ausschließlich in `package-release.ps1`, nachdem alle Artefakte final sind. Der Release-Workflow baut und testet die Solution vor dem Paketieren.
+
+### Fixed
+
+- WebSocket-Textnachrichten bleiben korrekt, wenn ein UTF-8-Zeichen über mehrere Frames fragmentiert ist; Binär- und übergroße Nachrichten werden weiterhin verworfen.
+- Serverstart, -stopp und Presence-Updates sind serialisiert; Idle-Tasks und Discord-Ressourcen werden bei Neustarts vollständig beendet.
+- Ein rückwärtskompatibles Keepalive über den bestehenden Verbindungstest hält die Manifest-V3-WebSocket-Verbindung bei pausierter Wiedergabe aktiv, ohne Pause- oder Idle-Timeouts zurückzusetzen.
+- Die finale Release-Prüfsummenliste enthält jetzt auch Firefox-ZIP und – sofern gebaut – das Setup-EXE.
+
+## [1.0.0] - 2026-06-20
+
+### Added
+
+- Testprojekt `YTMPresence.Core.Tests` (xUnit) mit Tests für Security-Token, Settings-Normalisierung, Update-Check (SemVer/Asset-Auswahl), Presence-Logik und CompanionServer-Token-Authentifizierung.
+- PR-CI-Workflow (`.github/workflows/ci.yml`): Build, Tests und `web-ext lint` bei Pull Requests und Pushes auf `main`.
+- Englische Lokalisierung der Browser-Extension über `chrome.i18n` (`_locales/en` als Standard, `_locales/de`); Popup, Optionen und Manifest sind jetzt DE/EN.
+- Firefox-Unterstützung: Release-Pipeline erzeugt zusätzlich `YTMPresence-extension-firefox.zip` mit `browser_specific_settings`.
+
+### Changed
+
+- Tray-Fenster (Erste Schritte, Einstellungen, Mini-Player, Update) verwenden jetzt durchgängig die zentralen `UiText`-Strings und sind damit DE/EN.
+- Discord-IPC-Client probiert bei nicht laufendem Discord nicht mehr bei jeder Nachricht alle Pipes durch, sondern legt eine kurze Cooldown-Phase ein und verbindet sich automatisch neu.
+- Release-Verifikation prüft die neuen Extension-Dateien (`i18n.js`, `_locales`) und beide Extension-ZIPs (Chromium + Firefox).
+
+### Removed
+
+- Totes Legacy-Projekt `YTMPresence.Tray` (nicht Teil der Solution) entfernt.
 
 ## [0.8.11] - 2026-06-01
 

@@ -34,6 +34,14 @@ In Chrome oder Edge:
 3. `Entpackte Erweiterung laden` auswählen
 4. den Ordner `extension` auswählen
 
+In Firefox Desktop (ab 126):
+
+1. `about:debugging#/runtime/this-firefox` öffnen
+2. `Temporäres Add-on laden…` auswählen
+3. die `manifest.json` aus der Firefox-Variante der Extension auswählen
+
+Die Oberfläche von Extension und Tray-App folgt der Browser- bzw. Windows-Sprache (Deutsch und Englisch werden unterstützt).
+
 ### 4. Extension konfigurieren
 
 Öffne die Optionen der Extension und trage ein:
@@ -67,7 +75,19 @@ Vorbereitete Store- und Privacy-Texte stehen unter:
 
 ## Updates
 
-Die Tray-App kann über `Nach Updates suchen` im Tray-Menü das neueste GitHub Release prüfen. Wenn ein Setup-EXE im Release vorhanden ist, kann die App das Update direkt herunterladen, die SHA256-Prüfsumme prüfen und das Setup starten. Beim Start wird automatisch einmal geprüft, sofern `CheckForUpdatesOnStartup` in den Einstellungen aktiv ist.
+Die Tray-App kann über `Nach Updates suchen` im Tray-Menü das neueste GitHub Release prüfen. Wenn ein Setup-EXE im Release vorhanden ist, kann die App das Update direkt herunterladen, verifizieren und das Setup starten. Beim Start wird automatisch einmal geprüft, sofern `CheckForUpdatesOnStartup` in den Einstellungen aktiv ist.
+
+Der Update-Download ist abgesichert:
+
+- **Verpflichtende SHA256-Prüfung**: Ein Setup wird nur gestartet, wenn das Release eine `SHA256SUMS.txt` enthält, darin genau eine exakt passende Zeile für die Setup-Datei steht und der berechnete Hash exakt übereinstimmt. Fehlt die Prüfsummendatei oder die Zeile, ist der Hash ungültig oder widersprüchlich, wird das Update nicht ausgeführt.
+- **Erlaubte Updatequellen**: Reale Updates werden ausschließlich per HTTPS von `api.github.com`, `github.com`, `release-assets.githubusercontent.com` und dem historischen Asset-Host `objects.githubusercontent.com` geladen. Ausgangs-URL, jeder Redirect und das finale Ziel werden einzeln geprüft; HTTP, direkte IP-Adressen, Loopback-, private und link-local Ziele sowie fremde Hosts werden abgelehnt. Normale TLS-Zertifikatsprüfung bleibt aktiv; eine eigene DNS-Pinning-Bibliothek wird bewusst nicht implementiert. Nur für den lokalen QA-Test (`scripts/test-update-flow.ps1`) kann per explizitem Settings-Flag `AllowLoopbackUpdateSource` eine HTTP-Loopback-Quelle erlaubt werden.
+- **Größenlimits und Timeouts**: Setup (300 MB), Prüfsummendatei (64 KB) und Release-Metadaten (4 MB) haben harte Obergrenzen, die vor dem Download (Content-Length) und während des Streamings erzwungen werden. Verbindungsaufbau, Datenstillstand und Gesamtdauer sind mit Timeouts abgesichert; Abbrüche über das Fenster oder beim App-Beenden räumen sauber auf.
+- **Temporäre Dateien**: Jeder Updateversuch nutzt ein eigenes eindeutiges Verzeichnis unter `%TEMP%\YTMPresence\updates`. Der Download läuft in eine `.part`-Datei und wird erst nach erfolgreicher Hash-Prüfung auf den finalen Namen verschoben; eine `.part`-Datei wird nie gestartet. Fehler, Benutzerabbruch, Fensterschließen und App-Shutdown brechen laufende I/O ab und räumen bestmöglich auf. Kann ein bereits gestartetes Setup seine Datei noch sperren, wird das verwaiste Verzeichnis beim nächsten App-Start altersbasiert bereinigt.
+- **Prüfung direkt vor dem Start**: Unmittelbar vor dem Prozessstart werden Existenz, Dateiname, Größe und SHA256 erneut geprüft; die Datei bleibt während des Starts gegen Veränderung gesperrt. Die App beendet sich erst, wenn das Setup tatsächlich gestartet wurde — schlägt der Start fehl, bleibt YTMPresence benutzbar.
+
+**Grenzen der SHA256-Verifikation**: Die `SHA256SUMS.txt` stammt aus demselben GitHub Release wie das Setup. Sie schützt vor Übertragungsfehlern und versehentlicher Manipulation einzelner Dateien, stellt aber keine kryptografische Authentizität des gesamten Releases sicher: Wer Setup **und** Prüfsummendatei im Release ersetzen kann (z. B. mit einem kompromittierten Release-Konto), wird dadurch nicht erkannt. Sie ist kein Ersatz für eine digitale Signatur oder einen Herausgebernachweis.
+
+**Beenden der laufenden App bei Installation**: Der Installer beendet keine Prozesse anhand des Dateinamens. Er bittet zuerst die aus dem Zielverzeichnis laufende Instanz über einen pfadgebundenen lokalen Mechanismus, sich regulär zu beenden. Reagiert sie nicht, schließt der Windows Restart Manager nur Prozesse, die tatsächlich Dateien im Installationsordner geöffnet halten. Eine parallel laufende portable Kopie in einem anderen Ordner bleibt unberührt.
 
 ## Tray-Menü
 
@@ -108,11 +128,14 @@ Das Skript erstellt:
 ```text
 artifacts\release\YTMPresence-<version>-win-x64-app\
 artifacts\release\YTMPresence-extension.zip
+artifacts\release\YTMPresence-extension-firefox.zip
 artifacts\release\YTMPresence-<version>-win-x64.zip
 artifacts\release\YTMPresence-<version>-win-x64-setup.exe
 artifacts\release\extension\
 artifacts\release\SHA256SUMS.txt
 ```
+
+`YTMPresence-extension.zip` ist die Chromium-Variante (Chrome/Edge), `YTMPresence-extension-firefox.zip` enthält dasselbe Paket mit `browser_specific_settings` für Firefox (ab Version 126).
 
 Das Setup-EXE wird in Release-Builds mit Inno Setup gebaut und bleibt beim Dateinamen `YTMPresence-<version>-win-x64-setup.exe`, damit der App-Update-Flow kompatibel bleibt.
 
@@ -125,6 +148,8 @@ Ein vorhandenes Release kannst du auch separat prüfen:
 ```powershell
 .\scripts\verify-release.ps1
 ```
+
+Die Verifikation schreibt nichts mehr um: `SHA256SUMS.txt` entsteht ausschließlich in `package-release.ps1`, nachdem alle Artefakte final sind. `verify-release.ps1` prüft anschließend, dass jedes Artefakt genau eine passende Hashzeile hat und keine veralteten, doppelten oder unbekannten Zeilen enthalten sind (`-RequireInstaller`/`-RequireSetup` verlangt zusätzlich das Setup-EXE).
 
 ## Fehlerbehebung
 
@@ -156,3 +181,7 @@ Wenn im Tray oder Diagnosefenster ungültige Tokens gezählt werden:
 ### Port belegt
 
 Der Companion nutzt standardmäßig Port `17373`. Falls der Port belegt ist, kann er im Settings-Fenster oder in `%APPDATA%\YTMPresence\settings.json` geändert werden. Danach muss auch die Companion WebSocket URL in der Extension angepasst werden.
+
+### Einstellungen beschädigt
+
+Kann `settings.json` nicht als gültige Konfiguration gelesen werden, bewahrt YTMPresence die Datei im selben Ordner als `settings.corrupt-<timestamp>.json` auf und startet mit sicheren Standardwerten sowie einem neuen Token. Danach muss der neue Token erneut in der Extension gespeichert werden.
