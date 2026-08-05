@@ -13,6 +13,13 @@ namespace YTMPresence.Core;
 /// Die Namenslogik muss exakt mit <c>MakeInstanceKey</c> in
 /// installer/YTMPresence.iss übereinstimmen (ASCII-Lowercase, SHA256 über die
 /// UTF-16LE-Codeeinheiten des normalisierten Pfads).
+///
+/// Achtung: Es gibt zwei Implementierungen dieser Berechnung — diese hier und
+/// die Pascal-Variante im Installer. <c>InstallerCoordinationTests</c> pinnt
+/// den gemeinsamen Testvektor, sichert damit aber nur diese Seite ab. Läuft die
+/// Installer-Seite auseinander, findet der Installer das Shutdown-Event nicht
+/// mehr und fällt still auf den Windows Restart Manager zurück. Sichtbar wird
+/// das nur im Update-Test aus docs/RELEASE_QA.md.
 /// </summary>
 public static class InstallerCoordination
 {

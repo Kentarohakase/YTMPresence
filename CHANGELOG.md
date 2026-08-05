@@ -11,6 +11,7 @@ Alle wichtigen Änderungen an YTMPresence werden in dieser Datei dokumentiert.
 
 ### Changed
 
+- Die doppelte Implementierung der Instanzschlüssel-Berechnung (`InstallerCoordination.GetInstanceKey` und `MakeInstanceKey` in `installer/YTMPresence.iss`) ist auf beiden Seiten als solche gekennzeichnet, mit gemeinsamem Testvektor. `docs/RELEASE_QA.md` prüft die Selbstbeendigung jetzt als eigenen Punkt: Sie ist der einzige sichtbare Nachweis, dass beide Seiten denselben Schlüssel berechnen — driften sie, fällt der Installer still auf den Restart Manager zurück und das Update wirkt trotzdem erfolgreich.
 - Das Setup-Asset eines Releases wird genau einmal ausgewählt; Name und Download-URL stammen anschließend aus demselben Asset. Mehrere Assets mit `-setup.exe` werden wie mehrdeutige Prüfsummenzeilen abgelehnt, statt still das erste zu nehmen – die Reihenfolge der GitHub-Antwort ist nicht zugesichert.
 - Releases mit `prerelease: true` werden nicht mehr als Update angeboten. `/releases/latest` filtert sie zwar bereits, aber `UpdateApiUrl` ist konfigurierbar.
 - Auswahl und Verifikation des Prüfsummen-Assets vergleichen den Dateinamen jetzt beide ordinal. Ein abweichend geschriebenes `sha256sums.txt` wird dadurch gar nicht erst angeboten, statt später mit einer irreführenden Sicherheitsmeldung abzubrechen. Die Artefaktnamen liegen dafür in `UpdateArtifactNames` als gemeinsame Quelle.

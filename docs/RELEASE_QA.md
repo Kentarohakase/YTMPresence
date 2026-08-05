@@ -36,6 +36,7 @@ Diese Checkliste ist für jeden Release-Tag gedacht, bevor das Release breit get
 - `Nur herunterladen` zeigt Fortschritt, Zielpfad und eine bestätigte SHA256-Prüfung, ohne die App zu beenden.
 - `Installieren` startet das Setup erst nach erfolgreicher SHA256-Prüfung; **danach beendet sich YTMPresence selbst** (der Installer beendet die App nicht mehr per Prozessname).
 - Setup-Fenster bleibt sichtbar, nachdem YTMPresence beendet wurde.
+- **Die App beendet sich innerhalb weniger Sekunden von selbst, nicht erst durch den Restart-Manager-Dialog.** Das ist der einzige sichtbare Nachweis, dass `MakeInstanceKey` im Installer und `InstallerCoordination.GetInstanceKey` in der App denselben Schlüssel berechnen. Beide Seiten sind Zweitimplementierungen derselben Logik; der Unit-Test pinnt nur die C#-Seite. Erscheint stattdessen der Restart-Manager-Dialog oder dauert die Beendigung bis zum Timeout, sind die Schlüssel auseinandergelaufen — funktional sieht das Update trotzdem erfolgreich aus.
 - Abbruch während des Downloads entfernt die temporären Dateien unter `%TEMP%\YTMPresence\updates`.
 - Schließen des Update-Fensters und App-Shutdown brechen laufende Downloads ab und entfernen das jeweilige Arbeitsverzeichnis bestmöglich.
 - Eine manipulierte oder fehlende `SHA256SUMS.txt` blockiert die Installation mit einer Fehlermeldung; die App bleibt benutzbar.

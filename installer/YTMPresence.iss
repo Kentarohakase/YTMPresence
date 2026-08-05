@@ -118,6 +118,20 @@ function SetEvent(hEvent: THandle): BOOL;
 function CloseHandle(hObject: THandle): BOOL;
   external 'CloseHandle@kernel32.dll stdcall';
 
+{ ACHTUNG: Zweitimplementierung von InstallerCoordination.GetInstanceKey
+  (YTMPresence.Core). Beide Seiten muessen bitgleich rechnen, sonst findet der
+  Installer das Shutdown-Event der laufenden Instanz nicht mehr und faellt
+  still auf den Windows Restart Manager zurueck - der taskkill-Ersatz waere
+  damit wirkungslos, ohne dass irgendetwas fehlschlaegt.
+
+  Gemeinsamer Testvektor (gepinnt in InstallerCoordinationTests):
+    C:\Users\Kenta\AppData\Local\Programs\YTMPresence\app
+    -> 229237f93d35110457aaa7122614dcabd493e49146361ddeac57b0cd3aa5d13d
+
+  Der Unit-Test sichert nur die C#-Seite. Aenderungen hier bleiben unbemerkt,
+  bis der Update-Test aus docs/RELEASE_QA.md sie sichtbar macht: Wenn sich
+  YTMPresence nach 'Installieren' nicht selbst beendet, sondern erst der
+  Restart Manager greift, sind die Schluessel auseinandergelaufen. }
 function MakeInstanceKey(Path: String): String;
 var
   I: Integer;
