@@ -74,10 +74,34 @@ function Get-ZipEntries {
 
     $zip = [System.IO.Compression.ZipFile]::OpenRead($ZipPath)
     try {
-        return @($zip.Entries | ForEach-Object { $_.FullName.Replace("\", "/").TrimStart("./") })
+        return @($zip.Entries | ForEach-Object { $_.FullName.TrimStart("./") })
     }
     finally {
         $zip.Dispose()
+    }
+}
+
+<#
+.SYNOPSIS
+Stellt sicher, dass ein ZIP Forward Slashes als Pfadtrenner nutzt.
+
+.DESCRIPTION
+Die ZIP-Spezifikation (APPNOTE 4.4.17.1) schreibt Forward Slashes vor.
+Backslash-Eintraege - wie sie Compress-Archive unter Windows PowerShell 5.1
+erzeugt - werden von spezifikationstreuen Entpackern als flache Dateinamen
+gelesen, nicht als Verzeichnisse. Fuer die Extension bedeutet das, dass
+`_locales/<lang>/messages.json` beim Store-Upload nicht gefunden wird.
+
+Diese Pruefung darf die Trenner nicht normalisieren, sonst meldet sie
+genau den Defekt als in Ordnung, den sie finden soll.
+#>
+function Assert-ZipUsesForwardSlashes {
+    param([Parameter(Mandatory = $true)][string]$ZipPath)
+
+    $offending = @(Get-ZipEntries -ZipPath $ZipPath | Where-Object { $_.Contains("\") })
+    if ($offending.Count -gt 0) {
+        $sample = ($offending | Select-Object -First 5) -join ", "
+        throw "ZIP '$ZipPath' uses backslash path separators, which violates the ZIP specification and breaks extension store uploads. Offending entries ($($offending.Count)): $sample"
     }
 }
 
@@ -112,6 +136,10 @@ $extensionEntries = @(
     "icons/icon48.png",
     "icons/icon128.png"
 )
+
+Assert-ZipUsesForwardSlashes -ZipPath $extensionZip
+Assert-ZipUsesForwardSlashes -ZipPath $extensionFirefoxZip
+Assert-ZipUsesForwardSlashes -ZipPath $bundleZip
 
 Assert-ZipEntries -ZipPath $extensionZip -Entries $extensionEntries
 Assert-ZipEntries -ZipPath $extensionFirefoxZip -Entries $extensionEntries

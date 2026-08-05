@@ -2,6 +2,13 @@
 
 Alle wichtigen Änderungen an YTMPresence werden in dieser Datei dokumentiert.
 
+## [Unreleased]
+
+### Fixed
+
+- Release-ZIPs verwenden jetzt Forward Slashes als Pfadtrenner. `Compress-Archive` schreibt unter Windows PowerShell 5.1 Backslashes, was gegen die ZIP-Spezifikation verstößt: Spezifikationstreue Entpacker – darunter die Uploadverarbeitung von Chrome Web Store und addons.mozilla.org – lesen `_locales\en\messages.json` als flachen Dateinamen statt als Verzeichnis, wodurch die `__MSG_*__`-Platzhalter im Manifest nicht auflösen. Betroffen waren beide Extension-ZIPs und das Bundle-ZIP.
+- `verify-release.ps1` normalisiert Backslash-Einträge nicht mehr auf Forward Slashes, sondern bricht mit Nennung der betroffenen Einträge ab. Die bisherige Normalisierung hat genau den Defekt als in Ordnung gemeldet, den die Prüfung finden sollte.
+
 ## [1.1.0] - 2026-08-05
 
 ### Added

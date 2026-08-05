@@ -81,6 +81,60 @@ function Remove-ReleasePath {
     Remove-Item -LiteralPath $targetFullPath -Recurse -Force
 }
 
+<#
+.SYNOPSIS
+Packt ein Verzeichnis als ZIP mit spezifikationskonformen Eintragsnamen.
+
+.DESCRIPTION
+Compress-Archive schreibt unter Windows PowerShell 5.1 Backslashes als
+Pfadtrenner. Die ZIP-Spezifikation (APPNOTE 4.4.17.1) verlangt Forward
+Slashes. Spezifikationstreue Entpacker - darunter die Uploadverarbeitung
+von Chrome Web Store und addons.mozilla.org - sehen sonst keine
+Verzeichnisse, sondern flache Dateinamen mit Backslash im Namen. Fuer die
+Extension ist das fatal, weil `_locales/<lang>/messages.json` dann nicht
+gefunden wird und die `__MSG_*__`-Platzhalter im Manifest nicht aufloesen.
+
+Diese Funktion legt die Eintraege deshalb selbst an und normalisiert die
+relativen Pfade explizit auf Forward Slashes.
+#>
+function New-ReleaseArchive {
+    param(
+        [Parameter(Mandatory = $true)][string]$SourceDirectory,
+        [Parameter(Mandatory = $true)][string]$DestinationPath
+    )
+
+    if (-not (Test-Path -LiteralPath $SourceDirectory -PathType Container)) {
+        throw "Archive source directory not found: $SourceDirectory"
+    }
+
+    Add-Type -AssemblyName System.IO.Compression | Out-Null
+    Add-Type -AssemblyName System.IO.Compression.FileSystem | Out-Null
+
+    Remove-ReleasePath -Path $DestinationPath
+
+    $sourceRoot = [System.IO.Path]::GetFullPath($SourceDirectory).TrimEnd([char[]]@('\', '/'))
+    $files = @(Get-ChildItem -LiteralPath $sourceRoot -Recurse -File | Sort-Object FullName)
+
+    if ($files.Count -eq 0) {
+        throw "Refusing to create an empty archive from: $sourceRoot"
+    }
+
+    $archive = [System.IO.Compression.ZipFile]::Open($DestinationPath, [System.IO.Compression.ZipArchiveMode]::Create)
+    try {
+        foreach ($file in $files) {
+            $relativePath = $file.FullName.Substring($sourceRoot.Length + 1).Replace('\', '/')
+            [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
+                $archive,
+                $file.FullName,
+                $relativePath,
+                [System.IO.Compression.CompressionLevel]::Optimal) | Out-Null
+        }
+    }
+    finally {
+        $archive.Dispose()
+    }
+}
+
 New-Item -ItemType Directory -Path $releaseRoot -Force | Out-Null
 
 if (-not $KeepOldArtifacts) {
@@ -114,12 +168,12 @@ dotnet publish $project `
     --output $appOutput
 
 Copy-Item -LiteralPath $extensionSource -Destination $extensionOutput -Recurse
-Compress-Archive -Path (Join-Path $extensionOutput "*") -DestinationPath $extensionZip -Force
+New-ReleaseArchive -SourceDirectory $extensionOutput -DestinationPath $extensionZip
 
 # Firefox-Variante: identische Dateien, Manifest um browser_specific_settings
 # und background.scripts-Fallback ergaenzt. Version bleibt automatisch synchron.
 & (Join-Path $PSScriptRoot "make-firefox-extension.ps1") -SourceDir $extensionSource -DestDir $extensionFirefoxOutput
-Compress-Archive -Path (Join-Path $extensionFirefoxOutput "*") -DestinationPath $extensionFirefoxZip -Force
+New-ReleaseArchive -SourceDirectory $extensionFirefoxOutput -DestinationPath $extensionFirefoxZip
 
 Remove-ReleasePath -Path $bundleZip
 
@@ -157,7 +211,7 @@ Framework-dependent Pakete benötigen die .NET 10 Desktop Runtime auf dem Ziel-P
 
 Set-Content -LiteralPath $summaryPath -Value $summary -Encoding UTF8
 Copy-Item -LiteralPath $summaryPath -Destination (Join-Path $bundleDir "RELEASE.txt") -Force
-Compress-Archive -Path (Join-Path $bundleDir "*") -DestinationPath $bundleZip -Force
+New-ReleaseArchive -SourceDirectory $bundleDir -DestinationPath $bundleZip
 
 if ($SkipInstaller) {
     Remove-ReleasePath -Path $setupPath
