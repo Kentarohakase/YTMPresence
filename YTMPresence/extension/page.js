@@ -325,6 +325,20 @@
         return canonical || ogUrl || null;
     }
 
+    /**
+     * Video-ID aus der Adresszeile.
+     *
+     * Belastbar, wenn der Nutzer den Track direkt geöffnet hat. Beim Abspielen
+     * aus einer Radio- oder Autoplay-Warteschlange bleibt die Adresse dagegen
+     * auf dem Einstiegstrack stehen, während die Wiedergabe weiterläuft.
+     * Deshalb rangiert diese Quelle unter dem Artwork, das der Player pro Track
+     * neu setzt - aber über canonical und og:url, die auf einer Single-Page-App
+     * gar nicht mitgeführt werden.
+     */
+    function getLocationVideoId() {
+        return extractVideoIdFromUrl(location.href);
+    }
+
     function extractVideoIdFromUrl(candidateUrl) {
         if (!candidateUrl) return null;
 
@@ -489,24 +503,26 @@
         const artworkVideoId = extractVideoIdFromArtwork(metadataArtwork);
         const canonicalVideoId = extractVideoIdFromUrl(canonicalOrOgUrl);
         const playerBarVideoId = extractVideoIdFromUrl(playerBarWatchUrl);
-
-        if (mode === "video") {
-            if (playerBarVideoId) return buildWatchUrl(playerBarVideoId);
-            if (canonicalVideoId) return buildWatchUrl(canonicalVideoId);
-            if (artworkVideoId) return buildWatchUrl(artworkVideoId);
-
-            return buildSearchUrl(title, artist);
-        }
+        const locationVideoId = getLocationVideoId();
 
         if (mode === "title") {
             return buildSearchUrl(title, artist);
         }
 
-        if (playerBarVideoId) return buildWatchUrl(playerBarVideoId);
-        if (canonicalVideoId) return buildWatchUrl(canonicalVideoId);
-        if (artworkVideoId) return buildWatchUrl(artworkVideoId);
+        // Reihenfolge nach Verlaesslichkeit, nicht nach Bequemlichkeit:
+        //   1. Player-Leiste  - zeigt exakt den laufenden Track, wenn vorhanden
+        //   2. Artwork        - wird vom Player pro Track neu gesetzt
+        //   3. Adresszeile    - korrekt bei direkt geoeffneten Tracks, steht in
+        //                       Warteschlangen aber auf dem Einstiegstrack
+        //   4. canonical/og   - auf einer Single-Page-App praktisch statisch
+        //
+        // Stand 2026-08 liefert YouTube Music weder die Player-Leisten-Anker
+        // noch canonical; og:url zeigt auf /app_shell und enthaelt keine
+        // Video-ID. Ohne die Adresszeile als Kandidat haengt die Ermittlung
+        // damit allein am Artwork.
+        const videoId = playerBarVideoId || artworkVideoId || locationVideoId || canonicalVideoId;
 
-        return buildSearchUrl(title, artist);
+        return videoId ? buildWatchUrl(videoId) : buildSearchUrl(title, artist);
     }
 
     function readState() {
