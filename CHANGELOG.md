@@ -7,6 +7,7 @@ Alle wichtigen Änderungen an YTMPresence werden in dieser Datei dokumentiert.
 ### Fixed
 
 - **Die Presence lässt sich wieder entfernen.** Zum Löschen sendete der Discord-IPC-Client den Befehl `CLEAR_ACTIVITY` — den es im RPC-Protokoll nicht gibt; dokumentiert sind `SET_ACTIVITY`, `SEND_ACTIVITY_JOIN_INVITE` und `CLOSE_ACTIVITY_REQUEST`. Discord lehnte den Befehl ab, die Ablehnung wurde verworfen, und die App meldete weiterhin „Discord OK". In der Folge blieb die Presence stehen: `OnlyShowWhenPlaying` wirkte nicht, `PausedClearSeconds` wirkte nicht, und auch beim Beenden verschwand sie nicht. Gelöscht wird jetzt über `SET_ACTIVITY` mit `activity: null`.
+- Vor einem Presence-Update wird nicht mehr erst gelöscht. Der frühere „Discord Cache Fix" sendete bei jedem Track- und Play/Pause-Wechsel ein Löschen und wartete 200 ms. Das blieb folgenlos, solange das Löschen den nicht existierenden Befehl `CLEAR_ACTIVITY` benutzte — mit dem reparierten Löschen hätte derselbe Ablauf die Presence bei jedem Songwechsel kurz verschwinden lassen. `SET_ACTIVITY` ersetzt die Aktivität ohnehin von sich aus.
 - Fehlerantworten von Discord werden protokolliert statt verworfen. Genau diese Lücke hat den falschen Befehl über die gesamte Projektlaufzeit verdeckt.
 
 ### Added

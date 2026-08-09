@@ -116,6 +116,37 @@ public class PresenceServiceTests
   }
 
   [Fact]
+  public async Task TrackChange_UpdatesWithoutClearingFirst()
+  {
+    // Frueher wurde vor jedem kritischen Update ein CLEAR gesendet und 200ms
+    // gewartet ("Discord Cache Fix"). Das blieb folgenlos, solange das Loeschen
+    // den nicht existierenden Befehl CLEAR_ACTIVITY benutzte. Seit das Loeschen
+    // wirkt, wuerde derselbe Ablauf die Presence bei jedem Songwechsel kurz
+    // verschwinden lassen. SET_ACTIVITY ersetzt die Aktivitaet von sich aus.
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings());
+
+    await service.HandleAsync(Playing(title: "Erster Song"), CancellationToken.None);
+    await service.HandleAsync(Playing(title: "Zweiter Song"), CancellationToken.None);
+
+    Assert.Equal(2, discord.SetCount);
+    Assert.Equal(0, discord.ClearCount);
+  }
+
+  [Fact]
+  public async Task PlayPauseToggle_UpdatesWithoutClearingFirst()
+  {
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings());
+
+    await service.HandleAsync(Playing(), CancellationToken.None);
+    await service.HandleAsync(Playing(isPlaying: false), CancellationToken.None);
+
+    Assert.Equal(2, discord.SetCount);
+    Assert.Equal(0, discord.ClearCount);
+  }
+
+  [Fact]
   public async Task IdenticalState_IsDeduped()
   {
     var discord = new FakeDiscordClient();

@@ -11,9 +11,6 @@ public sealed class PresenceService
   private DateTimeOffset _lastUpdateUtc = DateTimeOffset.MinValue;
   private DateTimeOffset _lastIncomingUtc = DateTimeOffset.MinValue;
 
-  // Discord Cache Fix (für Play/Pause/Trackwechsel)
-  private bool _forceClearBeforeNextSet = true;
-
   // Track/PlayState Change Detection
   private string? _lastSongKey;
   private bool? _lastIsPlaying;
@@ -93,8 +90,6 @@ public sealed class PresenceService
     _pausedSinceUtc = state.IsPlaying ? null : (_pausedSinceUtc ?? now);
 
     var criticalChange = trackChanged || playStateChanged;
-    if (criticalChange)
-      _forceClearBeforeNextSet = true;
 
     if (state.IsAd)
     {
@@ -182,7 +177,6 @@ public sealed class PresenceService
     _lastPresenceKey = null;
     _lastUpdateUtc = DateTimeOffset.MinValue;
 
-    _forceClearBeforeNextSet = true;
     _lastSongKey = null;
     _lastIsPlaying = null;
     _pausedSinceUtc = null;
@@ -238,14 +232,12 @@ public sealed class PresenceService
     {
       await _discord.EnsureConnectedAsync(ct);
 
-      // Discord Cache Fix: bei critical einmal CLEAR vor SET
-      if (_forceClearBeforeNextSet)
-      {
-        _forceClearBeforeNextSet = false;
-        await _discord.ClearActivityAsync(ct);
-        await Task.Delay(200, ct);
-      }
-
+      // Kein CLEAR vor dem SET: SET_ACTIVITY ersetzt die Aktivität von sich
+      // aus. Der frühere "Discord Cache Fix" sendete ein Löschen und wartete
+      // 200 ms - wirkungslos, solange das Löschen den nicht existierenden
+      // Befehl CLEAR_ACTIVITY benutzte. Seit das Löschen tatsächlich
+      // funktioniert, würde derselbe Ablauf die Presence bei jedem Track- und
+      // Play/Pause-Wechsel kurz verschwinden lassen.
       await _discord.SetActivityAsync(activity, ct);
 
       _lastPresenceKey = key;
@@ -256,7 +248,6 @@ public sealed class PresenceService
     catch (Exception ex)
     {
       MarkDiscordError(ex);
-      _forceClearBeforeNextSet = true;
     }
   }
 
