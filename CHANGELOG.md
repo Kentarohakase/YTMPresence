@@ -2,11 +2,13 @@
 
 Alle wichtigen Änderungen an YTMPresence werden in dieser Datei dokumentiert.
 
-## [Unreleased]
+## [1.3.0] - 2026-08-09
 
 ### Fixed
 
 - **Die Presence lässt sich wieder entfernen.** Zum Löschen sendete der Discord-IPC-Client den Befehl `CLEAR_ACTIVITY` — den es im RPC-Protokoll nicht gibt; dokumentiert sind `SET_ACTIVITY`, `SEND_ACTIVITY_JOIN_INVITE` und `CLOSE_ACTIVITY_REQUEST`. Discord lehnte den Befehl ab, die Ablehnung wurde verworfen, und die App meldete weiterhin „Discord OK". In der Folge blieb die Presence stehen: `OnlyShowWhenPlaying` wirkte nicht, `PausedClearSeconds` wirkte nicht, und auch beim Beenden verschwand sie nicht. Gelöscht wird jetzt über `SET_ACTIVITY` mit `activity: null`.
+- **Track-URLs verlieren ihre Prozent-Kodierung nicht mehr.** Zur Normalisierung wurde an drei Stellen `Uri.ToString()` benutzt — laut Dokumentation die *unescaped* kanonische Form („All characters are unescaped except #, ? and %"). Aus `?q=Sam%20Smith` wurde dadurch `?q=Sam Smith` mit echten Leerzeichen. Discord lehnte die Aktivität daraufhin komplett ab (`"url" must be a valid uri`), und es erschien überhaupt keine Presence. Betroffen waren die Suchlinks, auf die zurückgefallen wird, wenn keine Video-ID zu finden ist. Es wird jetzt `AbsoluteUri` verwendet.
+- Eine ungültige Button-URL kostet nicht mehr die gesamte Presence. Die URL wird vor dem Bauen des Buttons geprüft; hält sie nicht stand, entfällt nur dieser Button und eine Logzeile nennt den Grund.
 - Vor einem Presence-Update wird nicht mehr erst gelöscht. Der frühere „Discord Cache Fix" sendete bei jedem Track- und Play/Pause-Wechsel ein Löschen und wartete 200 ms. Das blieb folgenlos, solange das Löschen den nicht existierenden Befehl `CLEAR_ACTIVITY` benutzte — mit dem reparierten Löschen hätte derselbe Ablauf die Presence bei jedem Songwechsel kurz verschwinden lassen. `SET_ACTIVITY` ersetzt die Aktivität ohnehin von sich aus.
 - Fehlerantworten von Discord werden protokolliert statt verworfen. Genau diese Lücke hat den falschen Befehl über die gesamte Projektlaufzeit verdeckt.
 
