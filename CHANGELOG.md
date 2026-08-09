@@ -2,6 +2,14 @@
 
 Alle wichtigen Änderungen an YTMPresence werden in dieser Datei dokumentiert.
 
+## [1.3.1] - 2026-08-09
+
+### Changed
+
+- **Die Extension fordert die Berechtigung `tabs` nicht mehr an.** Gebraucht wurde sie nie: `tabs.query` mit URL-Filter und `tabs.sendMessage` funktionieren über die Host-Berechtigung für `https://music.youtube.com/*`, `tabs.create` braucht gar keine Berechtigung, und aus den Treffern wird ausschließlich die Tab-ID gelesen. Chrome zeigte dafür bei der Installation „Deinen Browserverlauf lesen" an — für eine Fähigkeit, von der die Extension nie Gebrauch gemacht hat.
+- Kurzbeschreibung und Store-Text nennen die Companion-App jetzt zuerst. Ohne sie ist die Extension funktionslos, weil Discord Rich Presence sich aus dem Browser heraus nicht setzen lässt. Die Kurzbeschreibung stammt aus `_locales/<sprache>/messages.json` und wird von Chrome aus dem Manifest übernommen, nicht aus dem Store-Dashboard.
+- `docs/STORE_SUBMISSION_CHECKLIST.md` enthält die Angaben zur Datenerhebung für das Chrome-Dashboard, abgestimmt auf die bereits deklarierten Firefox-Metadaten.
+
 ## [1.3.0] - 2026-08-09
 
 ### Fixed
