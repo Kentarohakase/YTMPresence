@@ -45,6 +45,17 @@ public sealed class AppSettings
   public string UpdateApiUrl { get; set; } = "https://api.github.com/repos/Kentarohakase/YTMPresence/releases/latest";
 
   /// <summary>
+  /// Zeitpunkt des letzten erfolgreich abgeschlossenen Update-Checks.
+  ///
+  /// Der Check beim Start meldet Fehler nur ins Log, damit nicht bei jedem
+  /// Hochfahren ohne Netz eine Sprechblase erscheint. Dadurch kann er aber
+  /// monatelang scheitern, ohne dass es jemand bemerkt - etwa hinter einem
+  /// Proxy, bei blockierender Firewall oder bei API-Ratenbegrenzung. Dieser
+  /// Zeitstempel macht das im Diagnosefenster sichtbar.
+  /// </summary>
+  public DateTimeOffset? LastSuccessfulUpdateCheckUtc { get; set; }
+
+  /// <summary>
   /// Nur für automatisierte Update-Tests (scripts/test-update-flow.ps1):
   /// erlaubt HTTP-Updatequellen auf Loopback-Adressen. In Produktion muss
   /// dieser Wert false bleiben; reale Updates akzeptieren ausschließlich

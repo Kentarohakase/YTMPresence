@@ -747,6 +747,18 @@ public partial class App : System.Windows.Application
         return;
       }
 
+      // Erst hier gilt der Check als durchgelaufen: Die Metadaten wurden
+      // geladen und ausgewertet, unabhaengig davon ob ein Update vorliegt.
+      _settings.LastSuccessfulUpdateCheckUtc = DateTimeOffset.UtcNow;
+      try
+      {
+        SettingsStore.Save(_settingsPath, _settings);
+      }
+      catch (Exception ex)
+      {
+        Logger.Warn($"Zeitpunkt des Update-Checks konnte nicht gespeichert werden: {ex.Message}");
+      }
+
       if (result.IsUpdateAvailable)
       {
         var updateUrl = string.IsNullOrWhiteSpace(result.SetupDownloadUrl)

@@ -2,6 +2,12 @@
 
 Alle wichtigen Änderungen an YTMPresence werden in dieser Datei dokumentiert.
 
+## [Unreleased]
+
+### Added
+
+- Das Diagnosefenster zeigt den letzten erfolgreichen Update-Check. Fehler beim automatischen Start-Check landen bewusst nur im Log, damit nicht bei jedem Hochfahren ohne Netz eine Sprechblase erscheint — dadurch konnte er aber monatelang scheitern, ohne dass es jemand bemerkt. Liegt der letzte Erfolg über zwei Wochen zurück, weist die Zeile ausdrücklich darauf hin; ist die Prüfung beim Start abgeschaltet, steht auch das dort. Der Zeitpunkt wird in den Einstellungen gespeichert und ist im Diagnosebericht enthalten.
+
 ## [1.2.0] - 2026-08-05
 
 ### Added

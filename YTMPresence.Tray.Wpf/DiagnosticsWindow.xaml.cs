@@ -52,6 +52,8 @@ public partial class DiagnosticsWindow : Window
     SettingsText.Text = _settingsPath;
     LogText.Text = logPath;
     UpdatedText.Text = DateTime.Now.ToString("HH:mm:ss");
+    UpdateCheckText.Text = DescribeUpdateCheck(
+        _settings.LastSuccessfulUpdateCheckUtc, _settings.CheckForUpdatesOnStartup);
 
     if (status is null)
     {
@@ -94,6 +96,8 @@ public partial class DiagnosticsWindow : Window
     sb.AppendLine($"Endpoint: {endpoint}");
     sb.AppendLine($"Settings: {_settingsPath}");
     sb.AppendLine($"Log: {logPath}");
+    sb.AppendLine($"Update check on startup: {_settings.CheckForUpdatesOnStartup}");
+    sb.AppendLine($"Last successful update check: {_settings.LastSuccessfulUpdateCheckUtc?.ToString("O") ?? "never"}");
 
     if (status is null)
     {
@@ -143,7 +147,30 @@ public partial class DiagnosticsWindow : Window
     if (age < TimeSpan.FromSeconds(5)) return "gerade eben";
     if (age < TimeSpan.FromMinutes(1)) return $"{(int)age.TotalSeconds}s";
     if (age < TimeSpan.FromHours(1)) return $"{(int)age.TotalMinutes}m";
-    return $"{(int)age.TotalHours}h";
+    if (age < TimeSpan.FromDays(1)) return $"{(int)age.TotalHours}h";
+    return $"{(int)age.TotalDays}d";
+  }
+
+  /// <summary>
+  /// Beschreibt den letzten erfolgreichen Update-Check und weist auf einen
+  /// laenger anhaltenden Ausfall hin. Fehler beim Start landen bewusst nur im
+  /// Log; ohne diese Zeile bliebe unbemerkt, dass seit Wochen kein Check mehr
+  /// durchgelaufen ist.
+  /// </summary>
+  private static string DescribeUpdateCheck(DateTimeOffset? lastSuccessUtc, bool checkOnStartup)
+  {
+    var suffix = checkOnStartup ? "" : " (Prüfung beim Start ist deaktiviert)";
+
+    if (lastSuccessUtc is null)
+      return $"Noch nie erfolgreich durchgelaufen{suffix}";
+
+    var age = DateTimeOffset.UtcNow - lastSuccessUtc.Value;
+    var text = $"Zuletzt erfolgreich: vor {AgeText(lastSuccessUtc)}";
+
+    if (age >= TimeSpan.FromDays(14))
+      text += " – seit über zwei Wochen kein erfolgreicher Check";
+
+    return text + suffix;
   }
 
   private static string GetAppVersion()
