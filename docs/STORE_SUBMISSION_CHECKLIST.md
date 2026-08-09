@@ -46,6 +46,12 @@ Erstelle vor dem Upload Screenshots von:
 - Discord Rich Presence
 - Tray-Menü oder Diagnosefenster
 
+## Store-Symbol und Screenshots
+
+- Store-Symbol („Händlersymbol" in der deutschen Oberfläche, gemeint ist das Store icon): 128x128 PNG. `YTMPresence/extension/icons/icon128.png` erfüllt die Anforderung; Google empfiehlt zusätzlich 16 px transparenten Rand um eine 96x96-Grafik.
+- Screenshots: 1280x800 oder 640x400, mindestens einer, höchstens fünf. Das erste Bild erscheint als Vorschau in den Suchergebnissen — dort gehört die Discord-Presence hin, nicht die Optionsseite.
+- Vor dem Hochladen prüfen, dass auf keinem Bild das Security Token lesbar ist.
+
 ## Nach dem Upload
 
 - Store-Review abwarten.

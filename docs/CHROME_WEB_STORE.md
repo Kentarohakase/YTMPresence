@@ -48,6 +48,32 @@ https://github.com/Kentarohakase/YTMPresence/blob/main/docs/EXTENSION_PRIVACY.md
 `http://127.0.0.1/*` und `http://localhost/*`
 : Erlaubt die Verbindung zur lokal laufenden Companion-App.
 
+### Eingereichter Wortlaut
+
+Das Dashboard verlangt pro Berechtigungsgruppe ein eigenes Feld, jeweils höchstens 1.000 Zeichen und ohne Markdown-Formatierung. Der folgende Wortlaut wurde eingereicht und lässt sich für Edge Add-ons und AMO wiederverwenden.
+
+**Feld „Begründung für storage"**
+
+> Die Erweiterung speichert genau zwei Werte im Browserprofil: das Security-Token der lokalen Companion-App und deren WebSocket-URL. Beide gibt der Nutzer einmalig auf der Optionsseite ein.
+>
+> Ohne chrome.storage müsste er Token und URL nach jedem Neustart des Browsers erneut eintragen, da die Verbindung sonst nicht hergestellt werden kann.
+>
+> Es werden keine Wiedergabedaten, keine Verlaufsdaten und keine personenbezogenen Daten gespeichert.
+
+**Feld „Begründung für Hostberechtigung"**
+
+> https://music.youtube.com/*
+>
+> Das Content-Script liest auf dieser Seite den Wiedergabestatus aus: Titel, Interpret, Album, Position und Dauer. Das ist die einzige Datenquelle der Erweiterung. Über dieselbe Berechtigung findet sie offene YouTube-Music-Tabs, um Play/Pause- und Skip-Befehle aus dem Mini-Player der Companion-App an den richtigen Tab weiterzuleiten.
+>
+> http://127.0.0.1/* und http://localhost/*
+>
+> Die Erweiterung verbindet sich per WebSocket mit der YTMPresence-Companion-App, die auf demselben Gerät läuft (Standardport 17373). Nur diese App kann Discord Rich Presence setzen; aus dem Browser heraus ist das technisch nicht möglich. Die Verbindung ist durch ein 256-Bit-Token geschützt.
+>
+> Die Daten verlassen das Gerät nicht. Es gibt keine Verbindung zu Servern des Entwicklers und keine Analyse- oder Werbedienste.
+
+Host-Berechtigungen lösen bei Google grundsätzlich eine gründlichere Prüfung aus; die entsprechende Warnung im Dashboard ist kein Fehler.
+
 Bewusst **nicht** angefordert wird `tabs`. Die Extension findet YouTube-Music-Tabs allein über die Host-Berechtigung für `https://music.youtube.com/*` und liest aus den Treffern ausschließlich die Tab-ID. Mit `tabs` würde Chrome bei der Installation zusätzlich „Deinen Browserverlauf lesen" anzeigen, ohne dass die Extension davon Gebrauch macht.
 
 ## Veröffentlichungsschritte
