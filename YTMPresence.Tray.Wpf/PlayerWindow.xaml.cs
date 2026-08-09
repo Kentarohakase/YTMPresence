@@ -66,7 +66,7 @@ public partial class PlayerWindow : Window
 
     PositionText.Text = FormatTime(position);
     DurationText.Text = duration > 0 ? FormatTime(duration) : "--:--";
-    PlayStateText.Text = status.LastIsPlaying == true ? "Läuft" : "Pausiert";
+    PlayStateText.Text = status.LastIsPlaying == true ? UiText.PlayerStatePlaying : UiText.PlayerStatePaused;
     PlayPauseButton.Content = status.LastIsPlaying == true ? "Pause" : "Play";
 
     _currentTrackUrl = status.LastTrackUrl;
@@ -78,8 +78,8 @@ public partial class PlayerWindow : Window
 
   private void ShowEmpty(CompanionStatus? status)
   {
-    TitleText.Text = "Kein Track";
-    ArtistText.Text = "Warte auf YouTube Music";
+    TitleText.Text = UiText.PlayerNoTrack;
+    ArtistText.Text = UiText.PlayerWaitingForYtm;
     AlbumText.Text = "";
     Progress.Maximum = 1;
     Progress.Value = 0;
@@ -254,7 +254,7 @@ public partial class PlayerWindow : Window
 
   private async void PreviousButton_Click(object sender, RoutedEventArgs e)
   {
-    await SendCommandAsync("previous", "Zurück");
+    await SendCommandAsync("previous", UiText.TooltipPrevious);
   }
 
   private async void PlayPauseButton_Click(object sender, RoutedEventArgs e)

@@ -2,6 +2,12 @@
 
 Alle wichtigen Änderungen an YTMPresence werden in dieser Datei dokumentiert.
 
+## [Unreleased]
+
+### Fixed
+
+- Der Mini-Player folgt jetzt der Windows-Sprache. Wiedergabestatus, die Meldung ohne Track und die Beschriftung des Zurueck-Kommandos waren fest auf Deutsch verdrahtet und blieben deutsch, auch wenn die uebrige Oberflaeche auf Englisch lief.
+
 ## [1.3.1] - 2026-08-09
 
 ### Changed

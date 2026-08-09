@@ -385,6 +385,14 @@ public static class UiText
   public static string PlayerWindowTitle => T(de: "YTM Presence Player", en: "YTM Presence player", es: "YTM Presence player");
   public static string PlayerTopMost => T(de: "Top", en: "Top", es: "Top");
   public static string TooltipPrevious => T(de: "Zurück", en: "Previous", es: "Previous");
+
+  public static string PlayerStatePlaying => T(de: "Läuft", en: "Playing", es: "Playing");
+  public static string PlayerStatePaused => T(de: "Pausiert", en: "Paused", es: "Paused");
+  public static string PlayerNoTrack => T(de: "Kein Track", en: "No track", es: "No track");
+  public static string PlayerWaitingForYtm => T(
+      de: "Warte auf YouTube Music",
+      en: "Waiting for YouTube Music",
+      es: "Waiting for YouTube Music");
   public static string TooltipNext => T(de: "Weiter", en: "Next", es: "Next");
   public static string ButtonOpen => T(de: "Öffnen", en: "Open", es: "Open");
   public static string TooltipOpenTrack => T(de: "Track öffnen", en: "Open track", es: "Open track");
