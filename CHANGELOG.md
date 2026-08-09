@@ -2,7 +2,7 @@
 
 Alle wichtigen Änderungen an YTMPresence werden in dieser Datei dokumentiert.
 
-## [Unreleased]
+## [1.2.0] - 2026-08-05
 
 ### Added
 
