@@ -1,7 +1,7 @@
 {
   "appName": { "message": "YTM Discord Presence Bridge" },
   "appShortName": { "message": "YTM Presence" },
-  "appDescription": { "message": "Shows YouTube Music as Discord Rich Presence via a local companion." },
+  "appDescription": { "message": "Shows YouTube Music as Discord Rich Presence. Requires the free YTMPresence companion app for Windows." },
 
   "popupLoading": { "message": "Loading status" },
   "optionsLoading": { "message": "Loading settings" },

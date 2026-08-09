@@ -17,7 +17,7 @@
     "http://127.0.0.1/*",
     "http://localhost/*"
   ],
-  "permissions": [ "storage", "tabs" ],
+  "permissions": [ "storage" ],
   "action": {
     "default_title": "__MSG_appShortName__",
     "default_popup": "popup.html",

@@ -8,11 +8,17 @@ YTM Discord Presence Bridge
 
 ## Kurzbeschreibung
 
-Zeigt YouTube Music als Discord Rich Presence über einen lokalen Companion.
+Zeigt YouTube Music als Discord Rich Presence. Benötigt die kostenlose YTMPresence-Companion-App für Windows.
+
+Die Kurzbeschreibung wird aus `appDescription` in `_locales/<sprache>/messages.json` übernommen und muss dort gepflegt werden, nicht im Store-Dashboard.
 
 ## Beschreibung
 
-YTMPresence verbindet YouTube Music im Browser mit einer lokal laufenden Companion-App für Windows. Die Extension liest den aktuellen Playback-Status auf YouTube Music aus und sendet ihn sicher über einen lokalen WebSocket an den Companion. Der Companion aktualisiert daraus Discord Rich Presence und kann den aktuellen Track im Mini-Player anzeigen.
+**Diese Extension benötigt zusätzlich die kostenlose YTMPresence-Companion-App für Windows.** Ohne sie funktioniert die Extension nicht — Discord Rich Presence lässt sich aus dem Browser heraus technisch nicht setzen. Die App gibt es hier:
+
+https://github.com/Kentarohakase/YTMPresence/releases
+
+So arbeiten beide zusammen: Die Extension liest den Playback-Status auf YouTube Music aus und sendet ihn über einen lokalen, tokengeschützten WebSocket an die Companion-App auf demselben Rechner. Die App aktualisiert daraus Discord Rich Presence und kann den aktuellen Track in einem Mini-Player anzeigen. Die Daten verlassen das Gerät nicht.
 
 Funktionen:
 
@@ -36,14 +42,13 @@ https://github.com/Kentarohakase/YTMPresence/blob/main/docs/EXTENSION_PRIVACY.md
 `storage`
 : Speichert Security Token und lokale Companion-URL im Browserprofil.
 
-`tabs`
-: Findet offene YouTube-Music-Tabs, um Verbindungstests und Player-Kommandos zuverlässig an den richtigen Tab weiterzuleiten.
-
 `https://music.youtube.com/*`
 : Erlaubt der Extension, Playback-Daten ausschließlich auf YouTube Music auszulesen.
 
 `http://127.0.0.1/*` und `http://localhost/*`
 : Erlaubt die Verbindung zur lokal laufenden Companion-App.
+
+Bewusst **nicht** angefordert wird `tabs`. Die Extension findet YouTube-Music-Tabs allein über die Host-Berechtigung für `https://music.youtube.com/*` und liest aus den Treffern ausschließlich die Tab-ID. Mit `tabs` würde Chrome bei der Installation zusätzlich „Deinen Browserverlauf lesen" anzeigen, ohne dass die Extension davon Gebrauch macht.
 
 ## Veröffentlichungsschritte
 

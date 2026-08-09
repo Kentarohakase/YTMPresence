@@ -13,8 +13,8 @@ Diese Checkliste ist für Chrome Web Store, Microsoft Edge Add-ons und kompatibl
 
 ## Pflichtangaben
 
-- Name: `YTM Discord Presence Bridge`
-- Kurzbeschreibung: `Zeigt YouTube Music als Discord Rich Presence über einen lokalen Companion.`
+- Name und Kurzbeschreibung stammen aus `_locales/<sprache>/messages.json` (`appName`, `appDescription`) und werden nicht im Dashboard gepflegt. Änderungen daran erfordern ein neues Paket.
+- Die ausführliche Beschreibung muss die Companion-App **im ersten Absatz** nennen. Ohne sie ist die Extension funktionslos; Nutzer, die das erst nach der Installation merken, bewerten entsprechend.
 - Kategorie: Musik oder Produktivität
 - Sprache: Deutsch, optional Englisch
 - Privacy Policy: `docs/EXTENSION_PRIVACY.md` als GitHub-URL
@@ -24,9 +24,17 @@ Diese Checkliste ist für Chrome Web Store, Microsoft Edge Add-ons und kompatibl
 ## Berechtigungen erklären
 
 - `storage`: speichert Token und Companion-URL lokal.
-- `tabs`: findet YouTube-Music-Tabs für Player-Kommandos.
-- `https://music.youtube.com/*`: liest Playback-Daten nur auf YouTube Music.
+- `https://music.youtube.com/*`: liest Playback-Daten nur auf YouTube Music und findet die Tabs für Player-Kommandos.
 - `localhost` und `127.0.0.1`: verbindet sich nur mit dem lokalen Companion.
+- `tabs` wird bewusst nicht angefordert. Falls es je wieder hinzukommt: Chrome zeigt dann bei der Installation „Deinen Browserverlauf lesen" an, und eine nachträgliche Berechtigungserweiterung löst ein neues Review aus.
+
+## Datenerhebung im Dashboard
+
+Die Angaben müssen zu den Firefox-Metadaten passen (`browsingActivity`, `websiteContent` in `browser_specific_settings.gecko.data_collection_permissions`):
+
+- Erhoben werden Angaben zur Website-Aktivität und Website-Inhalte (Track-Metadaten, aktuelle YouTube-Music-URL).
+- Übertragung ausschließlich lokal an `127.0.0.1`/`localhost`; keine Weitergabe an Dritte, kein Verkauf, keine Bonitäts- oder Kreditzwecke.
+- Keine Analyse-, Tracking- oder Werbedienste.
 
 ## Screenshots
 

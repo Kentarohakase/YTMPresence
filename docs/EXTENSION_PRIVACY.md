@@ -40,8 +40,7 @@ Firefox weist in Versionen mit eingebauter Consent-Anzeige bei der Installation 
 ## Berechtigungen
 
 - `storage`: speichert Token und Companion-URL lokal.
-- `tabs`: findet offene YouTube-Music-Tabs, um Player-Kommandos wie Play/Pause weiterzuleiten.
-- `https://music.youtube.com/*`: liest Playback-Daten nur auf YouTube Music.
+- `https://music.youtube.com/*`: liest Playback-Daten nur auf YouTube Music und findet offene YouTube-Music-Tabs, um Player-Kommandos wie Play/Pause weiterzuleiten.
 - `http://127.0.0.1/*` und `http://localhost/*`: verbindet sich mit dem lokalen Companion.
 
 ## Kontakt
