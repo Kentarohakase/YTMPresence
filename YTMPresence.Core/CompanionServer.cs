@@ -681,7 +681,11 @@ public sealed class CompanionServer : IAsyncDisposable
       return null;
     }
 
-    return uri.ToString();
+    // AbsoluteUri statt ToString(): ToString() liefert laut Dokumentation die
+    // *unescaped* kanonische Form ("All characters are unescaped except #, ?
+    // and %"). Aus ?q=Sam%20Smith wird dabei ?q=Sam Smith - mit echten
+    // Leerzeichen und damit keine gueltige URI mehr.
+    return uri.AbsoluteUri;
   }
 
   private static bool TryNormalizeMusicUrl(string? value, out string normalized)
@@ -695,7 +699,7 @@ public sealed class CompanionServer : IAsyncDisposable
     if (!string.Equals(uri.Host, "music.youtube.com", StringComparison.OrdinalIgnoreCase))
       return false;
 
-    normalized = uri.ToString();
+    normalized = uri.AbsoluteUri;
     return true;
   }
 

@@ -16,6 +16,10 @@ public sealed class PresenceService
   private bool? _lastIsPlaying;
   private DateTimeOffset? _pausedSinceUtc;
 
+  // Verhindert, dass dieselbe abgelehnte Button-URL bei jedem Update erneut
+  // protokolliert wird.
+  private string? _lastRejectedButtonUrl;
+
   // Wie oft soll der "Zeit-Text" aktualisiert werden?
   // Beispiel: 10 => "01:20 / 03:45" wird nur alle 10 Sekunden neu gesetzt.
   private const int ProgressTextStepSeconds = 10;
@@ -270,11 +274,22 @@ public sealed class PresenceService
         SmallText: state.IsPlaying ? "Läuft" : "Pausiert"
     );
 
-    DiscordButton[] buttons =
+    // Discord lehnt die *gesamte* Aktivität ab, wenn ein einzelner Button eine
+    // ungültige URL trägt - dann erscheint gar keine Presence. Ein fragwürdiger
+    // Link darf deshalb höchstens sich selbst kosten, nicht die Anzeige.
+    var buttons = new List<DiscordButton>();
+
+    if (IsValidButtonUrl(trackUrl))
     {
-            new DiscordButton("Auf YouTube Music öffnen", trackUrl),
-            new DiscordButton("YouTube Music", "https://music.youtube.com/")
-        };
+      buttons.Add(new DiscordButton("Auf YouTube Music öffnen", trackUrl));
+    }
+    else if (!string.Equals(trackUrl, _lastRejectedButtonUrl, StringComparison.Ordinal))
+    {
+      _lastRejectedButtonUrl = trackUrl;
+      Logger.Warn($"Track-Button weggelassen: '{trackUrl}' ist keine gültige Button-URL.");
+    }
+
+    buttons.Add(new DiscordButton("YouTube Music", "https://music.youtube.com/"));
 
     // Zeit im Status: "Artist · 01:23 / 03:45" oder "Pausiert bei 01:23 · Artist"
     string stateLine;
@@ -296,7 +311,7 @@ public sealed class PresenceService
         State: stateLine,
         Timestamps: timestamps,
         Assets: assets,
-        Buttons: buttons,
+        Buttons: buttons.ToArray(),
         Type: DiscordActivityType.Listening
     );
   }
@@ -379,6 +394,37 @@ public sealed class PresenceService
     return "https://music.youtube.com/";
   }
 
+  /// <summary>
+  /// Prüft, ob eine URL als Discord-Button taugt.
+  ///
+  /// <see cref="Uri.TryCreate(string, UriKind, out Uri)"/> allein reicht nicht:
+  /// Die Methode akzeptiert auch Zeichenketten mit Leerzeichen. Discord
+  /// verlangt eine bereits korrekt kodierte URI und weist sonst die komplette
+  /// Aktivität ab ("url must be a valid uri").
+  /// </summary>
+  internal static bool IsValidButtonUrl(string? url)
+  {
+    if (string.IsNullOrWhiteSpace(url) || url.Length > 512)
+      return false;
+
+    if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+      return false;
+
+    if (!string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase) &&
+        !string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase))
+    {
+      return false;
+    }
+
+    foreach (var c in url)
+    {
+      if (char.IsWhiteSpace(c) || char.IsControl(c))
+        return false;
+    }
+
+    return true;
+  }
+
   private static bool TryNormalizeMusicUrl(string candidate, out string url)
   {
     url = "";
@@ -393,7 +439,9 @@ public sealed class PresenceService
       if (!string.Equals(uri.Host, "music.youtube.com", StringComparison.OrdinalIgnoreCase))
         return false;
 
-      url = uri.ToString();
+      // AbsoluteUri behaelt die Prozent-Kodierung; ToString() wuerde sie
+      // aufloesen und damit eine ungueltige URI erzeugen.
+      url = uri.AbsoluteUri;
       return true;
     }
     catch

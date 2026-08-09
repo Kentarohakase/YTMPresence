@@ -146,6 +146,64 @@ public class PresenceServiceTests
     Assert.Equal(0, discord.ClearCount);
   }
 
+  [Theory]
+  [InlineData("https://music.youtube.com/watch?v=abc123")]
+  [InlineData("https://music.youtube.com/search?q=Sam%20Smith")]
+  public void ValidButtonUrls_AreAccepted(string url)
+  {
+    Assert.True(PresenceService.IsValidButtonUrl(url));
+  }
+
+  [Theory]
+  // Genau dieser Fall hat Discord die komplette Aktivitaet ablehnen lassen:
+  // Uri.ToString() loest die Prozent-Kodierung auf, aus %20 wird ein echtes
+  // Leerzeichen. Uri.TryCreate akzeptiert das anstandslos, Discord nicht.
+  [InlineData("https://music.youtube.com/search?q=Sam Smith")]
+  [InlineData("")]
+  [InlineData("   ")]
+  [InlineData("nicht mal eine url")]
+  [InlineData("javascript:alert(1)")]
+  [InlineData("ftp://example.com/track")]
+  public void InvalidButtonUrls_AreRejected(string url)
+  {
+    Assert.False(PresenceService.IsValidButtonUrl(url));
+  }
+
+  [Fact]
+  public async Task PercentEncodedTrackUrl_StaysEncodedInTheButton()
+  {
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings());
+
+    var state = Playing() with { ShareUrl = "https://music.youtube.com/search?q=Sam%20Smith" };
+    await service.HandleAsync(state, CancellationToken.None);
+
+    var buttons = discord.LastActivity?.Buttons;
+    Assert.NotNull(buttons);
+    Assert.All(buttons!, b => Assert.True(
+        PresenceService.IsValidButtonUrl(b.Url),
+        $"Button-URL '{b.Url}' wuerde von Discord abgelehnt."));
+  }
+
+  [Fact]
+  public async Task InvalidTrackUrl_DropsOnlyThatButton()
+  {
+    // Ein fragwuerdiger Link darf hoechstens sich selbst kosten. Frueher hat er
+    // die gesamte Presence verhindert, weil Discord die Aktivitaet ablehnte.
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings());
+
+    var state = Playing() with { Url = "nicht mal eine url", ShareUrl = "auch keine" };
+    await service.HandleAsync(state, CancellationToken.None);
+
+    Assert.Equal(1, discord.SetCount);
+
+    var buttons = discord.LastActivity?.Buttons;
+    Assert.NotNull(buttons);
+    Assert.NotEmpty(buttons!);
+    Assert.All(buttons!, b => Assert.True(PresenceService.IsValidButtonUrl(b.Url)));
+  }
+
   [Fact]
   public async Task IdenticalState_IsDeduped()
   {
