@@ -251,7 +251,13 @@ public class PresenceServiceTests
     await service.HandleAsync(Playing(isAd: true), CancellationToken.None);
 
     Assert.Equal(1, discord.SetCount);
-    Assert.Equal("Werbung", discord.LastActivity?.State);
+
+    // Nicht gegen "Werbung" pruefen: Der Text folgt seit der Lokalisierung der
+    // Systemsprache, und der CI-Runner laeuft auf Englisch. Hier gehoert die
+    // Verdrahtung geprueft - dass der Werbezustand den Werbetext setzt. Die
+    // Uebersetzungen selbst deckt PresenceTextTests ab.
+    Assert.Equal(PresenceText.Advertisement, discord.LastActivity?.State);
+    Assert.Equal("YouTube Music", discord.LastActivity?.Details);
   }
 
   [Fact]
