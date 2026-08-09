@@ -6,6 +6,7 @@ Alle wichtigen Änderungen an YTMPresence werden in dieser Datei dokumentiert.
 
 ### Fixed
 
+- **Die Discord-Presence ist nicht mehr fest deutsch.** Wiedergabestatus, Pausenzeile, Werbehinweis und die Beschriftung des Track-Buttons waren fest verdrahtet — ein englischer Nutzer zeigte seinen Kontakten damit „Pausiert bei 1:23“ und einen Button namens „Auf YouTube Music öffnen“. Das ist der Text, den **andere** lesen, nicht die eigene Oberfläche. `PresenceText` im Core-Projekt übersetzt jetzt nach Systemsprache, mit Englisch als Rückfallebene statt Deutsch.
 - Der Mini-Player folgt jetzt der Windows-Sprache. Wiedergabestatus, die Meldung ohne Track und die Beschriftung des Zurueck-Kommandos waren fest auf Deutsch verdrahtet und blieben deutsch, auch wenn die uebrige Oberflaeche auf Englisch lief.
 
 ## [1.3.1] - 2026-08-09

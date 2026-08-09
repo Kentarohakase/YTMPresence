@@ -207,7 +207,7 @@ public sealed class PresenceService
 
         var adActivity = new DiscordActivity(
             Details: "YouTube Music",
-            State: "Werbung",
+            State: PresenceText.Advertisement,
             Timestamps: null,
             Assets: adAssets,
             Buttons: null,
@@ -271,7 +271,7 @@ public sealed class PresenceService
             ? _settings.Assets.LargeImageText
             : $"{album} · {_settings.Assets.LargeImageText}",
         SmallImage: state.IsPlaying ? _settings.Assets.PlaySmallImageKey : _settings.Assets.PauseSmallImageKey,
-        SmallText: state.IsPlaying ? "Läuft" : "Pausiert"
+        SmallText: state.IsPlaying ? PresenceText.Playing : PresenceText.Paused
     );
 
     // Discord lehnt die *gesamte* Aktivität ab, wenn ein einzelner Button eine
@@ -281,7 +281,7 @@ public sealed class PresenceService
 
     if (IsValidButtonUrl(trackUrl))
     {
-      buttons.Add(new DiscordButton("Auf YouTube Music öffnen", trackUrl));
+      buttons.Add(new DiscordButton(PresenceText.OpenOnYouTubeMusic, trackUrl));
     }
     else if (!string.Equals(trackUrl, _lastRejectedButtonUrl, StringComparison.Ordinal))
     {
@@ -291,7 +291,8 @@ public sealed class PresenceService
 
     buttons.Add(new DiscordButton("YouTube Music", "https://music.youtube.com/"));
 
-    // Zeit im Status: "Artist · 01:23 / 03:45" oder "Pausiert bei 01:23 · Artist"
+    // Zeit im Status: "Artist · 01:23 / 03:45" bei laufender Wiedergabe,
+    // sonst der übersetzte Pause-Text aus PresenceText.
     string stateLine;
     if (state.IsPlaying)
     {
@@ -302,8 +303,8 @@ public sealed class PresenceService
     else
     {
       stateLine = hasTimes
-          ? $"Pausiert bei {Fmt(pos)} · {artist}"
-          : $"Pausiert · {AppendAlbum(artist, album)}";
+          ? PresenceText.PausedAt(Fmt(pos), artist)
+          : PresenceText.PausedWithoutTime(AppendAlbum(artist, album));
     }
 
     return new DiscordActivity(
