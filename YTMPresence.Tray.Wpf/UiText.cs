@@ -386,6 +386,68 @@ public static class UiText
   public static string PlayerTopMost => T(de: "Top", en: "Top", es: "Top");
   public static string TooltipPrevious => T(de: "Zurück", en: "Previous", es: "Previous");
 
+  public static string OpenYouTubeMusicFailed => T(
+      de: "YouTube Music konnte nicht geöffnet werden.",
+      en: "YouTube Music could not be opened.",
+      es: "YouTube Music could not be opened.");
+
+  // --- Diagnosefenster ---------------------------------------------------
+
+  public static string DiagUnknown => T(de: "Unbekannt", en: "Unknown", es: "Unknown");
+  public static string DiagNoServerData => T(de: "Keine Serverdaten", en: "No server data", es: "No server data");
+  public static string DiagServerRunning => T(de: "Läuft", en: "Running", es: "Running");
+  public static string DiagServerStopped => T(de: "Gestoppt", en: "Stopped", es: "Stopped");
+  public static string DiagNever => T(de: "nie", en: "never", es: "never");
+  public static string DiagJustNow => T(de: "gerade eben", en: "just now", es: "just now");
+  public static string DiagSecurityOk => T(de: "OK", en: "OK", es: "OK");
+
+  public static string DiagExtensionConnected(int clients, string age) => T(
+      de: $"Verbunden ({clients}), letzte Daten: {age}",
+      en: $"Connected ({clients}), last data: {age}",
+      es: $"Connected ({clients}), last data: {age}");
+
+  public static string DiagExtensionDisconnected(string age) => T(
+      de: $"Nicht verbunden, letzte Daten: {age}",
+      en: $"Not connected, last data: {age}",
+      es: $"Not connected, last data: {age}");
+
+  public static string DiagDiscordOk(string age) => T(
+      de: $"OK, letzter Erfolg: {age}",
+      en: $"OK, last success: {age}",
+      es: $"OK, last success: {age}");
+
+  public static string DiagDiscordError(string message) => T(
+      de: $"Fehler: {message}",
+      en: $"Error: {message}",
+      es: $"Error: {message}");
+
+  public static string DiagInvalidTokens(int count, string age) => T(
+      de: $"{count} ungültige Token, zuletzt: {age}",
+      en: $"{count} invalid tokens, last: {age}",
+      es: $"{count} invalid tokens, last: {age}");
+
+  public static string DiagUpdateCheckNever => T(
+      de: "Noch nie erfolgreich durchgelaufen",
+      en: "Has never completed successfully",
+      es: "Has never completed successfully");
+
+  public static string DiagUpdateCheckLastSuccess(string age) => T(
+      de: $"Zuletzt erfolgreich: vor {age}",
+      en: $"Last successful: {age} ago",
+      es: $"Last successful: {age} ago");
+
+  public static string DiagUpdateCheckStale => T(
+      de: " – seit über zwei Wochen kein erfolgreicher Check",
+      en: " – no successful check for over two weeks",
+      es: " – no successful check for over two weeks");
+
+  public static string DiagUpdateCheckDisabled => T(
+      de: " (Prüfung beim Start ist deaktiviert)",
+      en: " (check on startup is disabled)",
+      es: " (check on startup is disabled)");
+
+  // --- Mini-Player -------------------------------------------------------
+
   public static string PlayerStatePlaying => T(de: "Läuft", en: "Playing", es: "Playing");
   public static string PlayerStatePaused => T(de: "Pausiert", en: "Paused", es: "Paused");
   public static string PlayerNoTrack => T(de: "Kein Track", en: "No track", es: "No track");

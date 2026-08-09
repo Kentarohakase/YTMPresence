@@ -41,7 +41,7 @@ public partial class OnboardingWindow : Window
     }
     catch
     {
-      SetStatus("YouTube Music konnte nicht geöffnet werden.", isError: true);
+      SetStatus(UiText.OpenYouTubeMusicFailed, isError: true);
     }
   }
 

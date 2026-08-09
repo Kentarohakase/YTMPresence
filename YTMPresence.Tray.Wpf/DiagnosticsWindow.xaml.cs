@@ -57,33 +57,33 @@ public partial class DiagnosticsWindow : Window
 
     if (status is null)
     {
-      ServerText.Text = "Keine Serverdaten";
-      ExtensionText.Text = "Unbekannt";
-      DiscordText.Text = "Unbekannt";
-      TrackText.Text = "Kein Track";
+      ServerText.Text = UiText.DiagNoServerData;
+      ExtensionText.Text = UiText.DiagUnknown;
+      DiscordText.Text = UiText.DiagUnknown;
+      TrackText.Text = UiText.PlayerNoTrack;
       ProgressText.Text = "--";
-      SecurityText.Text = "Unbekannt";
+      SecurityText.Text = UiText.DiagUnknown;
       _lastReport = BuildReport(null, version, endpoint, logPath);
       return;
     }
 
-    ServerText.Text = status.IsRunning ? "Läuft" : "Gestoppt";
+    ServerText.Text = status.IsRunning ? UiText.DiagServerRunning : UiText.DiagServerStopped;
     ExtensionText.Text = status.ConnectedClients > 0
-        ? $"Verbunden ({status.ConnectedClients}), letzte Daten: {AgeText(status.LastMessageUtc)}"
-        : $"Nicht verbunden, letzte Daten: {AgeText(status.LastMessageUtc)}";
+        ? UiText.DiagExtensionConnected(status.ConnectedClients, AgeText(status.LastMessageUtc))
+        : UiText.DiagExtensionDisconnected(AgeText(status.LastMessageUtc));
 
     DiscordText.Text = status.DiscordOk
-        ? $"OK, letzter Erfolg: {AgeText(status.LastDiscordOkUtc)}"
-        : $"Fehler: {status.LastDiscordError ?? "unknown"}";
+        ? UiText.DiagDiscordOk(AgeText(status.LastDiscordOkUtc))
+        : UiText.DiagDiscordError(status.LastDiscordError ?? "unknown");
 
     TrackText.Text = string.IsNullOrWhiteSpace(status.LastTitle)
-        ? "Kein Track"
+        ? UiText.PlayerNoTrack
         : $"{status.LastTitle} - {status.LastArtist ?? "YouTube Music"}";
 
     ProgressText.Text = FormatProgress(status.LastPositionSeconds, status.LastDurationSeconds, status.LastIsPlaying);
     SecurityText.Text = status.UnauthorizedMessages > 0
-        ? $"{status.UnauthorizedMessages} ungültige Token, zuletzt: {AgeText(status.LastUnauthorizedUtc)}"
-        : "OK";
+        ? UiText.DiagInvalidTokens(status.UnauthorizedMessages, AgeText(status.LastUnauthorizedUtc))
+        : UiText.DiagSecurityOk;
 
     _lastReport = BuildReport(status, version, endpoint, logPath);
   }
@@ -141,10 +141,10 @@ public partial class DiagnosticsWindow : Window
   private static string AgeText(DateTimeOffset? value)
   {
     if (value is null)
-      return "nie";
+      return UiText.DiagNever;
 
     var age = DateTimeOffset.UtcNow - value.Value;
-    if (age < TimeSpan.FromSeconds(5)) return "gerade eben";
+    if (age < TimeSpan.FromSeconds(5)) return UiText.DiagJustNow;
     if (age < TimeSpan.FromMinutes(1)) return $"{(int)age.TotalSeconds}s";
     if (age < TimeSpan.FromHours(1)) return $"{(int)age.TotalMinutes}m";
     if (age < TimeSpan.FromDays(1)) return $"{(int)age.TotalHours}h";
@@ -159,16 +159,16 @@ public partial class DiagnosticsWindow : Window
   /// </summary>
   private static string DescribeUpdateCheck(DateTimeOffset? lastSuccessUtc, bool checkOnStartup)
   {
-    var suffix = checkOnStartup ? "" : " (Prüfung beim Start ist deaktiviert)";
+    var suffix = checkOnStartup ? "" : UiText.DiagUpdateCheckDisabled;
 
     if (lastSuccessUtc is null)
-      return $"Noch nie erfolgreich durchgelaufen{suffix}";
+      return UiText.DiagUpdateCheckNever + suffix;
 
     var age = DateTimeOffset.UtcNow - lastSuccessUtc.Value;
-    var text = $"Zuletzt erfolgreich: vor {AgeText(lastSuccessUtc)}";
+    var text = UiText.DiagUpdateCheckLastSuccess(AgeText(lastSuccessUtc));
 
     if (age >= TimeSpan.FromDays(14))
-      text += " – seit über zwei Wochen kein erfolgreicher Check";
+      text += UiText.DiagUpdateCheckStale;
 
     return text + suffix;
   }
