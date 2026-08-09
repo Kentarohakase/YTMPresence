@@ -9,4 +9,9 @@
 	<ItemGroup>
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
 	</ItemGroup>
+
+	<!-- Erlaubt Tests gegen interne Bausteine, ohne sie oeffentlich zu machen. -->
+	<ItemGroup>
+		<InternalsVisibleTo Include="YTMPresence.Core.Tests" />
+	</ItemGroup>
 </Project>

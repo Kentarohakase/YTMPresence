@@ -89,15 +89,25 @@ public sealed class DiscordIpcClient : IDiscordPresenceClient, IAsyncDisposable
   }
 
   public async Task ClearActivityAsync(CancellationToken ct)
-  {
-    var payload = new
-    {
-      cmd = "CLEAR_ACTIVITY",
-      args = new { pid = Environment.ProcessId },
-      nonce = Guid.NewGuid().ToString("N")
-    };
-    await SendJsonFrameAsync(1, payload, ct);
-  }
+    => await SendRawJsonFrameAsync(1, BuildClearActivityJson(), ct);
+
+  /// <summary>
+  /// Baut die Nachricht zum Entfernen der Presence.
+  ///
+  /// Discords RPC kennt kein CLEAR_ACTIVITY - die dokumentierten Befehle sind
+  /// SET_ACTIVITY, SEND_ACTIVITY_JOIN_INVITE und CLOSE_ACTIVITY_REQUEST.
+  /// Geloescht wird ueber SET_ACTIVITY mit <c>activity: null</c>.
+  ///
+  /// Der Null-Wert muss dabei tatsaechlich im JSON stehen. Die normalen
+  /// Optionen lassen Null-Felder weg (erwuenscht, damit optionale
+  /// Activity-Felder nicht als null uebertragen werden) - hier wuerde dadurch
+  /// aber genau die Angabe verschwinden, auf die es ankommt. Deshalb wird die
+  /// Nachricht direkt zusammengesetzt statt serialisiert.
+  /// </summary>
+  internal static string BuildClearActivityJson()
+    => $$"""
+      {"cmd":"SET_ACTIVITY","args":{"pid":{{Environment.ProcessId}},"activity":null},"nonce":"{{Guid.NewGuid():N}}"}
+      """;
 
   private Task SendHandshakeAsync(CancellationToken ct)
   {
@@ -109,7 +119,13 @@ public sealed class DiscordIpcClient : IDiscordPresenceClient, IAsyncDisposable
   {
     if (_stream is null) throw new InvalidOperationException("Discord IPC nicht verbunden.");
 
-    var json = JsonSerializer.Serialize(payload, JsonOptions);
+    await SendRawJsonFrameAsync(opcode, JsonSerializer.Serialize(payload, JsonOptions), ct);
+  }
+
+  private async Task SendRawJsonFrameAsync(int opcode, string json, CancellationToken ct)
+  {
+    if (_stream is null) throw new InvalidOperationException("Discord IPC nicht verbunden.");
+
     var data = Encoding.UTF8.GetBytes(json);
 
     var header = new byte[8];
@@ -152,12 +168,51 @@ public sealed class DiscordIpcClient : IDiscordPresenceClient, IAsyncDisposable
 
         var body = new byte[len];
         await ReadExactAsync(stream, body, ct);
+        LogErrorFrame(body);
       }
       catch
       {
         await ResetAsync();
         return;
       }
+    }
+  }
+
+  /// <summary>
+  /// Protokolliert Fehlerantworten von Discord.
+  ///
+  /// Die eingehenden Frames wurden bisher nur gelesen und verworfen. Dadurch
+  /// blieb unbemerkt, dass Discord einen ungueltigen Befehl ablehnte - die App
+  /// meldete weiterhin "Discord OK", waehrend die Presence unveraendert
+  /// stehenblieb. Genau so ist das nicht existierende CLEAR_ACTIVITY lange
+  /// unentdeckt geblieben.
+  ///
+  /// Bewusst nur Protokollierung: Ein Fehlerframe gehoert zu einer einzelnen
+  /// Nachricht und soll die Verbindung nicht abreissen lassen.
+  /// </summary>
+  private static void LogErrorFrame(byte[] body)
+  {
+    try
+    {
+      using var doc = JsonDocument.Parse(body);
+      var root = doc.RootElement;
+
+      if (!root.TryGetProperty("evt", out var evt) ||
+          !string.Equals(evt.GetString(), "ERROR", StringComparison.Ordinal))
+      {
+        return;
+      }
+
+      var command = root.TryGetProperty("cmd", out var cmd) ? cmd.GetString() : null;
+      var message = root.TryGetProperty("data", out var data) && data.TryGetProperty("message", out var m)
+          ? m.GetString()
+          : null;
+
+      Logger.Warn($"Discord hat den Befehl '{command ?? "unbekannt"}' abgelehnt: {message ?? "ohne Begruendung"}");
+    }
+    catch (Exception ex) when (ex is JsonException or InvalidOperationException or KeyNotFoundException)
+    {
+      // Kein auswertbares JSON: nicht jeder Frame ist eine Fehlerantwort.
     }
   }
 

@@ -4,6 +4,11 @@ Alle wichtigen Änderungen an YTMPresence werden in dieser Datei dokumentiert.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Die Presence lässt sich wieder entfernen.** Zum Löschen sendete der Discord-IPC-Client den Befehl `CLEAR_ACTIVITY` — den es im RPC-Protokoll nicht gibt; dokumentiert sind `SET_ACTIVITY`, `SEND_ACTIVITY_JOIN_INVITE` und `CLOSE_ACTIVITY_REQUEST`. Discord lehnte den Befehl ab, die Ablehnung wurde verworfen, und die App meldete weiterhin „Discord OK". In der Folge blieb die Presence stehen: `OnlyShowWhenPlaying` wirkte nicht, `PausedClearSeconds` wirkte nicht, und auch beim Beenden verschwand sie nicht. Gelöscht wird jetzt über `SET_ACTIVITY` mit `activity: null`.
+- Fehlerantworten von Discord werden protokolliert statt verworfen. Genau diese Lücke hat den falschen Befehl über die gesamte Projektlaufzeit verdeckt.
+
 ### Added
 
 - Das Diagnosefenster zeigt den letzten erfolgreichen Update-Check. Fehler beim automatischen Start-Check landen bewusst nur im Log, damit nicht bei jedem Hochfahren ohne Netz eine Sprechblase erscheint — dadurch konnte er aber monatelang scheitern, ohne dass es jemand bemerkt. Liegt der letzte Erfolg über zwei Wochen zurück, weist die Zeile ausdrücklich darauf hin; ist die Prüfung beim Start abgeschaltet, steht auch das dort. Der Zeitpunkt wird in den Einstellungen gespeichert und ist im Diagnosebericht enthalten.
