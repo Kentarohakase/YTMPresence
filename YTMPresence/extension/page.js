@@ -292,13 +292,23 @@
         return clampText(candidates[0]?.src || "");
     }
 
+    /**
+     * Watch-URL aus der Player-Leiste.
+     *
+     * Ausschliesslich auf <ytmusic-player-bar> beschraenkt. Frueher standen
+     * hier zusaetzlich `a#song-title[href*="watch?v="]`,
+     * `a[href*="music.youtube.com/watch?v="]` und `a[href*="/watch?v="]` in der
+     * Liste - Selektoren ohne Container-Bezug, die den ersten beliebigen
+     * Watch-Link im Dokument greifen. Auf YouTube Music sind das Eintraege aus
+     * der Warteschlange, Empfehlungskacheln oder die Seitenleiste, also
+     * irgendein Video ausser dem laufenden. Da diese Quelle frueher auch noch
+     * Vorrang hatte, wurde in der Presence ein nie abgespielter Track
+     * verlinkt.
+     */
     function getPlayerBarWatchUrl() {
         const anchors = [
             document.querySelector('ytmusic-player-bar a#song-title'),
-            document.querySelector('ytmusic-player-bar a[href*="watch?v="]'),
-            document.querySelector('a#song-title[href*="watch?v="]'),
-            document.querySelector('a[href*="music.youtube.com/watch?v="]'),
-            document.querySelector('a[href*="/watch?v="]')
+            document.querySelector('ytmusic-player-bar a[href*="watch?v="]')
         ].filter(Boolean);
 
         for (const anchor of anchors) {
@@ -510,17 +520,20 @@
         }
 
         // Reihenfolge nach Verlaesslichkeit, nicht nach Bequemlichkeit:
-        //   1. Player-Leiste  - zeigt exakt den laufenden Track, wenn vorhanden
-        //   2. Artwork        - wird vom Player pro Track neu gesetzt
+        //   1. Artwork        - setzt der Player selbst pro Track, damit auch
+        //                       die Medienanzeige des Systems stimmt; die
+        //                       einzige Quelle, die zuverlaessig den laufenden
+        //                       Titel meint
+        //   2. Player-Leiste  - korrekt, wenn vorhanden, aber DOM-abhaengig
         //   3. Adresszeile    - korrekt bei direkt geoeffneten Tracks, steht in
         //                       Warteschlangen aber auf dem Einstiegstrack
         //   4. canonical/og   - auf einer Single-Page-App praktisch statisch
         //
         // Stand 2026-08 liefert YouTube Music weder die Player-Leisten-Anker
         // noch canonical; og:url zeigt auf /app_shell und enthaelt keine
-        // Video-ID. Ohne die Adresszeile als Kandidat haengt die Ermittlung
-        // damit allein am Artwork.
-        const videoId = playerBarVideoId || artworkVideoId || locationVideoId || canonicalVideoId;
+        // Video-ID. Praktisch entscheidet damit das Artwork, mit der
+        // Adresszeile als Rueckhalt.
+        const videoId = artworkVideoId || playerBarVideoId || locationVideoId || canonicalVideoId;
 
         return videoId ? buildWatchUrl(videoId) : buildSearchUrl(title, artist);
     }
