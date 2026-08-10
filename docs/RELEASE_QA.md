@@ -1,79 +1,79 @@
-# Release-QA
+# Release QA
 
-Diese Checkliste ist für jeden Release-Tag gedacht, bevor das Release breit geteilt wird.
+This checklist is meant for every release tag, before the release is shared widely.
 
-## Vor dem Tag
+## Before tagging
 
-- `Directory.Build.props` und `YTMPresence/extension/manifest.json` haben dieselbe Version.
-- `CHANGELOG.md` enthält einen Eintrag für diese Version.
-- `dotnet build YTMPresence.slnx --configuration Release` läuft ohne Fehler.
-- `dotnet test YTMPresence.Core.Tests/YTMPresence.Core.Tests.csproj` ist grün.
-- `.\scripts\package-release.ps1` erzeugt App, Bundle-ZIP, Extension-ZIP (Chromium), Extension-ZIP (Firefox), Inno-Setup-EXE und danach `SHA256SUMS.txt` (erst nachdem alle Artefakte final sind).
-- `.\scripts\verify-release.ps1 -RequireSetup` meldet die erwartete Version und den Runtime-Zieltyp und verifiziert `SHA256SUMS.txt` gegen die Artefakte, ohne die Liste neu zu schreiben.
+- `Directory.Build.props` and `YTMPresence/extension/manifest.json` carry the same version.
+- `CHANGELOG.md` contains an entry for this version.
+- `dotnet build YTMPresence.slnx --configuration Release` completes without errors.
+- `dotnet test YTMPresence.Core.Tests/YTMPresence.Core.Tests.csproj` is green.
+- `.\scripts\package-release.ps1` produces the app, bundle ZIP, extension ZIP (Chromium), extension ZIP (Firefox), Inno Setup EXE and then `SHA256SUMS.txt` (only once all artifacts are final).
+- `.\scripts\verify-release.ps1 -RequireSetup` reports the expected version and runtime target and verifies `SHA256SUMS.txt` against the artifacts without rewriting the list.
 
-## Release-Artefakte
+## Release artifacts
 
-- `YTMPresence-<version>-win-x64-setup.exe` startet ohne Adminrechte.
-- Setup zeigt den Inno-Setup-Wizard und installiert nach `%LOCALAPPDATA%\Programs\YTMPresence`.
-- `YTMPresence-<version>-win-x64.zip` enthält `app/`, `extension/` und `RELEASE.txt`.
-- `YTMPresence-extension.zip` enthält Manifest, Scripts, `i18n.js`, `_locales/`, Optionen, Popup und alle Icons.
-- `YTMPresence-extension-firefox.zip` enthält dieselben Dateien plus `browser_specific_settings` im Manifest.
-- `SHA256SUMS.txt` enthält Bundle-ZIP, beide Extension-ZIPs und Setup-EXE.
+- `YTMPresence-<version>-win-x64-setup.exe` starts without administrator rights.
+- The setup shows the Inno Setup wizard and installs to `%LOCALAPPDATA%\Programs\YTMPresence`.
+- `YTMPresence-<version>-win-x64.zip` contains `app/`, `extension/` and `RELEASE.txt`.
+- `YTMPresence-extension.zip` contains the manifest, scripts, `i18n.js`, `_locales/`, options, popup and all icons.
+- `YTMPresence-extension-firefox.zip` contains the same files plus `browser_specific_settings` in the manifest.
+- `SHA256SUMS.txt` covers the bundle ZIP, both extension ZIPs and the setup EXE.
 
-## Installations-Test
+## Installation test
 
-- Setup über eine vorhandene Installation ausführen.
-- YTMPresence startet nach der Installation.
-- Startmenü-Verknüpfung startet die App.
-- Windows zeigt YTMPresence unter den installierten Apps.
-- Deinstallation entfernt Startmenü-Eintrag, Autostart-Wert, App-Ordner und Windows-Deinstallationseintrag.
+- Run the setup over an existing installation.
+- YTMPresence starts after installation.
+- The start menu shortcut launches the app.
+- Windows lists YTMPresence among the installed apps.
+- Uninstallation removes the start menu entry, the autostart value, the app folder and the Windows uninstall entry.
 
-## Update-Test
+## Update test
 
-- Eine ältere Version installieren.
-- `Nach Updates suchen` im Tray-Menü ausführen.
-- Update-Menüeintrag öffnet das Update-Installer-Fenster.
-- `Nur herunterladen` zeigt Fortschritt, Zielpfad und eine bestätigte SHA256-Prüfung, ohne die App zu beenden.
-- `Installieren` startet das Setup erst nach erfolgreicher SHA256-Prüfung; **danach beendet sich YTMPresence selbst** (der Installer beendet die App nicht mehr per Prozessname).
-- Setup-Fenster bleibt sichtbar, nachdem YTMPresence beendet wurde.
-- **Die App beendet sich innerhalb weniger Sekunden von selbst, nicht erst durch den Restart-Manager-Dialog.** Das ist der einzige sichtbare Nachweis, dass `MakeInstanceKey` im Installer und `InstallerCoordination.GetInstanceKey` in der App denselben Schlüssel berechnen. Beide Seiten sind Zweitimplementierungen derselben Logik; der Unit-Test pinnt nur die C#-Seite. Erscheint stattdessen der Restart-Manager-Dialog oder dauert die Beendigung bis zum Timeout, sind die Schlüssel auseinandergelaufen — funktional sieht das Update trotzdem erfolgreich aus.
-- Abbruch während des Downloads entfernt die temporären Dateien unter `%TEMP%\YTMPresence\updates`.
-- Schließen des Update-Fensters und App-Shutdown brechen laufende Downloads ab und entfernen das jeweilige Arbeitsverzeichnis bestmöglich.
-- Eine manipulierte oder fehlende `SHA256SUMS.txt` blockiert die Installation mit einer Fehlermeldung; die App bleibt benutzbar.
-- Läuft parallel eine portable YTMPresence-Kopie aus einem anderen Ordner in einer anderen Benutzersitzung, bleibt sie von der Installation unberührt.
-- Nach der Installation meldet die App die neue Version.
+- Install an older version.
+- Run `Check for updates` from the tray menu.
+- The update menu entry opens the update installer window.
+- `Download only` shows progress, target path and a confirmed SHA256 check, without exiting the app.
+- `Install` launches the setup only after a successful SHA256 check; **YTMPresence then exits by itself** (the installer no longer terminates the app by process name).
+- The setup window stays visible after YTMPresence has exited.
+- **The app exits by itself within a few seconds, rather than through the Restart Manager dialog.** This is the only visible evidence that `MakeInstanceKey` in the installer and `InstallerCoordination.GetInstanceKey` in the app compute the same key. Both sides are second implementations of the same logic; the unit test only pins the C# side. If the Restart Manager dialog appears instead, or shutting down takes until the timeout, the keys have drifted apart — the update still looks successful.
+- Cancelling during the download removes the temporary files under `%TEMP%\YTMPresence\updates`.
+- Closing the update window and shutting down the app abort running downloads and remove the respective working directory as best they can.
+- A tampered or missing `SHA256SUMS.txt` blocks the installation with an error message; the app stays usable.
+- A portable YTMPresence copy running in parallel from another folder in a different user session is left untouched by the installation.
+- After installation the app reports the new version.
 
-## Lokaler Updater-Hotfix-Test
+## Local updater hotfix test
 
-- Release-Kandidat mit `.\scripts\package-release.ps1` erzeugen.
-- Eine ältere veröffentlichte Version installieren.
-- `.\scripts\test-update-flow.ps1 -SetupPath .\artifacts\release\YTMPresence-<version>-win-x64-setup.exe` starten.
-- Den angezeigten manuellen In-App-Update-Test vollständig ausführen.
-- Script mit Enter beenden und prüfen, dass die ursprüngliche `settings.json` wiederhergestellt wurde.
+- Build a release candidate with `.\scripts\package-release.ps1`.
+- Install an older published version.
+- Run `.\scripts\test-update-flow.ps1 -SetupPath .\artifacts\release\YTMPresence-<version>-win-x64-setup.exe`.
+- Carry out the manual in-app update test it describes, in full.
+- End the script with Enter and check that the original `settings.json` was restored.
 
-## Silent-Installations-Test
+## Silent installation test
 
-- Nur auf einem frischen Windows-Profil oder in einer VM ausführen.
-- `.\artifacts\release\YTMPresence-<version>-win-x64-setup.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-` ausführen.
-- Prüfen, dass `%LOCALAPPDATA%\Programs\YTMPresence\app\YTMPresence.exe` existiert.
-- `%LOCALAPPDATA%\Programs\YTMPresence\unins000.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART` ausführen.
-- Prüfen, dass App-Ordner, Startmenü-Eintrag und Windows-Deinstallationseintrag entfernt wurden.
+- Only run this on a fresh Windows profile or in a VM.
+- Run `.\artifacts\release\YTMPresence-<version>-win-x64-setup.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-`.
+- Check that `%LOCALAPPDATA%\Programs\YTMPresence\app\YTMPresence.exe` exists.
+- Run `%LOCALAPPDATA%\Programs\YTMPresence\unins000.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART`.
+- Check that the app folder, start menu entry and Windows uninstall entry were removed.
 
-## Clean-Test
+## Clean test
 
-- Auf einem frischen Windows-Profil oder einer VM installieren.
-- Erste-Schritte-Fenster erscheint beim ersten Start.
-- Token und Companion-URL lassen sich kopieren.
-- Extension verbindet sich nach Speichern von Token und URL.
-- Chromium-Extension (Chrome/Edge) und Firefox-Extension (`about:debugging`) verbinden sich beide.
-- Bei englischer Browser-/Windows-Sprache erscheinen Extension-Popup, Optionen und Tray-Fenster auf Englisch, bei deutscher auf Deutsch.
-- App ohne laufendes Discord startet stabil; Diagnose meldet Discord als nicht erreichbar und verbindet automatisch, sobald Discord läuft.
-- Diagnosefenster zeigt Server, Extension und Discord sinnvoll an.
-- Diagnosebericht-ZIP lässt sich erstellen und enthält keine rohe `SecurityToken`-Zeile.
+- Install on a fresh Windows profile or in a VM.
+- The getting-started window appears on first start.
+- Token and companion URL can be copied.
+- The extension connects once token and URL are saved.
+- The Chromium extension (Chrome/Edge) and the Firefox extension (`about:debugging`) both connect.
+- With an English browser and Windows language, the extension popup, the options and the tray windows appear in English; with German, in German.
+- The app starts reliably without Discord running; diagnostics report Discord as unreachable and connect automatically once Discord is running.
+- The diagnostics window shows server, extension and Discord sensibly.
+- The diagnostics report ZIP can be created and contains no raw `SecurityToken` line.
 
-## Nach dem Push
+## After pushing
 
-- GitHub Actions Release-Workflow ist grün.
-- GitHub Release ist nicht als Draft oder Prerelease markiert.
-- Release Notes entsprechen dem Changelog-Eintrag.
-- Assets sind im Release vorhanden und herunterladbar.
+- The GitHub Actions release workflow is green.
+- The GitHub release is not marked as draft or prerelease.
+- The release notes match the changelog entry.
+- The assets are present in the release and downloadable.

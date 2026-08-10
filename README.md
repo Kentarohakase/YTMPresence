@@ -1,140 +1,140 @@
 # YTMPresence
 
-YTMPresence zeigt den aktuellen YouTube-Music-Track als Discord Rich Presence an. Das Projekt besteht aus zwei Teilen:
+YTMPresence shows the current YouTube Music track as Discord Rich Presence. The project consists of two parts:
 
-- einer lokalen Companion-App im Tray, die mit Discord spricht
-- einer Browser-Extension, die den aktuellen YouTube-Music-Status an den Companion sendet
+- a local companion app in the tray that talks to Discord
+- a browser extension that sends the current YouTube Music state to the companion
 
-**Die Extension gibt es im Chrome Web Store:**
+**The extension is available in the Chrome Web Store:**
 [YTM Discord Presence Bridge](https://chromewebstore.google.com/detail/ytm-discord-presence-brid/obdinnbalnbmpkcaopnhnkdgdkcgligi)
 
-Sie funktioniert nur zusammen mit der Companion-App für Windows aus den [Releases](https://github.com/Kentarohakase/YTMPresence/releases) — Discord Rich Presence lässt sich aus dem Browser heraus nicht setzen.
+It only works together with the companion app for Windows from the [releases](https://github.com/Kentarohakase/YTMPresence/releases) — Discord Rich Presence cannot be set from a browser.
 
 ## Installation
 
-### 1. Companion starten
+### 1. Start the companion
 
-Starte `YTMPresence.exe`. Danach erscheint das Tray-Icon im Infobereich von Windows.
+Run `YTMPresence.exe`. The tray icon then appears in the Windows notification area.
 
-Beim ersten Start erzeugt die App automatisch einen Security Token und speichert die Einstellungen unter:
+On first start the app generates a security token automatically and stores the settings at:
 
 ```text
 %APPDATA%\YTMPresence\settings.json
 ```
 
-### 2. Token kopieren
+### 2. Copy the token
 
-Rechtsklick auf das Tray-Icon:
+Right-click the tray icon:
 
 ```text
-Token kopieren
+Copy token
 ```
 
-### 3. Extension installieren
+### 3. Install the extension
 
-In Chrome oder Edge über den Store — das ist der empfohlene Weg, weil Updates dann automatisch kommen:
+In Chrome or Edge through the store — this is the recommended way, because updates then arrive automatically:
 
-[YTM Discord Presence Bridge im Chrome Web Store](https://chromewebstore.google.com/detail/ytm-discord-presence-brid/obdinnbalnbmpkcaopnhnkdgdkcgligi)
+[YTM Discord Presence Bridge in the Chrome Web Store](https://chromewebstore.google.com/detail/ytm-discord-presence-brid/obdinnbalnbmpkcaopnhnkdgdkcgligi)
 
-Alternativ als entpackte Erweiterung, etwa zum Entwickeln oder Testen:
+Alternatively as an unpacked extension, for development or testing:
 
-1. `chrome://extensions` oder `edge://extensions` öffnen
-2. Entwicklermodus aktivieren
-3. `Entpackte Erweiterung laden` auswählen
-4. den Ordner `extension` auswählen
+1. Open `chrome://extensions` or `edge://extensions`
+2. Enable developer mode
+3. Choose `Load unpacked`
+4. Select the `extension` folder
 
-Beides gleichzeitig zu installieren ist nicht sinnvoll: Beide Fassungen verbinden sich mit demselben Companion.
+Installing both at once is not useful: each version connects to the same companion.
 
-In Firefox Desktop (ab 126):
+In Firefox Desktop (126 and later):
 
-1. `about:debugging#/runtime/this-firefox` öffnen
-2. `Temporäres Add-on laden…` auswählen
-3. die `manifest.json` aus der Firefox-Variante der Extension auswählen
+1. Open `about:debugging#/runtime/this-firefox`
+2. Choose `Load Temporary Add-on…`
+3. Select the `manifest.json` from the Firefox variant of the extension
 
-Die Oberfläche von Extension und Tray-App folgt der Browser- bzw. Windows-Sprache (Deutsch und Englisch werden unterstützt).
+The interface of both the extension and the tray app follows the browser and Windows language (German and English are supported).
 
-### 4. Extension konfigurieren
+### 4. Configure the extension
 
-Öffne die Optionen der Extension und trage ein:
+Open the extension options and enter:
 
 ```text
-Security Token: Token aus dem Tray
+Security token: the token from the tray
 Companion WebSocket URL: ws://127.0.0.1:17373/ws
 ```
 
-Danach YouTube Music neu laden:
+Then reload YouTube Music:
 
 ```text
 https://music.youtube.com/
 ```
 
-Mit `Verbindung testen` in den Extension-Optionen kannst du prüfen, ob Companion URL und Token zusammenpassen.
+`Test connection` in the extension options tells you whether companion URL and token match.
 
-Das Extension-Icon zeigt den aktuellen Verbindungsstatus als Badge an. Im Popup siehst du Companion-Status, Token-Status und den zuletzt empfangenen Track.
+The extension icon shows the current connection state as a badge. The popup shows companion status, token status and the last track received.
 
 ## Changelog
 
-Alle Release-Änderungen stehen in [CHANGELOG.md](CHANGELOG.md).
+All release changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
-## Extension veröffentlichen
+## Publishing the extension
 
-Vorbereitete Store- und Privacy-Texte stehen unter:
+Prepared store and privacy texts are available at:
 
-- [Chrome Web Store Vorbereitung](docs/CHROME_WEB_STORE.md)
-- [Extension Privacy-Hinweis](docs/EXTENSION_PRIVACY.md)
-- [Store-Submission-Checkliste](docs/STORE_SUBMISSION_CHECKLIST.md)
+- [Chrome Web Store](docs/CHROME_WEB_STORE.md)
+- [Extension privacy notice](docs/EXTENSION_PRIVACY.md)
+- [Store submission checklist](docs/STORE_SUBMISSION_CHECKLIST.md)
 
 ## Updates
 
-Die Tray-App kann über `Nach Updates suchen` im Tray-Menü das neueste GitHub Release prüfen. Wenn ein Setup-EXE im Release vorhanden ist, kann die App das Update direkt herunterladen, verifizieren und das Setup starten. Beim Start wird automatisch einmal geprüft, sofern `CheckForUpdatesOnStartup` in den Einstellungen aktiv ist.
+The tray app can check the latest GitHub release through `Check for updates` in the tray menu. If the release contains a setup EXE, the app can download and verify the update and launch the setup directly. It checks once at startup as well, provided `CheckForUpdatesOnStartup` is enabled in the settings.
 
-Der Update-Download ist abgesichert:
+The update download is protected:
 
-- **Verpflichtende SHA256-Prüfung**: Ein Setup wird nur gestartet, wenn das Release eine `SHA256SUMS.txt` enthält, darin genau eine exakt passende Zeile für die Setup-Datei steht und der berechnete Hash exakt übereinstimmt. Fehlt die Prüfsummendatei oder die Zeile, ist der Hash ungültig oder widersprüchlich, wird das Update nicht ausgeführt.
-- **Erlaubte Updatequellen**: Reale Updates werden ausschließlich per HTTPS von `api.github.com`, `github.com`, `release-assets.githubusercontent.com` und dem historischen Asset-Host `objects.githubusercontent.com` geladen. Ausgangs-URL, jeder Redirect und das finale Ziel werden einzeln geprüft; HTTP, direkte IP-Adressen, Loopback-, private und link-local Ziele sowie fremde Hosts werden abgelehnt. Normale TLS-Zertifikatsprüfung bleibt aktiv; eine eigene DNS-Pinning-Bibliothek wird bewusst nicht implementiert. Nur für den lokalen QA-Test (`scripts/test-update-flow.ps1`) kann per explizitem Settings-Flag `AllowLoopbackUpdateSource` eine HTTP-Loopback-Quelle erlaubt werden.
-- **Größenlimits und Timeouts**: Setup (300 MB), Prüfsummendatei (64 KB) und Release-Metadaten (4 MB) haben harte Obergrenzen, die vor dem Download (Content-Length) und während des Streamings erzwungen werden. Verbindungsaufbau, Datenstillstand und Gesamtdauer sind mit Timeouts abgesichert; Abbrüche über das Fenster oder beim App-Beenden räumen sauber auf.
-- **Temporäre Dateien**: Jeder Updateversuch nutzt ein eigenes eindeutiges Verzeichnis unter `%TEMP%\YTMPresence\updates`. Der Download läuft in eine `.part`-Datei und wird erst nach erfolgreicher Hash-Prüfung auf den finalen Namen verschoben; eine `.part`-Datei wird nie gestartet. Fehler, Benutzerabbruch, Fensterschließen und App-Shutdown brechen laufende I/O ab und räumen bestmöglich auf. Kann ein bereits gestartetes Setup seine Datei noch sperren, wird das verwaiste Verzeichnis beim nächsten App-Start altersbasiert bereinigt.
-- **Prüfung direkt vor dem Start**: Unmittelbar vor dem Prozessstart werden Existenz, Dateiname, Größe und SHA256 erneut geprüft; die Datei bleibt während des Starts gegen Veränderung gesperrt. Die App beendet sich erst, wenn das Setup tatsächlich gestartet wurde — schlägt der Start fehl, bleibt YTMPresence benutzbar.
+- **Mandatory SHA256 verification**: a setup is only launched if the release contains a `SHA256SUMS.txt`, that file holds exactly one precisely matching line for the setup file, and the computed hash matches exactly. If the checksum file or the line is missing, or the hash is invalid or contradictory, the update is not carried out.
+- **Permitted update sources**: real updates are only fetched over HTTPS from `api.github.com`, `github.com`, `release-assets.githubusercontent.com` and the historical asset host `objects.githubusercontent.com`. The initial URL, every redirect and the final target are validated individually; HTTP, direct IP addresses, loopback, private and link-local targets as well as foreign hosts are rejected. Normal TLS certificate validation stays active; a custom DNS pinning implementation is deliberately not provided. Only for the local QA test (`scripts/test-update-flow.ps1`) can an HTTP loopback source be permitted through the explicit settings flag `AllowLoopbackUpdateSource`.
+- **Size limits and timeouts**: setup (300 MB), checksum file (64 KB) and release metadata (4 MB) have hard upper bounds, enforced before the download (Content-Length) and while streaming. Connection setup, stalled data and total duration are covered by timeouts; cancelling through the window or on app shutdown cleans up properly.
+- **Temporary files**: every update attempt uses its own unique directory under `%TEMP%\YTMPresence\updates`. The download goes into a `.part` file and is only moved to its final name after a successful hash check; a `.part` file is never launched. Errors, user cancellation, closing the window and app shutdown abort ongoing I/O and clean up as best they can. If a setup that has already started still holds its file locked, the orphaned directory is removed by age at the next app start.
+- **Verification immediately before launch**: right before the process starts, existence, file name, size and SHA256 are checked again; the file stays locked against modification during the launch. The app only exits once the setup has actually started — if the launch fails, YTMPresence remains usable.
 
-**Grenzen der SHA256-Verifikation**: Die `SHA256SUMS.txt` stammt aus demselben GitHub Release wie das Setup. Sie schützt vor Übertragungsfehlern und versehentlicher Manipulation einzelner Dateien, stellt aber keine kryptografische Authentizität des gesamten Releases sicher: Wer Setup **und** Prüfsummendatei im Release ersetzen kann (z. B. mit einem kompromittierten Release-Konto), wird dadurch nicht erkannt. Sie ist kein Ersatz für eine digitale Signatur oder einen Herausgebernachweis.
+**Limits of SHA256 verification**: the `SHA256SUMS.txt` comes from the same GitHub release as the setup. It protects against transfer errors and accidental tampering with individual files, but it does not establish cryptographic authenticity for the release as a whole: anyone able to replace both the setup **and** the checksum file in the release (for example with a compromised release account) would not be detected. It is not a substitute for a digital signature or a publisher attestation.
 
-**Beenden der laufenden App bei Installation**: Der Installer beendet keine Prozesse anhand des Dateinamens. Er bittet zuerst die aus dem Zielverzeichnis laufende Instanz über einen pfadgebundenen lokalen Mechanismus, sich regulär zu beenden. Reagiert sie nicht, schließt der Windows Restart Manager nur Prozesse, die tatsächlich Dateien im Installationsordner geöffnet halten. Eine parallel laufende portable Kopie in einem anderen Ordner bleibt unberührt.
+**Stopping the running app during installation**: the installer does not terminate processes by file name. It first asks the instance running from the target directory to shut down cleanly through a path-bound local mechanism. If that instance does not respond, the Windows Restart Manager only closes processes that actually hold files open in the installation folder. A portable copy running in parallel from a different folder is left untouched.
 
-## Tray-Menü
+## Tray menu
 
-- `Einstellungen...`: öffnet das Settings-Fenster für Token, Server, Presence und Discord Client ID
-- `Mini-Player öffnen`: zeigt aktuellen Track, Cover, Fortschritt, Play/Pause, Zurück/Weiter und einen Button zum Öffnen des Tracks
-- `Diagnose öffnen`: zeigt Server-, Extension-, Discord-, Track- und Security-Status und kann einen Diagnosebericht ohne Security Token erstellen
-- `Presence nur wenn Musik läuft`: löscht die Discord-Presence sofort beim Pausieren
-- `Werbung ignorieren`: sendet bei Werbung kein Discord-Update
-- `Autostart aktivieren`: startet YTMPresence beim Windows-Login
-- `Token kopieren`: kopiert den aktuellen Security Token
-- `Neuen Token generieren`: erzeugt einen neuen Token und startet den Companion neu
-- `Log öffnen`: öffnet das aktuelle Logfile
+- `Settings...`: opens the settings window for token, server, presence and Discord client ID
+- `Open mini player`: shows the current track, cover, progress, play/pause, previous/next and a button to open the track
+- `Open diagnostics`: shows server, extension, Discord, track and security status, and can produce a diagnostics report without the security token
+- `Only show presence while music plays`: clears the Discord presence immediately on pause
+- `Ignore advertisements`: sends no Discord update during advertisements
+- `Enable autostart`: starts YTMPresence at Windows login
+- `Copy token`: copies the current security token
+- `Generate new token`: creates a new token and restarts the companion
+- `Open log`: opens the current log file
 
-## Release bauen
+## Building a release
 
-Voraussetzung: .NET 10 SDK und Inno Setup 6 (`ISCC.exe`) für das Setup-EXE. GitHub Actions installiert Inno Setup automatisch.
+Requirements: the .NET 10 SDK, and Inno Setup 6 (`ISCC.exe`) for the setup EXE. GitHub Actions installs Inno Setup automatically.
 
 ```powershell
 .\scripts\package-release.ps1
 ```
 
-Wenn Inno Setup nicht im `PATH` liegt, kann der Compiler explizit angegeben werden:
+If Inno Setup is not on the `PATH`, the compiler can be specified explicitly:
 
 ```powershell
 .\scripts\package-release.ps1 -InnoSetupCompiler "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
 ```
 
-Der Standard-Build ist framework-dependent. Auf einem anderen Rechner muss also die .NET 10 Desktop Runtime installiert sein.
+The default build is framework-dependent, so the .NET 10 Desktop Runtime has to be installed on any other machine.
 
-Für ein größeres Paket, das die Runtime mitbringt:
+For a larger package that brings the runtime along:
 
 ```powershell
 .\scripts\package-release.ps1 -SelfContained
 ```
 
-Das Skript erstellt:
+The script produces:
 
 ```text
 artifacts\release\YTMPresence-<version>-win-x64-app\
@@ -146,53 +146,53 @@ artifacts\release\extension\
 artifacts\release\SHA256SUMS.txt
 ```
 
-`YTMPresence-extension.zip` ist die Chromium-Variante (Chrome/Edge), `YTMPresence-extension-firefox.zip` enthält dasselbe Paket mit `browser_specific_settings` für Firefox (ab Version 126).
+`YTMPresence-extension.zip` is the Chromium variant (Chrome/Edge); `YTMPresence-extension-firefox.zip` contains the same package with `browser_specific_settings` for Firefox (version 126 and later).
 
-Das Setup-EXE wird in Release-Builds mit Inno Setup gebaut und bleibt beim Dateinamen `YTMPresence-<version>-win-x64-setup.exe`, damit der App-Update-Flow kompatibel bleibt.
+The setup EXE is built with Inno Setup in release builds and keeps the file name `YTMPresence-<version>-win-x64-setup.exe`, so that the in-app update flow stays compatible.
 
-Für eine normale Weitergabe ist das Setup-EXE am bequemsten. Es installiert YTMPresence ohne Adminrechte nach `%LOCALAPPDATA%\Programs\YTMPresence` und legt Startmenü-Verknüpfungen an. Das versionierte Komplett-ZIP enthält weiterhin die App, die Extension und eine `RELEASE.txt`.
-Das Release-Skript prüft das Paket nach dem Build automatisch. Alte versionierte App-/ZIP-Artefakte für denselben Runtime-Zieltyp werden standardmäßig entfernt. Mit `-KeepOldArtifacts` bleiben sie erhalten.
-Vor dem Tagging hilft die [Release-QA-Checkliste](docs/RELEASE_QA.md), Installation, Update, Deinstallation und GitHub-Release-Artefakte einmal geordnet zu prüfen.
+For ordinary distribution the setup EXE is the most convenient option. It installs YTMPresence without administrator rights to `%LOCALAPPDATA%\Programs\YTMPresence` and creates start menu shortcuts. The versioned full ZIP still contains the app, the extension and a `RELEASE.txt`.
+The release script checks the package automatically after the build. Old versioned app and ZIP artifacts for the same runtime target are removed by default; `-KeepOldArtifacts` keeps them.
+Before tagging, the [release QA checklist](docs/RELEASE_QA.md) helps to work through installation, update, uninstallation and GitHub release artifacts in order.
 
-Ein vorhandenes Release kannst du auch separat prüfen:
+An existing release can also be verified separately:
 
 ```powershell
 .\scripts\verify-release.ps1
 ```
 
-Die Verifikation schreibt nichts mehr um: `SHA256SUMS.txt` entsteht ausschließlich in `package-release.ps1`, nachdem alle Artefakte final sind. `verify-release.ps1` prüft anschließend, dass jedes Artefakt genau eine passende Hashzeile hat und keine veralteten, doppelten oder unbekannten Zeilen enthalten sind (`-RequireInstaller`/`-RequireSetup` verlangt zusätzlich das Setup-EXE).
+Verification no longer rewrites anything: `SHA256SUMS.txt` is produced solely in `package-release.ps1`, once all artifacts are final. `verify-release.ps1` then checks that every artifact has exactly one matching hash line and that no stale, duplicate or unknown lines are present (`-RequireInstaller`/`-RequireSetup` additionally requires the setup EXE).
 
-## Fehlerbehebung
+## Troubleshooting
 
-### Discord zeigt nichts an
+### Discord shows nothing
 
-- Discord Desktop-App muss laufen.
-- Companion muss im Tray sichtbar sein.
-- YouTube Music Tab einmal neu laden.
-- Im Tray `Diagnose öffnen` prüfen.
-- Im Tray `Log öffnen` prüfen.
+- The Discord desktop app has to be running.
+- The companion has to be visible in the tray.
+- Reload the YouTube Music tab once.
+- Check `Open diagnostics` in the tray.
+- Check `Open log` in the tray.
 
-### Extension ist nicht verbunden
+### The extension is not connected
 
-- Token in der Extension prüfen.
-- Companion URL muss normalerweise `ws://127.0.0.1:17373/ws` sein.
-- In den Extension-Optionen `Verbindung testen` verwenden.
-- Nach Token-Änderungen den YouTube-Music-Tab neu laden.
+- Check the token in the extension.
+- The companion URL is normally `ws://127.0.0.1:17373/ws`.
+- Use `Test connection` in the extension options.
+- Reload the YouTube Music tab after changing the token.
 
-### Token ungültig
+### Invalid token
 
-Wenn im Tray oder Diagnosefenster ungültige Tokens gezählt werden:
+If invalid tokens are being counted in the tray or the diagnostics window:
 
-1. `Token kopieren`
-2. Extension-Optionen öffnen
-3. Token ersetzen
-4. speichern
-5. YouTube Music neu laden
+1. `Copy token`
+2. Open the extension options
+3. Replace the token
+4. Save
+5. Reload YouTube Music
 
-### Port belegt
+### Port in use
 
-Der Companion nutzt standardmäßig Port `17373`. Falls der Port belegt ist, kann er im Settings-Fenster oder in `%APPDATA%\YTMPresence\settings.json` geändert werden. Danach muss auch die Companion WebSocket URL in der Extension angepasst werden.
+The companion uses port `17373` by default. If that port is taken, it can be changed in the settings window or in `%APPDATA%\YTMPresence\settings.json`. The companion WebSocket URL in the extension has to be adjusted afterwards.
 
-### Einstellungen beschädigt
+### Corrupt settings
 
-Kann `settings.json` nicht als gültige Konfiguration gelesen werden, bewahrt YTMPresence die Datei im selben Ordner als `settings.corrupt-<timestamp>.json` auf und startet mit sicheren Standardwerten sowie einem neuen Token. Danach muss der neue Token erneut in der Extension gespeichert werden.
+If `settings.json` cannot be read as a valid configuration, YTMPresence preserves the file in the same folder as `settings.corrupt-<timestamp>.json` and starts with safe defaults and a new token. The new token then has to be saved in the extension again.

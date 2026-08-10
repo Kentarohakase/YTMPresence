@@ -1,50 +1,52 @@
-# YTMPresence Extension Privacy-Hinweis
+# YTMPresence Extension Privacy Notice
 
-Stand: 2026-05-15
+Last updated: 2026-08-09
 
-YTMPresence ist eine Browser-Extension für YouTube Music, die den aktuellen Playback-Status an eine lokal laufende Companion-App sendet. Die Companion-App zeigt diesen Status anschließend als Discord Rich Presence an.
+YTMPresence is a browser extension for YouTube Music that sends the current playback state to a companion app running locally. The companion app then displays that state as Discord Rich Presence.
 
-## Welche Daten verarbeitet werden
+## What data is processed
 
-Die Extension liest auf `https://music.youtube.com/*` die sichtbaren Playback-Daten des aktuell laufenden Tracks aus:
+On `https://music.youtube.com/*` the extension reads the visible playback data of the currently playing track:
 
-- Track-Titel
-- Künstler
-- Album, falls verfügbar
-- Cover-URL, falls verfügbar
-- Wiedergabestatus, Position und Dauer
-- Track- oder Video-Link
-- Information, ob gerade Werbung erkannt wurde
+- track title
+- artist
+- album, if available
+- cover URL, if available
+- playback state, position and duration
+- track or video link
+- whether an advertisement was detected
 
-Zusätzlich speichert die Extension lokal im Browser:
+In addition, the extension stores locally in the browser:
 
-- den Security Token für den lokalen Companion
-- die lokale WebSocket-URL des Companion
+- the security token for the local companion
+- the local WebSocket URL of the companion
 
-## Wofür die Daten verwendet werden
+## What the data is used for
 
-Die Daten werden ausschließlich verwendet, um den YouTube-Music-Status an den lokalen YTMPresence Companion auf deinem Rechner zu senden. Der Companion nutzt sie für Discord Rich Presence und für den optionalen Mini-Player.
+The data is used solely to send the YouTube Music state to the local YTMPresence companion on your machine. The companion uses it for Discord Rich Presence and for the optional mini player.
 
-## Datenweitergabe
+## Data sharing
 
-Die Extension sendet die Playback-Daten nur an `localhost` beziehungsweise `127.0.0.1`, also an die lokal installierte Companion-App. Die Extension sendet keine Daten an externe Server des Entwicklers und verwendet keine Analyse-, Tracking- oder Werbedienste.
+The extension sends the playback data only to `localhost` or `127.0.0.1`, that is, to the locally installed companion app. The extension sends no data to any server operated by the developer and uses no analytics, tracking or advertising services.
 
-Discord erhält die daraus erzeugten Rich-Presence-Informationen über die lokal laufende Companion-App und die Discord Desktop-App.
+Discord receives the resulting Rich Presence information through the locally running companion app and the Discord desktop app.
 
-## Speicherung
+## Storage
 
-Der Security Token und die Companion-URL werden über `chrome.storage.local` lokal im Browserprofil gespeichert. Playback-Daten werden in der Extension nur für den aktuellen Status zwischengespeichert und nicht dauerhaft archiviert.
+The security token and the companion URL are stored locally in the browser profile through `chrome.storage.local`. Playback data is only held in the extension for the current state and is not archived permanently.
 
-Firefox weist in Versionen mit eingebauter Consent-Anzeige bei der Installation auf `browsingActivity` und `websiteContent` hin, weil Track-Metadaten und die aktuelle YouTube-Music-URL den Browser zum lokalen Companion verlassen. Diese Übertragung bleibt auf dem Gerät (`localhost`/`127.0.0.1`); YTMPresence sendet sie nicht an einen Remote- oder Analysedienst.
+In versions with a built-in consent display, Firefox points out `browsingActivity` and `websiteContent` at installation time, because track metadata and the current YouTube Music URL leave the browser for the local companion. That transfer stays on the device (`localhost`/`127.0.0.1`); YTMPresence does not send it to any remote or analytics service.
 
-## Berechtigungen
+## Permissions
 
-- `storage`: speichert Token und Companion-URL lokal.
-- `https://music.youtube.com/*`: liest Playback-Daten nur auf YouTube Music und findet offene YouTube-Music-Tabs, um Player-Kommandos wie Play/Pause weiterzuleiten.
-- `http://127.0.0.1/*` und `http://localhost/*`: verbindet sich mit dem lokalen Companion.
+- `storage`: stores the token and companion URL locally.
+- `https://music.youtube.com/*`: reads playback data on YouTube Music only, and finds open YouTube Music tabs in order to forward player commands such as play/pause.
+- `http://127.0.0.1/*` and `http://localhost/*`: connects to the local companion.
 
-## Kontakt
+The `tabs` permission is deliberately not requested. The extension finds YouTube Music tabs through the host permission alone and reads only the tab ID from the results.
 
-Probleme, Fragen oder Datenschutz-Hinweise können über GitHub Issues im Repository gemeldet werden:
+## Contact
+
+Problems, questions or privacy concerns can be reported through GitHub Issues in the repository:
 
 https://github.com/Kentarohakase/YTMPresence/issues
