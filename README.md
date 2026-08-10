@@ -5,6 +5,11 @@ YTMPresence zeigt den aktuellen YouTube-Music-Track als Discord Rich Presence an
 - einer lokalen Companion-App im Tray, die mit Discord spricht
 - einer Browser-Extension, die den aktuellen YouTube-Music-Status an den Companion sendet
 
+**Die Extension gibt es im Chrome Web Store:**
+[YTM Discord Presence Bridge](https://chromewebstore.google.com/detail/ytm-discord-presence-brid/obdinnbalnbmpkcaopnhnkdgdkcgligi)
+
+Sie funktioniert nur zusammen mit der Companion-App für Windows aus den [Releases](https://github.com/Kentarohakase/YTMPresence/releases) — Discord Rich Presence lässt sich aus dem Browser heraus nicht setzen.
+
 ## Installation
 
 ### 1. Companion starten
@@ -25,14 +30,20 @@ Rechtsklick auf das Tray-Icon:
 Token kopieren
 ```
 
-### 3. Extension laden
+### 3. Extension installieren
 
-In Chrome oder Edge:
+In Chrome oder Edge über den Store — das ist der empfohlene Weg, weil Updates dann automatisch kommen:
+
+[YTM Discord Presence Bridge im Chrome Web Store](https://chromewebstore.google.com/detail/ytm-discord-presence-brid/obdinnbalnbmpkcaopnhnkdgdkcgligi)
+
+Alternativ als entpackte Erweiterung, etwa zum Entwickeln oder Testen:
 
 1. `chrome://extensions` oder `edge://extensions` öffnen
 2. Entwicklermodus aktivieren
 3. `Entpackte Erweiterung laden` auswählen
 4. den Ordner `extension` auswählen
+
+Beides gleichzeitig zu installieren ist nicht sinnvoll: Beide Fassungen verbinden sich mit demselben Companion.
 
 In Firefox Desktop (ab 126):
 

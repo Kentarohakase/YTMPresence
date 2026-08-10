@@ -1,6 +1,12 @@
-# Chrome Web Store Vorbereitung
+# Chrome Web Store
 
-Dieses Dokument enthält vorbereitete Texte für eine spätere Veröffentlichung der YTMPresence Extension im Chrome Web Store oder in kompatiblen Browser-Stores.
+**Veröffentlicht:** https://chromewebstore.google.com/detail/ytm-discord-presence-brid/obdinnbalnbmpkcaopnhnkdgdkcgligi
+
+Erstmals eingereicht mit Version 1.3.1 und genehmigt. Die Extension-ID `obdinnbalnbmpkcaopnhnkdgdkcgligi` liegt damit fest; der Companion akzeptiert sie über die allgemeine Origin-Prüfung auf `chrome-extension:` und braucht dafür keine Anpassung.
+
+Dieses Dokument enthält die eingereichten Texte. Sie lassen sich für Microsoft Edge Add-ons und addons.mozilla.org wiederverwenden — beide Stores sind kostenlos, für Firefox wird `YTMPresence-extension-firefox.zip` statt des Chromium-ZIPs hochgeladen.
+
+**Bei jeder neuen Version:** Das Paket muss zusätzlich im Dashboard hochgeladen werden. Ein GitHub-Release allein erreicht die Store-Nutzer nicht.
 
 ## Store-Name
 

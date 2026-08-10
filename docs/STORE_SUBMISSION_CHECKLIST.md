@@ -55,6 +55,13 @@ Erstelle vor dem Upload Screenshots von:
 ## Nach dem Upload
 
 - Store-Review abwarten.
-- Release-README aktualisieren, sobald eine Store-URL existiert.
-- Store-URL in `docs/CHROME_WEB_STORE.md` und README ergänzen.
+- Store-URL in README und `docs/CHROME_WEB_STORE.md` ergänzen. (Chrome: erledigt mit 1.3.1)
 - Prüfen, ob die Store-Version zur GitHub-Release-Version passt.
+
+## Bei jeder weiteren Version
+
+Der Store aktualisiert sich nicht von selbst. Ein GitHub-Release erreicht nur die Nutzer, die die Extension entpackt geladen haben.
+
+- Neues Paket im Dashboard hochladen, sonst bleiben Store-Nutzer auf der alten Fassung.
+- Änderungen an Berechtigungen lösen ein erneutes Review aus und können die Freigabe verzögern.
+- Name und Kurzbeschreibung stammen aus `_locales/`; Änderungen daran brauchen ebenfalls ein neues Paket.
