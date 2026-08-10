@@ -1,4 +1,4 @@
-﻿using Microsoft.Win32;
+using Microsoft.Win32;
 
 using System.Diagnostics;
 using System.IO;
@@ -756,7 +756,7 @@ public partial class App : System.Windows.Application
       }
       catch (Exception ex)
       {
-        Logger.Warn($"Zeitpunkt des Update-Checks konnte nicht gespeichert werden: {ex.Message}");
+        Logger.Warn($"Could not persist the update check timestamp: {ex.Message}");
       }
 
       if (result.IsUpdateAvailable)

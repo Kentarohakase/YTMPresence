@@ -108,7 +108,7 @@ public sealed class UpdateDownloadService : IDisposable
       // ausführbare Setup-Datei; eine .part-Datei wird nie gestartet.
       File.Move(partPath, finalPath);
 
-      Logger.Info($"Update-Setup verifiziert: {fileName} ({length} Bytes, SHA256 {expectedHash}).");
+      Logger.Info($"Update setup verified: {fileName} ({length} bytes, SHA256 {expectedHash}).");
       return new VerifiedSetupPackage(
         finalPath, fileName, expectedHash, length, workspace, _options.SizePolicy.MaxSetupBytes);
     }

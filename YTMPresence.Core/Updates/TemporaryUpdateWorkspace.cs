@@ -54,7 +54,7 @@ public sealed class TemporaryUpdateWorkspace : IDisposable
     catch (Exception ex)
     {
       // Nur protokollieren: Cleanup darf den eigentlichen Fehler nicht verdecken.
-      Logger.Warn($"Temporäres Update-Verzeichnis konnte nicht gelöscht werden: {Directory} ({ex.Message})");
+      Logger.Warn($"Could not delete temporary update directory: {Directory} ({ex.Message})");
     }
   }
 
@@ -84,13 +84,13 @@ public sealed class TemporaryUpdateWorkspace : IDisposable
         }
         catch (Exception ex)
         {
-          Logger.Warn($"Verwaistes Update-Verzeichnis konnte nicht gelöscht werden: {directory} ({ex.Message})");
+          Logger.Warn($"Could not delete orphaned update directory: {directory} ({ex.Message})");
         }
       }
     }
     catch (Exception ex)
     {
-      Logger.Warn($"Bereinigung alter Update-Verzeichnisse fehlgeschlagen: {ex.Message}");
+      Logger.Warn($"Cleanup of stale update directories failed: {ex.Message}");
     }
   }
 }

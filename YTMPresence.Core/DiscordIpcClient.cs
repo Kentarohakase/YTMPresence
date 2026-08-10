@@ -1,4 +1,4 @@
-﻿using System.Buffers.Binary;
+using System.Buffers.Binary;
 using System.IO.Pipes;
 using System.Net.Sockets;
 using System.Text;
@@ -208,7 +208,7 @@ public sealed class DiscordIpcClient : IDiscordPresenceClient, IAsyncDisposable
           ? m.GetString()
           : null;
 
-      Logger.Warn($"Discord hat den Befehl '{command ?? "unbekannt"}' abgelehnt: {message ?? "ohne Begruendung"}");
+      Logger.Warn($"Discord rejected the command '{command ?? "unknown"}': {message ?? "no reason given"}");
     }
     catch (Exception ex) when (ex is JsonException or InvalidOperationException or KeyNotFoundException)
     {

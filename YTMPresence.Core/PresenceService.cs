@@ -1,4 +1,4 @@
-﻿namespace YTMPresence.Core;
+namespace YTMPresence.Core;
 
 public sealed class PresenceService
 {
@@ -286,7 +286,7 @@ public sealed class PresenceService
     else if (!string.Equals(trackUrl, _lastRejectedButtonUrl, StringComparison.Ordinal))
     {
       _lastRejectedButtonUrl = trackUrl;
-      Logger.Warn($"Track-Button weggelassen: '{trackUrl}' ist keine gültige Button-URL.");
+      Logger.Warn($"Track button omitted: '{trackUrl}' is not a valid button URL.");
     }
 
     buttons.Add(new DiscordButton("YouTube Music", "https://music.youtube.com/"));

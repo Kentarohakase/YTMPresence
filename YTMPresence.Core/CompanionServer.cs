@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -129,7 +129,7 @@ public sealed class CompanionServer : IAsyncDisposable
     if (_app is not null)
       return;
 
-    Logger.Info($"CompanionServer startet auf {_settings.GetWebSocketEndpoint()}");
+    Logger.Info($"CompanionServer starting on {_settings.GetWebSocketEndpoint()}");
 
     _cts = new CancellationTokenSource();
 
@@ -154,7 +154,7 @@ public sealed class CompanionServer : IAsyncDisposable
       {
         var rejected = Interlocked.Increment(ref _rejectedOriginCount);
         if (rejected <= 3 || rejected % 10 == 0)
-          Logger.Warn($"WebSocket-Verbindung mit unzulässigem Origin '{origin}' abgelehnt. Gesamtzahl: {rejected}");
+          Logger.Warn($"Rejected WebSocket connection from disallowed origin '{origin}'. Total: {rejected}");
 
         ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
         return;
@@ -182,7 +182,7 @@ public sealed class CompanionServer : IAsyncDisposable
         authCts.CancelAfter(Timeout.InfiniteTimeSpan);
       }
 
-      Logger.Info("Extension Socket verbunden.");
+      Logger.Info("Extension socket connected.");
 
       try
       {
@@ -215,7 +215,7 @@ public sealed class CompanionServer : IAsyncDisposable
           }
           catch (Exception ex)
           {
-            Logger.Warn($"Ungültiges JSON empfangen: {ex.Message}");
+            Logger.Warn($"Received invalid JSON: {ex.Message}");
             continue;
           }
 
@@ -230,7 +230,7 @@ public sealed class CompanionServer : IAsyncDisposable
 
             if (invalidCount <= 3 || invalidCount % 10 == 0)
             {
-              Logger.Warn($"Ungültiges Token empfangen. Gesamtzahl: {invalidCount}");
+              Logger.Warn($"Received invalid token. Total: {invalidCount}");
             }
 
             continue;
@@ -248,7 +248,7 @@ public sealed class CompanionServer : IAsyncDisposable
             countedClient = true;
             Interlocked.Increment(ref _connectedClients);
             _authenticatedSockets[socketId] = ws;
-            Logger.Info($"Extension Client authentifiziert. Clients aktiv: {Volatile.Read(ref _connectedClients)}");
+            Logger.Info($"Extension client authenticated. Active clients: {Volatile.Read(ref _connectedClients)}");
           }
 
           lock (_statusSync)
@@ -275,16 +275,16 @@ public sealed class CompanionServer : IAsyncDisposable
         if (countedClient)
         {
           Interlocked.Decrement(ref _connectedClients);
-          Logger.Info($"Extension Client getrennt. Clients aktiv: {Volatile.Read(ref _connectedClients)}");
+          Logger.Info($"Extension client disconnected. Active clients: {Volatile.Read(ref _connectedClients)}");
         }
         else if (!authenticated && authCts.IsCancellationRequested && !ctx.RequestAborted.IsCancellationRequested)
         {
           Logger.Warn(
-            $"Socket ohne gültiges Token nach {UnauthenticatedSocketTimeout.TotalSeconds:0} Sekunden geschlossen (Origin '{origin}').");
+            $"Closed socket without a valid token after {UnauthenticatedSocketTimeout.TotalSeconds:0} seconds (origin '{origin}').");
         }
         else
         {
-          Logger.Info("Nicht authentifizierter Extension Socket getrennt.");
+          Logger.Info("Unauthenticated extension socket disconnected.");
         }
       }
     });
@@ -306,7 +306,7 @@ public sealed class CompanionServer : IAsyncDisposable
     var serverCts = _cts!;
     _idleTask = RunIdleLoopAsync(serverCts.Token);
 
-    Logger.Info("CompanionServer erfolgreich gestartet.");
+    Logger.Info("CompanionServer started successfully.");
   }
 
   private async Task RunIdleLoopAsync(CancellationToken ct)
@@ -324,7 +324,7 @@ public sealed class CompanionServer : IAsyncDisposable
       }
       catch (Exception ex)
       {
-        Logger.Error(ex, "Fehler im Idle-Clear Hintergrundtask.");
+        Logger.Error(ex, "Error in the idle-clear background task.");
       }
     }
   }
@@ -350,7 +350,7 @@ public sealed class CompanionServer : IAsyncDisposable
     var app = _app;
     var idleTask = _idleTask;
 
-    Logger.Info("CompanionServer wird gestoppt.");
+    Logger.Info("CompanionServer stopping.");
 
     try { _cts?.Cancel(); } catch { }
     Volatile.Write(ref _isRunning, 0);
@@ -370,7 +370,7 @@ public sealed class CompanionServer : IAsyncDisposable
         }
         catch (Exception ex)
         {
-          Logger.Error(ex, "Fehler beim Freigeben des Companion-Webhosts.");
+          Logger.Error(ex, "Error disposing the companion web host.");
         }
 
         if (idleTask is not null)
@@ -385,7 +385,7 @@ public sealed class CompanionServer : IAsyncDisposable
         }
       }
 
-      Logger.Info("CompanionServer erfolgreich gestoppt.");
+      Logger.Info("CompanionServer stopped successfully.");
     }
     finally
     {
@@ -428,12 +428,12 @@ public sealed class CompanionServer : IAsyncDisposable
       catch (Exception ex) when (ex is WebSocketException or OperationCanceledException or ConnectionAbortedException)
       {
         _authenticatedSockets.TryRemove(pair.Key, out _);
-        Logger.Warn($"Player command '{command}' konnte nicht an Extension Socket {pair.Key} gesendet werden: {ex.Message}");
+        Logger.Warn($"Player command '{command}' could not be sent to extension socket {pair.Key}: {ex.Message}");
       }
     }
 
     if (sent > 0)
-      Logger.Info($"Player command '{command}' an {sent} Extension Socket(s) gesendet.");
+      Logger.Info($"Player command '{command}' sent to {sent} extension socket(s).");
 
     return sent > 0;
   }
@@ -495,7 +495,7 @@ public sealed class CompanionServer : IAsyncDisposable
           _lastUnauthorizedUtc = DateTimeOffset.UtcNow;
 
         if (invalidCount <= 3 || invalidCount % 10 == 0)
-          Logger.Warn($"Ungültiges Token beim Verbindungstest. Gesamtzahl: {invalidCount}");
+          Logger.Warn($"Invalid token in connection test. Total: {invalidCount}");
       }
 
       var response = JsonSerializer.Serialize(new
@@ -736,7 +736,7 @@ public sealed class CompanionServer : IAsyncDisposable
       }
       catch (Exception ex)
       {
-        Logger.Error(ex, "Fehler beim Stoppen von CompanionServer während Dispose.");
+        Logger.Error(ex, "Error stopping CompanionServer during dispose.");
       }
 
       try
@@ -745,7 +745,7 @@ public sealed class CompanionServer : IAsyncDisposable
       }
       catch (Exception ex)
       {
-        Logger.Error(ex, "Fehler beim Dispose des Discord-Clients.");
+        Logger.Error(ex, "Error disposing the Discord client.");
       }
     }
     finally
