@@ -2,7 +2,11 @@
 
 All notable changes to YTMPresence are documented in this file.
 
-## [Unreleased]
+## [1.4.0] - 2026-08-09
+
+### Changed
+
+- The project documentation is now in English: the changelog including its history, the README and everything under `docs/`. The extension is published in an international store, and German documentation no longer matched that.
 
 ### Fixed
 
