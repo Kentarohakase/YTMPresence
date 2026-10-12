@@ -4,7 +4,7 @@ YTMPresence already covers the main workflow: YouTube Music playback reaches Dis
 
 Planning baseline: **1.4.0**, commit `da60499`, reviewed **2026-10-12**. Completed implementation items are checked below; unchecked items remain planned. Milestones describe delivery order, not promised dates or assigned release versions.
 
-Implemented since that baseline: extension regression tests and selection within one browser profile, including recovery after background-worker restart. Live browser/Discord QA and selection across companion connections remain open.
+Implemented since that baseline: extension regression tests and selection within one browser profile, including recovery after background-worker restart. An [initial Edge/Discord live run](docs/LIVE_QA_2026-10-12.md) found an autoplay timing defect, now fixed with regression coverage. That run used the Web Store installation; live validation of the corrected local extension and selection across companion connections remain open.
 
 ## Assessment of the baseline
 
