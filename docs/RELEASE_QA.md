@@ -8,6 +8,7 @@ This checklist is meant for every release tag, before the release is shared wide
 - `CHANGELOG.md` contains an entry for this version.
 - `dotnet build YTMPresence.slnx --configuration Release` completes without errors.
 - `dotnet test YTMPresence.Core.Tests/YTMPresence.Core.Tests.csproj` is green.
+- `node --test` passes the extension behavior suite (Node.js 20 or later; no npm install required).
 - `.\scripts\package-release.ps1` produces the app, bundle ZIP, extension ZIP (Chromium), extension ZIP (Firefox), Inno Setup EXE and then `SHA256SUMS.txt` (only once all artifacts are final).
 - `.\scripts\verify-release.ps1 -RequireSetup` reports the expected version and runtime target and verifies `SHA256SUMS.txt` against the artifacts without rewriting the list.
 
@@ -70,6 +71,19 @@ This checklist is meant for every release tag, before the release is shared wide
 - The app starts reliably without Discord running; diagnostics report Discord as unreachable and connect automatically once Discord is running.
 - The diagnostics window shows server, extension and Discord sensibly.
 - The diagnostics report ZIP can be created and contains no raw `SecurityToken` line.
+
+## Multiple tabs in one browser profile
+
+Run this smoke check in Chrome, Edge and the packaged Firefox variant; record the tested versions and results. The automated fixtures do not establish live YouTube Music or Discord compatibility.
+
+- Open two YouTube Music tabs with distinct tracks. Play in A and keep B paused. The extension popup, mini player and Discord continue to show A when B reports state or gains focus.
+- Use play/pause, next and previous in the mini player. Only A reacts.
+- Pause A while B remains paused. Play resumes A. Start B while A is paused; the displayed track and commands switch to B.
+- Where the browser permits simultaneous playback, keep both tabs playing. The selection stays stable; pausing the selected tab selects the other playing tab.
+- Close, reload, navigate away from and discard the selected tab in separate checks. A valid fallback is selected; commands are not sent to a removed document. A normal in-page YouTube Music track change still updates the selected source.
+- Restart the extension background worker with both tabs paused. After state recovery, Play targets exactly one tab and the popup identifies that tab's track.
+- Close all YouTube Music tabs. The popup clears the track, commands affect no tab, and Discord clears after the configured idle timeout. Changing the token must not replay the closed track.
+- This slice covers one browser profile. Coordination between separate browser/extension connections remains an open roadmap item.
 
 ## After pushing
 

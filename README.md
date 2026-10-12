@@ -72,6 +72,14 @@ https://music.youtube.com/
 
 The extension icon shows the current connection state as a badge. The popup shows companion status, token status and the last track received.
 
+### Multiple YouTube Music tabs
+
+Within one browser profile, the extension selects one tab for both the displayed track and mini-player commands. A playing tab keeps the selection while it plays; paused background tabs cannot replace it. If the selected tab pauses, another playing tab takes over. If none plays, the selection stays on the paused tab so that Play resumes it.
+
+Closing, reloading, navigating away from or discarding the selected tab selects an available fallback. After a background-worker restart, the extension retrieves the latest state from open tabs, preferring a playing tab. When no source remains, the popup clears its track and the companion clears Discord presence through its existing idle timeout (120 seconds by default).
+
+Selection across separate browser profiles or browsers is planned separately; each extension connection still has its own selection.
+
 ## Changelog
 
 All release changes are listed in [CHANGELOG.md](CHANGELOG.md).
@@ -115,6 +123,20 @@ The update download is protected:
 - `Open log`: opens the current log file
 
 ## Building a release
+
+### Development checks
+
+Run the existing .NET checks and the extension suite from the repository root:
+
+```powershell
+dotnet build YTMPresence.slnx -c Release
+dotnet test YTMPresence.Core.Tests/YTMPresence.Core.Tests.csproj -c Release --no-build
+node --test
+```
+
+The extension tests use Node.js 20 or later and its built-in test runner, with no npm dependencies. They execute the actual extension scripts with browser, WebSocket and media/DOM fixtures under `tests/extension/`. Both CI and the release workflow run them. Live browser/Discord checks remain in [release QA](docs/RELEASE_QA.md).
+
+### Packaging
 
 Requirements: the .NET 10 SDK, and Inno Setup 6 (`ISCC.exe`) for the setup EXE. GitHub Actions installs Inno Setup automatically.
 

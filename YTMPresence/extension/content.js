@@ -1,5 +1,6 @@
 if (!window.__ytmPresenceBridgeContentLoaded) {
     window.__ytmPresenceBridgeContentLoaded = true;
+    let latestState = null;
 
     const injectedScript = document.createElement("script");
     injectedScript.src = chrome.runtime.getURL("page.js");
@@ -25,6 +26,7 @@ if (!window.__ytmPresenceBridgeContentLoaded) {
 
         if (event.data.type !== "YTM_STATE") return;
 
+        latestState = event.data.payload;
         chrome.runtime.sendMessage({
             type: "YTM_STATE",
             payload: event.data.payload
@@ -34,6 +36,11 @@ if (!window.__ytmPresenceBridgeContentLoaded) {
     });
 
     chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+        if (message?.type === "YTM_GET_STATE") {
+            sendResponse({ payload: latestState });
+            return false;
+        }
+
         if (!message || message.type !== "YTM_COMMAND") return false;
 
         window.postMessage({

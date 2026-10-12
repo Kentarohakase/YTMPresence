@@ -2,9 +2,11 @@
 
 YTMPresence already covers the main workflow: YouTube Music playback reaches Discord through a local Windows companion, with a mini player, diagnostics, updates and German/English interfaces. The next releases should make that workflow predictable across multiple tabs, reconnects and first-time installation.
 
-Planning baseline: **1.4.0**, commit `da60499`, reviewed **2026-10-12**. All work below is proposed and incomplete. Milestones describe delivery order, not promised dates or assigned release versions.
+Planning baseline: **1.4.0**, commit `da60499`, reviewed **2026-10-12**. Completed implementation items are checked below; unchecked items remain planned. Milestones describe delivery order, not promised dates or assigned release versions.
 
-## Current assessment
+Implemented since that baseline: extension regression tests and selection within one browser profile, including recovery after background-worker restart. Live browser/Discord QA and selection across companion connections remain open.
+
+## Assessment of the baseline
 
 The existing foundation is worth keeping:
 
@@ -12,7 +14,7 @@ The existing foundation is worth keeping:
 - The local Release build passes with zero warnings and errors; all **207 Core tests** pass. Version consistency also passes. These results do not establish live browser/Discord compatibility or successful installation on a clean Windows machine.
 - CI builds the solution, runs Core tests, verifies release archives and lints the packaged Firefox extension. The [release QA checklist](docs/RELEASE_QA.md) covers installation and updates.
 
-The largest gaps are in coordination between components and proof of user-visible behavior:
+At the baseline, the largest gaps were in coordination between components and proof of user-visible behavior:
 
 | Finding in the current code | User impact | Priority |
 | --- | --- | --- |
@@ -29,18 +31,21 @@ Evidence: [extension background](YTMPresence/extension/background.js), [companio
 
 ### Add extension regression tests
 
-- [ ] Introduce a small JavaScript test harness for state extraction, message handling and command routing. Use deterministic media/DOM fixtures and mocked browser/WebSocket APIs; keep live YouTube Music checks separate.
-- [ ] Cover playing/paused media, audio/video elements, seeks, advertisements, missing metadata, track URL selection and encoded URLs. Reproduce the playback and URL failures recorded in the [changelog](CHANGELOG.md).
-- [ ] Cover invalid tokens, reconnects, pending state, storage changes, old socket callbacks and multiple tabs. Run the suite in PR CI and the release workflow.
+- [x] Introduce a small JavaScript test harness for state extraction, message handling and command routing. Use deterministic media/DOM fixtures and mocked browser/WebSocket APIs; keep live YouTube Music checks separate.
+- [x] Cover playing/paused media, audio/video elements, seeks, advertisements, missing metadata, track URL selection and encoded URLs. Reproduce the playback and URL failures recorded in the [changelog](CHANGELOG.md).
+- [x] Cover selected-tab routing, reconnect with pending state, token changes, obsolete-socket commands, tab lifecycle and background-worker recovery. Run the suite in PR CI and the release workflow.
+- [ ] Extend coverage to rejected-token status, reconnect without new playback data and the remaining socket callback races alongside the connection-status work below.
 
 **Done when:** tests fail for the reproduced regressions and pass with the intended behavior. Lint and archive verification remain in place.
 
 ### Select one playback source
 
-- [ ] Track the sender tab for each state. Proposed default: keep the current playing source; select a newly playing source when the current one stops or disappears. Define a deterministic tie-break when several sources play.
-- [ ] Send play/pause, next and previous only to the selected tab. Preserve that selection while paused so play resumes the same tab.
+- [x] Track the sender tab for each state within one browser profile. Keep the playing selection; otherwise prefer a playing fallback, retain a paused selection when none plays, and use the lowest tab ID to break fallback ties.
+- [x] Send play/pause, next and previous only to the selected tab's main frame. Preserve that selection while paused so play resumes the same tab.
 - [ ] Extend selection across companion connections so Chrome, Edge or separate profiles do not all execute the same command. Introduce optional source identifiers compatibly; define a deterministic fallback for older clients.
-- [ ] Show the selected source in diagnostics and handle tab closure, navigation and disconnected clients.
+- [x] Handle tab closure, navigation, reload, discard and background-worker restart. Expose `selectedTabId` in extension runtime status; the popup track follows the selection.
+- [ ] Show the selected source in companion diagnostics and handle disconnected clients across companion connections.
+- [ ] Complete the live multiple-tab scenarios in [release QA](docs/RELEASE_QA.md) in Chrome, Edge and Firefox.
 
 **Done when:** with two tabs and two browser connections, the displayed track and command target stay aligned; one click affects exactly one source; closing it selects a valid fallback without stale playback state. Cover these cases in automated tests and a live smoke check.
 
@@ -99,8 +104,8 @@ The prerequisite documentation and remaining translations can ship as a small pa
 
 Keep cloud accounts, listening-history analytics and a broad interface rewrite outside the current plan. Preserve the small, local companion model.
 
-## First implementation slice
+## Next implementation slice
 
-Start with the extension test harness and tab selection in one browser: reproduce a playing tab being overwritten by a paused tab and one player command reaching both tabs, then make those scenarios pass. Follow with selection across companion connections and truthful authentication/Discord status. This creates useful regression protection while fixing visible behavior.
+The first implementation slice adds the extension test harness and tab selection in one browser. Its regression tests reproduce and fix a playing tab being overwritten by a paused tab and one command reaching both tabs. Next, complete live QA, then implement selection across companion connections and truthful authentication/Discord status.
 
 Update this roadmap when a slice ships, move completed changes to the changelog, and reassess the next milestone using bugs and setup feedback. Each implementation should retain passing Core tests, version checks and relevant release checks; new cross-component behavior also needs the matching live QA scenario.

@@ -2,6 +2,19 @@
 
 All notable changes to YTMPresence are documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- An extension behavior suite using Node's built-in test runner, executed in CI and the release workflow. It covers tab selection, targeted commands, tab lifecycle, background restart, pending state, playback extraction and track URLs without contacting YouTube Music or Discord.
+
+### Fixed
+
+- Within one browser profile, a playing YouTube Music tab retains ownership of the presence. Paused background tabs no longer overwrite it, and mini-player commands go only to the selected tab's main frame. Pausing retains the selected tab unless another tab is playing; closing, reloading, navigating away or discarding it chooses a fallback in stable tab-ID order, preferring playing tabs.
+- Background-worker restarts recover playback state from open tabs, including paused tracks. Closed tabs cannot be restored by late recovery responses or replayed after a token change, and obsolete WebSocket connections cannot deliver player commands.
+
+Selection across different browser profiles/connections remains a separate roadmap item. This change keeps the existing companion protocol and idle-clear behavior.
+
 ## [1.4.0] - 2026-08-09
 
 ### Changed
