@@ -76,6 +76,8 @@ The extension icon shows the current connection state as a badge. The popup show
 
 All release changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
+Planned improvements, priorities and completion criteria are tracked in [ROADMAP.md](ROADMAP.md).
+
 ## Publishing the extension
 
 Prepared store and privacy texts are available at:
