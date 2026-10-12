@@ -4,17 +4,17 @@ import { background, settle, tabSender, track } from "./helpers.mjs";
 
 test("a paused background tab cannot replace the playing track", async () => {
     const app = await background();
-    app.sockets[0].open();
+    app.sockets[0].authenticate();
     await app.state(1, track("Playing"));
     await app.state(2, track("Paused", false));
     assert.equal((await app.status()).lastState.title, "Playing");
-    assert.deepEqual(app.sockets[0].sent.map((state) => state.title), ["Playing"]);
+    assert.deepEqual(app.sockets[0].playback.map((state) => state.title), ["Playing"]);
 });
 
 for (const command of ["play-pause", "next", "previous"]) {
     test(`${command} reaches only the tab supplying the presence`, async () => {
         const app = await background();
-        app.sockets[0].open();
+        app.sockets[0].authenticate();
         await app.state(4, track("Selected"));
         await app.state(2, track("Other", false));
         await app.command(command);
@@ -53,11 +53,11 @@ test("pausing the selected tab chooses a playing fallback by lowest tab ID", asy
 
 test("closing the selection publishes a fallback and routes the next command there", async () => {
     const app = await background();
-    app.sockets[0].open();
+    app.sockets[0].authenticate();
     await app.state(1, track("First"));
     await app.state(2, track("Fallback", false));
     await app.remove(1);
-    assert.equal(app.sockets[0].sent.at(-1).title, "Fallback");
+    assert.equal(app.sockets[0].playback.at(-1).title, "Fallback");
     assert.equal((await app.status()).selectedTabId, 2);
     await app.command();
     assert.deepEqual(app.deliveries.map((item) => item.id), [2]);
@@ -109,8 +109,8 @@ test("removing the final tab clears queued state and prevents replay after token
     await app.remove(1);
     app.chrome.storage.onChanged.emit({ securityToken: { newValue: "new-token" } }, "local");
     await settle();
-    app.sockets.at(-1).open();
-    assert.deepEqual(app.sockets.at(-1).sent, []);
+    app.sockets.at(-1).authenticate();
+    assert.deepEqual(app.sockets.at(-1).playback, []);
     const status = await app.status();
     assert.equal(status.lastState, null);
     assert.equal(status.selectedTabId, null);
@@ -123,8 +123,8 @@ test("selection changes replace pending data while the socket connects", async (
     const app = await background();
     await app.state(1, track("Paused", false));
     await app.state(2, track("Playing"));
-    app.sockets[0].open();
-    assert.deepEqual(app.sockets[0].sent.map((state) => state.title), ["Playing"]);
+    app.sockets[0].authenticate();
+    assert.deepEqual(app.sockets[0].playback.map((state) => state.title), ["Playing"]);
 });
 
 test("a failed command is not retried on another tab", async () => {
@@ -169,21 +169,21 @@ test("closing a tab during config loading cannot resurrect its queued state", as
     await app.remove(1);
     release();
     await settle();
-    app.sockets[0].open();
+    app.sockets[0].authenticate();
     assert.equal((await app.status()).lastState, null);
-    assert.deepEqual(app.sockets[0].sent, []);
+    assert.deepEqual(app.sockets[0].playback, []);
 });
 
 test("the selected source survives reconnect and ignored tab updates", async () => {
     const app = await background();
-    app.sockets[0].open();
+    app.sockets[0].authenticate();
     await app.state(1, track("First"));
     app.sockets[0].close();
     await app.state(1, track("Updated"));
     await app.state(2, track("Other", false));
     await app.time.advance(500);
-    app.sockets.at(-1).open();
-    assert.deepEqual(app.sockets.at(-1).sent.map((state) => state.title), ["Updated"]);
+    app.sockets.at(-1).authenticate();
+    assert.deepEqual(app.sockets.at(-1).playback.map((state) => state.title), ["Updated"]);
     await app.command();
     assert.deepEqual(app.deliveries.map((item) => item.id), [1]);
 });
@@ -191,15 +191,15 @@ test("the selected source survives reconnect and ignored tab updates", async () 
 test("an old socket cannot deliver commands after settings restart the connection", async () => {
     const app = await background();
     const oldSocket = app.sockets[0];
-    oldSocket.open();
+    oldSocket.authenticate();
     await app.state(1, track("First"));
     app.chrome.storage.onChanged.emit({ securityToken: { newValue: "new-token" } }, "local");
     await settle();
     oldSocket.receive({ type: "YTM_COMMAND", command: "next" });
     await settle();
     assert.deepEqual(app.deliveries, []);
-    app.sockets.at(-1).open();
-    assert.equal(app.sockets.at(-1).sent[0].token, "new-token");
+    app.sockets.at(-1).authenticate();
+    assert.equal(app.sockets.at(-1).playback[0].token, "new-token");
     await app.command("next");
     assert.deepEqual(app.deliveries.map((item) => item.id), [1]);
 });
@@ -212,8 +212,8 @@ test("without a token state stays local until configuration is supplied", async 
     assert.equal((await app.status()).lastState.title, "Selected");
     app.chrome.storage.onChanged.emit({ securityToken: { newValue: "configured" } }, "local");
     await settle();
-    app.sockets[0].open();
-    assert.deepEqual(app.sockets[0].sent.map((state) => state.title), ["Selected"]);
+    app.sockets[0].authenticate();
+    assert.deepEqual(app.sockets[0].playback.map((state) => state.title), ["Selected"]);
 });
 
 test("an unknown command cannot reach a tab", async () => {
@@ -227,8 +227,8 @@ test("worker restart restores a playing source from existing content scripts", a
     const app = await background({ initialTabs: [
         [1, track("Paused", false)], [8, track("Eighth")], [4, track("Fourth")]
     ] });
-    app.sockets[0].open();
-    assert.equal(app.sockets[0].sent.at(-1).title, "Fourth");
+    app.sockets[0].authenticate();
+    assert.equal(app.sockets[0].playback.at(-1).title, "Fourth");
     await app.command();
     assert.deepEqual(app.deliveries.map((item) => item.id), [4]);
 });

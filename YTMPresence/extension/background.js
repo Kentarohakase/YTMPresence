@@ -34,6 +34,10 @@ let lastStatusMessage = "";
 let lastError = "";
 let lastConnectedAt = 0;
 let lastDisconnectedAt = 0;
+let companionVersion = "";
+let socketAuthenticated = false;
+let activeTest = null;
+let configWork = Promise.resolve();
 
 function t(key, subs) {
     const msg = chrome.i18n.getMessage(key, subs);
@@ -97,14 +101,14 @@ function updateBadge() {
         text = "OK";
         color = "#0a7a2f";
         title = `YTM Presence: ${t("connConnected")}`;
-    } else if (connectionState === "connecting") {
+    } else if (connectionState === "connecting" || connectionState === "authenticating") {
         text = "...";
         color = "#555555";
-        title = `YTM Presence: ${t("connConnecting")}`;
-    } else if (connectionState === "disconnected") {
+        title = `YTM Presence: ${t(connectionState === "authenticating" ? "connAuthenticating" : "connConnecting")}`;
+    } else if (connectionState === "disconnected" || connectionState === "rejected") {
         text = "OFF";
         color = "#b45309";
-        title = `YTM Presence: ${t("connDisconnected")}`;
+        title = `YTM Presence: ${t(connectionState === "rejected" ? "connRejected" : "connDisconnected")}`;
     }
 
     try {
@@ -140,6 +144,7 @@ function getRuntimeStatus() {
         companionUrls: [...companionWsUrls],
         activeCompanionUrl,
         connectionState,
+        companionVersion,
         lastStatusMessage,
         lastError,
         lastConnectedAt,
@@ -186,42 +191,57 @@ async function ensureConfigLoaded() {
     }
 }
 
-function applyStorageChanges(changes) {
-    let shouldRestart = false;
+function queueConfigWork(work) {
+    const result = configWork.then(work);
+    configWork = result.catch(() => {});
+    return result;
+}
 
-    if (changes.securityToken) {
-        cachedToken = (changes.securityToken.newValue || "").trim();
-        missingTokenLogged = false;
-        lastSentKey = "";
-        shouldRestart = true;
-        console.info("[YTM Bridge] Token updated.");
-    }
-
-    if (changes.companionUrl) {
-        const customUrl = normalizeCompanionUrl(changes.companionUrl.newValue);
-        companionWsUrls = customUrl ? [customUrl] : [...DEFAULT_COMPANION_WS_URLS];
-        nextCompanionUrlIndex = 0;
-        lastSentKey = "";
-        shouldRestart = true;
-        console.info(`[YTM Bridge] Companion URL updated: ${companionWsUrls.join(", ")}`);
-    }
-
-    if (shouldRestart) {
-        if (lastPayload) pendingPayload = lastPayload;
-        restartConnection();
-    }
+function applyConfig(token, url) {
+    const urls = url ? [url] : [...DEFAULT_COMPANION_WS_URLS];
+    if (cachedToken === token && JSON.stringify(companionWsUrls) === JSON.stringify(urls)) return;
+    cachedToken = token;
+    companionWsUrls = urls;
+    missingTokenLogged = false;
+    nextCompanionUrlIndex = 0;
+    restartConnection();
 }
 
 chrome.storage.onChanged.addListener((changes, area) => {
-    if (area !== "local") return;
-
-    ensureConfigLoaded()
-        .then(() => applyStorageChanges(changes))
-        .catch((error) => {
-            lastError = `${t("msgSettingsLoadFailed")} ${error?.message || error}`;
-            updateBadge();
-        });
+    if (area !== "local" || (!changes.securityToken && !changes.companionUrl)) return;
+    // Read the latest complete pair, not a delayed event from a previous save.
+    queueConfigWork(async () => {
+        await ensureConfigLoaded();
+        const settings = await chrome.storage.local.get({ securityToken: "", companionUrl: "" });
+        applyConfig((settings.securityToken || "").trim(), normalizeCompanionUrl(settings.companionUrl));
+    }).catch(() => { lastError = t("msgSettingsLoadFailed"); });
 });
+
+async function saveAndTest(message) {
+    const token = typeof message.token === "string" ? message.token.trim() : "";
+    const rawUrl = typeof message.companionUrl === "string" ? message.companionUrl.trim() : "";
+    const url = normalizeCompanionUrl(rawUrl);
+    if (!token || (rawUrl && !url)) {
+        return { saved: false, ok: false, message: t(!token ? "errTokenMissingInput" : "errInvalidUrl") };
+    }
+    let operation;
+    try {
+        operation = await queueConfigWork(async () => {
+            await ensureConfigLoaded();
+            await chrome.storage.local.set({ securityToken: token, companionUrl: url });
+            applyConfig(token, url);
+            return { test: testConnection() };
+        });
+    } catch {
+        return { saved: false, ok: false, message: t("msgSaveFailed") };
+    }
+    const result = await operation.test;
+    return {
+        ...result, saved: true,
+        message: t(result.ok ? "msgSavedConnected" : result.reason === "rejected" ? "msgSavedRejected" :
+            result.reason === "changed" ? "msgSavedChanged" : "msgSavedUnreachable")
+    };
+}
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (!message || !message.type) return false;
@@ -235,6 +255,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     lastError: `${t("msgStatusLoadFailed")} ${error?.message || error}`
                 });
             });
+        return true;
+    }
+
+    if (message.type === "YTM_SAVE_AND_TEST") {
+        saveAndTest(message).then(sendResponse);
         return true;
     }
 
@@ -402,7 +427,7 @@ function flushPendingState() {
     if (!pendingPayload || !cachedToken) return;
 
     const socket = connect();
-    if (!socket || socket.readyState !== WebSocket.OPEN) return;
+    if (!socket || socket.readyState !== WebSocket.OPEN || !socketAuthenticated) return;
 
     const now = Date.now();
     const payload = pendingPayload;
@@ -416,7 +441,56 @@ function flushPendingState() {
         lastSentAt = now;
     } catch (error) {
         console.warn(`[YTM Bridge] WebSocket send failed: ${error?.message || error}`);
-        webSocket = null;
+        disconnect(socket, "disconnected", t("testUnreachable"));
+    }
+}
+
+function finishTest(result) {
+    if (!activeTest) return;
+    const test = activeTest;
+    activeTest = null;
+    clearTimeout(test.timer);
+    test.resolve({ ...result, companionUrl: activeCompanionUrl });
+}
+
+function beginTest(socket, showProgress = true) {
+    if (activeTest?.socket === socket) return activeTest.promise;
+    let resolve;
+    const promise = new Promise((done) => { resolve = done; });
+    activeTest = {
+        socket, promise, resolve,
+        timer: setTimeout(() => {
+            if (webSocket === socket) disconnect(socket, "disconnected", t("testNoResponse"));
+        }, TEST_TIMEOUT_MS)
+    };
+    if (socket.readyState === WebSocket.OPEN) sendTest(socket, showProgress);
+    return promise;
+}
+
+function sendTest(socket, showProgress = true) {
+    if (webSocket !== socket) return;
+    if (showProgress) setConnectionState("authenticating", t("connAuthenticating"));
+    try {
+        // This existing protocol message never updates playback/pause/idle timestamps.
+        socket.send(JSON.stringify({ type: "YTM_TEST", token: cachedToken, ts: Date.now() }));
+    } catch {
+        disconnect(socket, "disconnected", t("testUnreachable"));
+    }
+}
+
+function disconnect(socket, state, message) {
+    if (webSocket !== socket) return;
+    finishTest({ ok: false, reason: state, message });
+    webSocket = null;
+    socketAuthenticated = false;
+    companionVersion = "";
+    stopKeepAlive();
+    try { socket.close(); } catch { /* best effort */ }
+    lastDisconnectedAt = Date.now();
+    lastError = message;
+    setConnectionState(state, message);
+    if (state !== "rejected") {
+        nextCompanionUrlIndex = (nextCompanionUrlIndex + 1) % companionWsUrls.length;
         scheduleReconnect();
     }
 }
@@ -426,69 +500,32 @@ function connect() {
         setConnectionState("idle", t("bgTokenMissing"));
         return null;
     }
-
-    if (webSocket) {
-        if (webSocket.readyState === WebSocket.OPEN || webSocket.readyState === WebSocket.CONNECTING) {
-            return webSocket;
-        }
-
-        webSocket = null;
-    }
+    if (webSocket) return webSocket;
+    if (reconnectTimer || connectionState === "rejected") return null;
 
     try {
         activeCompanionUrl = companionWsUrls[nextCompanionUrlIndex];
         setConnectionState("connecting", t("bgConnecting", [activeCompanionUrl]));
         const socket = new WebSocket(activeCompanionUrl);
         webSocket = socket;
+        socketAuthenticated = false;
+        beginTest(socket);
 
         socket.onopen = () => {
-            reconnectDelayMs = 500;
-            nextReconnectAt = 0;
-            lastConnectedAt = Date.now();
-            lastError = "";
-            setConnectionState("connected", t("bgConnected", [activeCompanionUrl]));
-            console.info(`[YTM Bridge] Connected to ${activeCompanionUrl}.`);
-            flushPendingState();
-            if (webSocket === socket) startKeepAlive(socket);
+            if (webSocket === socket) sendTest(socket);
         };
-
-        socket.onclose = (event) => {
-            if (webSocket !== socket) return;
-
-            console.warn(
-                `[YTM Bridge] Companion disconnected (${activeCompanionUrl}). ` +
-                `Code: ${event.code || "?"}, reason: ${event.reason || "n/a"}`
-            );
-
-            webSocket = null;
-            stopKeepAlive();
-            lastDisconnectedAt = Date.now();
-            lastError = t("bgDisconnectReason", [String(event.code || "?"), event.reason || "n/a"]);
-            setConnectionState("disconnected", t("bgDisconnectedFrom", [activeCompanionUrl]));
-            nextCompanionUrlIndex = (nextCompanionUrlIndex + 1) % companionWsUrls.length;
-            scheduleReconnect();
-        };
-
-        socket.onerror = () => {
-            lastError = t("bgWsError", [activeCompanionUrl]);
-            console.warn(`[YTM Bridge] WebSocket error at ${activeCompanionUrl}.`);
-        };
-
+        socket.onclose = () => disconnect(socket, "disconnected", t("testUnreachable"));
+        socket.onerror = () => disconnect(socket, "disconnected", t("testUnreachable"));
         socket.onmessage = (event) => {
             if (webSocket !== socket) return;
-            handleCompanionMessage(event.data).catch((error) => {
-                lastError = `Companion message failed: ${error?.message || error}`;
-                console.warn(`[YTM Bridge] ${lastError}`);
+            handleCompanionMessage(socket, event.data).catch(() => {
+                if (webSocket === socket) lastError = t("msgTestFailed");
             });
         };
-
         return socket;
-    } catch (error) {
-        lastError = `${t("bgWsCreateFailed")} ${error?.message || error}`;
+    } catch {
+        lastError = t("testWsCreateFailed");
         setConnectionState("disconnected", lastError);
-        console.warn(`[YTM Bridge] ${lastError}`);
-        webSocket = null;
-        stopKeepAlive();
         nextCompanionUrlIndex = (nextCompanionUrlIndex + 1) % companionWsUrls.length;
         scheduleReconnect();
         return null;
@@ -497,31 +534,8 @@ function connect() {
 
 function startKeepAlive(socket) {
     stopKeepAlive();
-
     keepAliveTimer = setInterval(() => {
-        if (webSocket !== socket || socket.readyState !== WebSocket.OPEN) {
-            stopKeepAlive();
-            return;
-        }
-
-        if (!cachedToken) return;
-
-        try {
-            // YTM_TEST gehört bereits zum bestehenden Protokoll und verändert
-            // weder Track- noch Pause-/Idle-Zustand im Companion.
-            socket.send(JSON.stringify({
-                type: "YTM_TEST",
-                token: cachedToken,
-                ts: Date.now()
-            }));
-        } catch (error) {
-            lastError = `${t("bgWsError", [activeCompanionUrl])} ${error?.message || error}`;
-            webSocket = null;
-            stopKeepAlive();
-            try { socket.close(); } catch { /* best effort */ }
-            setConnectionState("disconnected", lastError);
-            scheduleReconnect();
-        }
+        if (webSocket === socket && socket.readyState === WebSocket.OPEN) beginTest(socket, false);
     }, KEEPALIVE_INTERVAL_MS);
 }
 
@@ -547,46 +561,60 @@ function scheduleReconnect() {
 }
 
 function restartConnection() {
-    if (reconnectTimer) {
-        clearTimeout(reconnectTimer);
-        reconnectTimer = null;
-    }
-
+    finishTest({ ok: false, reason: "changed", message: t("msgConfigChanged") });
+    if (reconnectTimer) clearTimeout(reconnectTimer);
+    reconnectTimer = null;
     reconnectDelayMs = 500;
     nextReconnectAt = 0;
     stopKeepAlive();
-
-    if (webSocket) {
-        const socket = webSocket;
-        webSocket = null;
-        socket.onclose = null;
-        socket.close();
-    }
-
+    const socket = webSocket;
+    webSocket = null;
+    socketAuthenticated = false;
+    companionVersion = "";
+    lastError = "";
+    lastSentKey = "";
+    pendingPayload = null;
+    try { socket?.close(); } catch { /* best effort */ }
+    setConnectionState("idle");
     connect();
 }
 
-async function handleCompanionMessage(data) {
+async function handleCompanionMessage(socket, data) {
     let message;
-    try {
-        message = JSON.parse(data);
-    } catch {
+    try { message = JSON.parse(data); } catch { return; }
+
+    if (message?.type === "YTM_TEST_RESULT") {
+        if (activeTest?.socket !== socket || typeof message.ok !== "boolean") return;
+        if (!message.ok) {
+            disconnect(socket, "rejected", t("testBadToken"));
+            return;
+        }
+        const firstAuthentication = !socketAuthenticated;
+        socketAuthenticated = true;
+        companionVersion = clampText(message.companionVersion);
+        reconnectDelayMs = 500;
+        nextReconnectAt = 0;
+        lastConnectedAt = Date.now();
+        lastError = "";
+        setConnectionState("connected", t("testOk"));
+        finishTest({ ok: true, message: t("testOk") });
+        if (firstAuthentication) {
+            // Replay the current selection, including a paused track, after reconnect.
+            // Test/keepalive replies on an already authenticated socket do not replay it.
+            lastSentKey = "";
+            pendingPayload = tabStates.get(selectedTabId)?.payload || null;
+            flushPendingState();
+            if (webSocket === socket) startKeepAlive(socket);
+        }
         return;
     }
-
-    if (message?.type !== "YTM_COMMAND") return;
-
+    if (!socketAuthenticated || message?.type !== "YTM_COMMAND") return;
     const command = clampText(message.command);
     if (!isAllowedCommand(command)) return;
-
     const result = await forwardCommandToSelectedTab(command);
-    lastStatusMessage = result.ok
-        ? t("bgCommandSent", [command])
-        : result.message;
-
-    if (!result.ok) {
-        lastError = result.message;
-    }
+    if (webSocket !== socket) return;
+    lastStatusMessage = result.ok ? t("bgCommandSent", [command]) : result.message;
+    if (!result.ok) lastError = result.message;
 }
 
 function isAllowedCommand(command) {
@@ -618,107 +646,12 @@ async function forwardCommandToSelectedTab(command) {
 }
 
 function testConnection() {
-    const companionUrl = companionWsUrls[0] || DEFAULT_COMPANION_WS_URLS[0];
-    const token = cachedToken;
-
-    return new Promise((resolve) => {
-        if (!token) {
-            resolve({
-                ok: false,
-                message: t("errTokenMissingInput")
-            });
-            return;
-        }
-
-        let settled = false;
-        let socket = null;
-
-        const finish = (result) => {
-            if (settled) return;
-            settled = true;
-            clearTimeout(timeoutId);
-
-            try {
-                if (socket && socket.readyState === WebSocket.OPEN) {
-                    socket.close(1000, "test finished");
-                }
-            } catch {
-                // ignore
-            }
-
-            resolve({
-                ...result,
-                companionUrl
-            });
-        };
-
-        const timeoutId = setTimeout(() => {
-            finish({
-                ok: false,
-                message: t("testNoResponse")
-            });
-        }, TEST_TIMEOUT_MS);
-
-        try {
-            socket = new WebSocket(companionUrl);
-        } catch {
-            finish({
-                ok: false,
-                message: t("bgWsCreateFailed")
-            });
-            return;
-        }
-
-        socket.onopen = () => {
-            socket.send(JSON.stringify({
-                type: "YTM_TEST",
-                token,
-                ts: Date.now()
-            }));
-        };
-
-        socket.onmessage = (event) => {
-            let response;
-            try {
-                response = JSON.parse(event.data);
-            } catch {
-                finish({
-                    ok: false,
-                    message: t("testUnexpected")
-                });
-                return;
-            }
-
-            if (response?.type !== "YTM_TEST_RESULT") {
-                finish({
-                    ok: false,
-                    message: t("testNotRecognized")
-                });
-                return;
-            }
-
-            finish({
-                ok: Boolean(response.ok),
-                message: response.ok
-                    ? t("testOk")
-                    : t("testBadToken")
-            });
-        };
-
-        socket.onerror = () => {
-            finish({
-                ok: false,
-                message: t("testUnreachable")
-            });
-        };
-
-        socket.onclose = () => {
-            finish({
-                ok: false,
-                message: t("testClosedEarly")
-            });
-        };
-    });
+    if (!cachedToken) return Promise.resolve({ ok: false, message: t("errTokenMissingInput") });
+    // A retry uses the same background connection, never a separate probe socket.
+    if (!webSocket) restartConnection();
+    const socket = webSocket;
+    if (!socket) return Promise.resolve({ ok: false, message: t("testUnreachable") });
+    return beginTest(socket);
 }
 
 ensureConfigLoaded().then(async () => {

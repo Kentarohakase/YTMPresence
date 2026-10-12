@@ -58,20 +58,31 @@ export function track(title, isPlaying = true, overrides = {}) {
     return { source: "ytmusic", title, artist: "Artist", isPlaying, ...overrides };
 }
 
-export async function background({ token = "test-token", storageReady, initialTabs = [], readState } = {}) {
+export async function background({ token = "test-token", storageReady, initialTabs = [], readState, saveError, socketError } = {}) {
     const time = clock();
     const sockets = [];
     const deliveries = [];
     const tabs = new Map(initialTabs);
+    const stored = { securityToken: token, companionUrl: "" };
+    const storageChanged = event();
+    const emitChanges = storageChanged.emit;
+    storageChanged.emit = (changes, area) => {
+        if (area === "local") for (const [key, change] of Object.entries(changes)) stored[key] = change.newValue;
+        return emitChanges(changes, area);
+    };
     const chrome = {
         i18n: { getMessage: (key) => key },
         action: { setBadgeText() {}, setBadgeBackgroundColor() {}, setTitle() {} },
         storage: {
             local: { get: async () => {
                 if (storageReady) await storageReady;
-                return { securityToken: token, companionUrl: "" };
+                return clone(stored);
+            }, set: async (settings) => {
+                if (saveError) throw new Error("Storage unavailable");
+                storageChanged.emit(Object.fromEntries(Object.entries(settings).map(([key, newValue]) =>
+                    [key, { oldValue: stored[key], newValue }])), "local");
             } },
-            onChanged: event()
+            onChanged: storageChanged
         },
         runtime: { onMessage: event() },
         tabs: {
@@ -93,8 +104,10 @@ export async function background({ token = "test-token", storageReady, initialTa
         static CLOSED = 3;
         readyState = Socket.CONNECTING;
         sent = [];
-        constructor(url) { this.url = url; sockets.push(this); }
+        constructor(url) { if (socketError) throw new Error("Unavailable"); this.url = url; sockets.push(this); }
         open() { this.readyState = Socket.OPEN; this.onopen?.(); }
+        authenticate() { this.open(); this.receive({ type: "YTM_TEST_RESULT", ok: true }); }
+        get playback() { return this.sent.filter((message) => message.source === "ytmusic"); }
         send(data) { this.sent.push(JSON.parse(data)); }
         close() { this.readyState = Socket.CLOSED; this.onclose?.({ code: 1000 }); }
         receive(message) { this.onmessage?.({ data: JSON.stringify(message) }); }
@@ -104,7 +117,10 @@ export async function background({ token = "test-token", storageReady, initialTa
     }, { filename: "background.js" });
     await settle();
     return {
-        chrome, sockets, deliveries, tabs, time,
+        chrome, sockets, deliveries, tabs, time, stored,
+        async request(message) {
+            return new Promise((resolve) => chrome.runtime.onMessage.emit(message, {}, (value) => resolve(clone(value))));
+        },
         async state(id, payload, overrides) {
             tabs.set(id, payload);
             chrome.runtime.onMessage.emit({ type: "YTM_STATE", payload }, tabSender(id, overrides), () => {});
@@ -121,6 +137,7 @@ export async function background({ token = "test-token", storageReady, initialTa
             await settle();
         },
         async command(command = "play-pause") {
+            if (sockets.at(-1).readyState === Socket.CONNECTING) sockets.at(-1).authenticate();
             sockets.at(-1).receive({ type: "YTM_COMMAND", command });
             await settle();
         }
