@@ -21,6 +21,9 @@ let pendingPayload = null;
 let lastPayload = null;
 let lastReceivedStateAt = 0;
 let lastStatePreview = null;
+const tabStates = new Map();
+const restoringTabs = new Set();
+let selectedTabId = null;
 
 let cachedToken = "";
 let configLoaded = false;
@@ -113,8 +116,8 @@ function updateBadge() {
     }
 }
 
-function rememberState(payload) {
-    lastReceivedStateAt = Date.now();
+function rememberState(payload, receivedAt) {
+    lastReceivedStateAt = receivedAt;
     lastStatePreview = {
         title: clampText(payload?.title),
         artist: clampText(payload?.artist),
@@ -145,6 +148,7 @@ function getRuntimeStatus() {
         lastSentAt,
         nextReconnectAt,
         hasPendingPayload: Boolean(pendingPayload),
+        selectedTabId,
         lastState: lastStatePreview
     };
 }
@@ -219,7 +223,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
         });
 });
 
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (!message || !message.type) return false;
 
     if (message.type === "YTM_GET_STATUS") {
@@ -248,6 +252,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     }
 
     if (message.type === "YTM_COMMAND_RESULT") {
+        if (!isYtmSender(sender) || sender.tab.id !== selectedTabId) return false;
         const ok = Boolean(message.ok);
         const command = clampText(message.command, "unknown");
         lastStatusMessage = ok
@@ -259,18 +264,112 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
     if (message.type !== "YTM_STATE") return false;
 
-    sendState(message.payload).catch((error) => {
-        console.warn(`[YTM Bridge] State send failed: ${error?.message || error}`);
-    });
+    const payload = message.payload;
+    if (!isYtmSender(sender) || !isPlaybackState(payload)) return false;
+
+    restoringTabs.delete(sender.tab.id);
+    tabStates.set(sender.tab.id, { payload, receivedAt: Date.now() });
+    const previousTabId = selectedTabId;
+    selectPlaybackTab();
+    if (sender.tab.id === selectedTabId || previousTabId !== selectedTabId) {
+        publishSelectedState();
+    }
 
     return false;
 });
 
-async function sendState(payload) {
+function isYtmUrl(value) {
+    try {
+        return new URL(value).origin === "https://music.youtube.com";
+    } catch {
+        return false;
+    }
+}
+
+function isYtmSender(sender) {
+    return Number.isInteger(sender?.tab?.id) && sender.tab.id >= 0 &&
+        sender.frameId === 0 && isYtmUrl(sender.url);
+}
+
+function isPlaybackState(payload) {
+    return payload?.source === "ytmusic" && typeof payload.isPlaying === "boolean";
+}
+
+async function restoreTabStates() {
+    // A paused page may not publish again after the background worker restarts.
+    // Ask content scripts for their latest state, without executing any command.
+    try {
+        const tabs = await chrome.tabs.query({ url: "https://music.youtube.com/*" });
+        await Promise.allSettled(tabs.map(async ({ id }) => {
+            if (!Number.isInteger(id) || tabStates.has(id)) return;
+            restoringTabs.add(id);
+            try {
+                const response = await chrome.tabs.sendMessage(id, { type: "YTM_GET_STATE" }, { frameId: 0 });
+                // A live state or navigation/removal event takes precedence.
+                if (restoringTabs.delete(id) && isPlaybackState(response?.payload)) {
+                    tabStates.set(id, { payload: response.payload, receivedAt: Date.now() });
+                }
+            } finally {
+                restoringTabs.delete(id);
+            }
+        }));
+        selectPlaybackTab();
+        publishSelectedState();
+    } catch (error) {
+        console.warn(`[YTM Bridge] Tab state restore failed: ${error?.message || error}`);
+    }
+}
+
+function selectPlaybackTab() {
+    const current = tabStates.get(selectedTabId);
+    if (current?.payload.isPlaying) return;
+
+    // Keep the playing source, or the paused selection when nothing plays.
+    // The lowest tab ID breaks ties when the previous source has disappeared.
+    const candidates = [...tabStates.keys()].sort((a, b) => a - b);
+    const playingId = candidates.find((id) => tabStates.get(id).payload.isPlaying);
+    const nextId = playingId ?? (current ? selectedTabId : candidates[0] ?? null);
+    if (nextId === selectedTabId) return;
+
+    selectedTabId = nextId;
+    lastSentKey = "";
+    pendingPayload = null;
+    lastPayload = null;
+    lastStatePreview = null;
+    lastReceivedStateAt = 0;
+}
+
+function forgetTab(tabId) {
+    restoringTabs.delete(tabId);
+    if (!tabStates.delete(tabId)) return;
+    const previousTabId = selectedTabId;
+    selectPlaybackTab();
+    if (previousTabId !== selectedTabId) publishSelectedState();
+}
+
+chrome.tabs.onRemoved.addListener(forgetTab);
+chrome.tabs.onReplaced.addListener((_addedId, removedId) => forgetTab(removedId));
+chrome.tabs.onUpdated.addListener((tabId, change) => {
+    if (change.status === "loading" || change.discarded === true ||
+        (change.url && !isYtmUrl(change.url))) {
+        forgetTab(tabId);
+    }
+});
+
+function publishSelectedState() {
+    sendSelectedState().catch((error) => {
+        console.warn(`[YTM Bridge] State send failed: ${error?.message || error}`);
+    });
+}
+
+async function sendSelectedState() {
     await ensureConfigLoaded();
 
-    if (!payload || typeof payload !== "object") return;
-    rememberState(payload);
+    // Read after awaiting configuration: the tab may have closed or changed.
+    const state = tabStates.get(selectedTabId);
+    if (!state) return;
+    const { payload, receivedAt } = state;
+    rememberState(payload, receivedAt);
     lastPayload = payload;
 
     if (!cachedToken) {
@@ -376,6 +475,7 @@ function connect() {
         };
 
         socket.onmessage = (event) => {
+            if (webSocket !== socket) return;
             handleCompanionMessage(event.data).catch((error) => {
                 lastError = `Companion message failed: ${error?.message || error}`;
                 console.warn(`[YTM Bridge] ${lastError}`);
@@ -479,7 +579,7 @@ async function handleCompanionMessage(data) {
     const command = clampText(message.command);
     if (!isAllowedCommand(command)) return;
 
-    const result = await forwardCommandToYtmTabs(command);
+    const result = await forwardCommandToSelectedTab(command);
     lastStatusMessage = result.ok
         ? t("bgCommandSent", [command])
         : result.message;
@@ -493,32 +593,28 @@ function isAllowedCommand(command) {
     return command === "play-pause" || command === "next" || command === "previous";
 }
 
-async function forwardCommandToYtmTabs(command) {
-    const tabs = await chrome.tabs.query({ url: "https://music.youtube.com/*" });
-    if (!tabs.length) {
+async function forwardCommandToSelectedTab(command) {
+    const tabId = selectedTabId;
+    if (tabId === null) {
         return {
             ok: false,
             message: t("bgNoYtmTab")
         };
     }
 
-    let delivered = 0;
-
-    await Promise.allSettled(tabs.map(async (tab) => {
-        if (!tab.id) return;
-
-        const response = await chrome.tabs.sendMessage(tab.id, {
+    try {
+        const response = await chrome.tabs.sendMessage(tabId, {
             type: "YTM_COMMAND",
             command,
             ts: Date.now()
-        });
+        }, { frameId: 0 });
 
-        if (response?.ok) delivered++;
-    }));
+        if (response?.ok) return { ok: true, message: t("bgCommandSent", [command]) };
+    } catch {
+        // Never replay a potentially executed command on a different tab.
+    }
 
-    return delivered > 0
-        ? { ok: true, message: t("bgCommandSent", [command]) }
-        : { ok: false, message: t("bgCommandRejected") };
+    return { ok: false, message: t("bgCommandRejected") };
 }
 
 function testConnection() {
@@ -625,6 +721,9 @@ function testConnection() {
     });
 }
 
-ensureConfigLoaded().then(connect).catch((error) => {
+ensureConfigLoaded().then(async () => {
+    connect();
+    await restoreTabStates();
+}).catch((error) => {
     console.warn(`[YTM Bridge] Config could not be loaded: ${error?.message || error}`);
 });

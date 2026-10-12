@@ -33,6 +33,9 @@ jobs:
         shell: pwsh
         run: ./scripts/verify-version-consistency.ps1
 
+      - name: Test extension behavior
+        run: node --test
+
       - name: Restore
         run: dotnet restore YTMPresence.slnx
 

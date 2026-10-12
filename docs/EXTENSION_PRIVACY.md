@@ -1,6 +1,6 @@
 # YTMPresence Extension Privacy Notice
 
-Last updated: 2026-08-09
+Last updated: 2026-10-12
 
 YTMPresence is a browser extension for YouTube Music that sends the current playback state to a companion app running locally. The companion app then displays that state as Discord Rich Presence.
 
@@ -33,7 +33,7 @@ Discord receives the resulting Rich Presence information through the locally run
 
 ## Storage
 
-The security token and the companion URL are stored locally in the browser profile through `chrome.storage.local`. Playback data is only held in the extension for the current state and is not archived permanently.
+The security token and the companion URL are stored locally in the browser profile through `chrome.storage.local`. The extension keeps the latest playback state for each reporting YouTube Music tab in memory to select one source. Content scripts also retain their latest state in memory so selection can recover after a background-worker restart. Playback data is not archived permanently.
 
 In versions with a built-in consent display, Firefox points out `browsingActivity` and `websiteContent` at installation time, because track metadata and the current YouTube Music URL leave the browser for the local companion. That transfer stays on the device (`localhost`/`127.0.0.1`); YTMPresence does not send it to any remote or analytics service.
 
@@ -43,7 +43,7 @@ In versions with a built-in consent display, Firefox points out `browsingActivit
 - `https://music.youtube.com/*`: reads playback data on YouTube Music only, and finds open YouTube Music tabs in order to forward player commands such as play/pause.
 - `http://127.0.0.1/*` and `http://localhost/*`: connects to the local companion.
 
-The `tabs` permission is deliberately not requested. The extension finds YouTube Music tabs through the host permission alone and reads only the tab ID from the results.
+The `tabs` permission is deliberately not requested. The extension finds YouTube Music tabs through the host permission alone, uses their IDs and lifecycle events to maintain the selection, and sends player commands only to the selected tab.
 
 ## Contact
 
