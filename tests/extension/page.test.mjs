@@ -38,6 +38,57 @@ function visible(properties = {}) {
     return { textContent: "", getBoundingClientRect: () => ({ width: 100, height: 20 }), ...properties };
 }
 
+function progress(app, position, duration, properties = {}) {
+    app.elements.set("ytmusic-player-bar #progress-bar", [visible({
+        getAttribute: (name) => ({ "aria-valuenow": position, "aria-valuemax": duration })[name] ?? null,
+        ...properties
+    })]);
+}
+
+test("autoplay reports track-relative progress instead of the cumulative media timeline", async () => {
+    // Live Edge/YTM: the second track showed 0:55 / 2:22 while VIDEO
+    // currentTime/duration still included the previous track's timeline.
+    const app = page({ tag: "video", media: { currentTime: 225.42, duration: 311.766 } });
+    progress(app, "55", "142");
+    await app.time.advance(250);
+    assert.equal(app.state().position, 55);
+    assert.equal(app.state().duration, 142);
+
+    app.navigator.mediaSession.metadata.title = "Next track";
+    progress(app, "0", "200");
+    await app.time.advance(1000);
+    assert.equal(app.state().title, "Next track");
+    assert.equal(app.state().position, 0);
+    assert.equal(app.state().duration, 200);
+
+    progress(app, "90", "200");
+    app.mediaEvents.get("seeked")();
+    await app.time.advance(0);
+    assert.equal(app.state().position, 90);
+});
+
+for (const [position, duration] of [
+    [null, "180"], ["", "180"], ["12", null], ["12", " "],
+    ["NaN", "180"], ["12", "Infinity"], ["-1", "180"],
+    ["181", "180"], ["0", "0"]
+]) {
+    test(`invalid player progress (${position}, ${duration}) retains the media fallback`, async () => {
+        const app = page();
+        progress(app, position, duration);
+        await app.time.advance(250);
+        assert.equal(app.state().position, 12);
+        assert.equal(app.state().duration, 180);
+    });
+}
+
+test("hidden player progress cannot override the media timeline", async () => {
+    const app = page();
+    progress(app, "55", "142", { getBoundingClientRect: () => ({ width: 0, height: 0 }) });
+    await app.time.advance(250);
+    assert.equal(app.state().position, 12);
+    assert.equal(app.state().duration, 180);
+});
+
 for (const tag of ["audio", "video"]) {
     test(`${tag} pause overrides an incorrectly playing media session`, async () => {
         const app = page({ tag, media: { paused: true } });
