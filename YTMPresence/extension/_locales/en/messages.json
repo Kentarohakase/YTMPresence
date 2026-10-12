@@ -1,123 +1,309 @@
 {
-  "appName": { "message": "YTM Discord Presence Bridge" },
-  "appShortName": { "message": "YTM Presence" },
-  "appDescription": { "message": "Shows YouTube Music as Discord Rich Presence. Requires the free YTMPresence companion app for Windows." },
-
-  "popupLoading": { "message": "Loading status" },
-  "optionsLoading": { "message": "Loading settings" },
-  "optionsTitle": { "message": "YTM Presence settings" },
-
-  "trackNone": { "message": "No track received" },
-  "trackNoneHint": { "message": "Open YouTube Music and start a track" },
-
-  "labelCompanion": { "message": "Companion" },
-  "labelToken": { "message": "Token" },
-  "labelUrl": { "message": "URL" },
-  "labelActiveUrl": { "message": "Active URL" },
-  "labelLastTrack": { "message": "Last track" },
-  "labelLastUpdate": { "message": "Last update" },
-  "labelStatus": { "message": "Status" },
-  "labelSecurityToken": { "message": "Security token" },
-  "labelWebsocketUrl": { "message": "WebSocket URL" },
-
-  "btnTest": { "message": "Test connection" },
-  "btnOptions": { "message": "Options" },
-  "btnYtm": { "message": "YT Music" },
-  "btnRefresh": { "message": "Refresh" },
-  "btnSave": { "message": "Save" },
-  "btnResetUrl": { "message": "Default URL" },
-
-  "placeholderToken": { "message": "Token from the tray menu" },
-  "placeholderUrl": { "message": "ws://127.0.0.1:17373/ws" },
-  "privacyNote": { "message": "YTMPresence stores the token and URL locally in the browser. Playback data is only sent to the local companion on your machine." },
-
-  "ageJustNow": { "message": "just now" },
+  "appName": {
+    "message": "YTM Discord Presence Bridge"
+  },
+  "appShortName": {
+    "message": "YTM Presence"
+  },
+  "appDescription": {
+    "message": "Shows YouTube Music as Discord Rich Presence. Requires the free YTMPresence companion app for Windows."
+  },
+  "popupLoading": {
+    "message": "Loading status"
+  },
+  "optionsLoading": {
+    "message": "Loading settings"
+  },
+  "optionsTitle": {
+    "message": "YTM Presence settings"
+  },
+  "trackNone": {
+    "message": "No track received"
+  },
+  "trackNoneHint": {
+    "message": "Open YouTube Music and start a track"
+  },
+  "labelCompanion": {
+    "message": "Companion"
+  },
+  "labelToken": {
+    "message": "Token"
+  },
+  "labelUrl": {
+    "message": "URL"
+  },
+  "labelActiveUrl": {
+    "message": "Active URL"
+  },
+  "labelLastTrack": {
+    "message": "Last track"
+  },
+  "labelLastUpdate": {
+    "message": "Last update"
+  },
+  "labelStatus": {
+    "message": "Status"
+  },
+  "labelSecurityToken": {
+    "message": "Security token"
+  },
+  "labelWebsocketUrl": {
+    "message": "WebSocket URL"
+  },
+  "btnTest": {
+    "message": "Test connection"
+  },
+  "btnOptions": {
+    "message": "Options"
+  },
+  "btnYtm": {
+    "message": "YT Music"
+  },
+  "btnRefresh": {
+    "message": "Refresh"
+  },
+  "btnSave": {
+    "message": "Save"
+  },
+  "btnResetUrl": {
+    "message": "Default URL"
+  },
+  "placeholderToken": {
+    "message": "Token from the tray menu"
+  },
+  "placeholderUrl": {
+    "message": "ws://127.0.0.1:17373/ws"
+  },
+  "privacyNote": {
+    "message": "YTMPresence stores the token and URL locally in the browser. Playback data is only sent to the local companion on your machine."
+  },
+  "ageJustNow": {
+    "message": "just now"
+  },
   "ageSecondsAgo": {
     "message": "$count$s ago",
-    "placeholders": { "count": { "content": "$1", "example": "5" } }
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
   },
   "ageMinutesAgo": {
     "message": "$count$m ago",
-    "placeholders": { "count": { "content": "$1", "example": "5" } }
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
   },
   "ageHoursAgo": {
     "message": "$count$h ago",
-    "placeholders": { "count": { "content": "$1", "example": "5" } }
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
   },
-
-  "playbackAd": { "message": "Ad" },
-  "playbackPlaying": { "message": "playing" },
-  "playbackPaused": { "message": "paused" },
-
-  "connTokenMissing": { "message": "Token missing" },
-  "connConnected": { "message": "Connected" },
-  "connConnecting": { "message": "Connecting" },
-  "connDisconnected": { "message": "Disconnected" },
-  "connReady": { "message": "Ready" },
-
-  "badgeSetup": { "message": "Setup" },
-  "badgeOnline": { "message": "Online" },
-  "badgeConnecting": { "message": "Connecting" },
-  "badgeOffline": { "message": "Offline" },
-
-  "tokenSet": { "message": "set" },
-  "tokenMissingShort": { "message": "missing" },
-
-  "msgTesting": { "message": "Testing connection…" },
-  "msgStatusLoadFailed": { "message": "Could not load status." },
-  "msgTestFailed": { "message": "Connection test failed." },
-  "msgSaved": { "message": "Saved. Reload the YouTube Music tab if it was already open." },
-  "msgSettingsLoadFailed": { "message": "Could not load settings." },
-
-  "errTokenMissingInput": { "message": "Token missing. Copy it from the tray menu and paste it here." },
-  "errInvalidUrl": { "message": "Invalid companion URL. Allowed hosts are localhost or 127.0.0.1." },
-
-  "testNoResponse": { "message": "No response from the companion. Is the tray app running and the URL correct?" },
-  "testWsCreateFailed": { "message": "Could not create WebSocket. Check the companion URL." },
-  "testUnexpected": { "message": "Unexpected response from the companion." },
-  "testNotRecognized": { "message": "The companion did not recognize the connection test." },
-  "testOk": { "message": "Connection OK. Token and companion URL match." },
-  "testBadToken": { "message": "Companion reachable, but the token is wrong." },
-  "testUnreachable": { "message": "Companion not reachable. Start the tray app or check the URL." },
-  "testClosedEarly": { "message": "The connection closed before the test was answered." },
-
-  "bgTokenMissing": { "message": "Token missing." },
+  "playbackAd": {
+    "message": "Ad"
+  },
+  "playbackPlaying": {
+    "message": "playing"
+  },
+  "playbackPaused": {
+    "message": "paused"
+  },
+  "connTokenMissing": {
+    "message": "Token missing"
+  },
+  "connConnected": {
+    "message": "Connected"
+  },
+  "connConnecting": {
+    "message": "Connecting"
+  },
+  "connDisconnected": {
+    "message": "Disconnected"
+  },
+  "connReady": {
+    "message": "Ready"
+  },
+  "badgeSetup": {
+    "message": "Setup"
+  },
+  "badgeOnline": {
+    "message": "Online"
+  },
+  "badgeConnecting": {
+    "message": "Connecting"
+  },
+  "badgeOffline": {
+    "message": "Offline"
+  },
+  "tokenSet": {
+    "message": "set"
+  },
+  "tokenMissingShort": {
+    "message": "missing"
+  },
+  "msgTesting": {
+    "message": "Testing connection…"
+  },
+  "msgStatusLoadFailed": {
+    "message": "Status unavailable. Reload the extension and reopen options."
+  },
+  "msgTestFailed": {
+    "message": "Check failed. Reopen options and check the connection."
+  },
+  "msgSaved": {
+    "message": "Saved. Reload the YouTube Music tab if it was already open."
+  },
+  "msgSettingsLoadFailed": {
+    "message": "Settings unavailable. Reload the extension and reopen options."
+  },
+  "errTokenMissingInput": {
+    "message": "Token missing. Copy it from the tray menu and paste it here."
+  },
+  "errInvalidUrl": {
+    "message": "Invalid companion URL. Allowed hosts are localhost or 127.0.0.1."
+  },
+  "testNoResponse": {
+    "message": "No response from the companion. Is the tray app running and the URL correct?"
+  },
+  "testWsCreateFailed": {
+    "message": "Could not create WebSocket. Check the companion URL."
+  },
+  "testUnexpected": {
+    "message": "Unexpected response from the companion."
+  },
+  "testNotRecognized": {
+    "message": "The companion did not recognize the connection test."
+  },
+  "testOk": {
+    "message": "Companion connection confirmed. Check the presence in Discord."
+  },
+  "testBadToken": {
+    "message": "Token rejected. Copy the current token from the companion, then save and check in options."
+  },
+  "testUnreachable": {
+    "message": "Companion not reachable. Start the tray app or check the URL."
+  },
+  "testClosedEarly": {
+    "message": "The connection closed before the test was answered."
+  },
+  "bgTokenMissing": {
+    "message": "Token missing."
+  },
   "bgConnecting": {
     "message": "Connecting to $url$.",
-    "placeholders": { "url": { "content": "$1", "example": "ws://127.0.0.1:17373/ws" } }
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "ws://127.0.0.1:17373/ws"
+      }
+    }
   },
   "bgConnected": {
     "message": "Connected to $url$.",
-    "placeholders": { "url": { "content": "$1", "example": "ws://127.0.0.1:17373/ws" } }
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "ws://127.0.0.1:17373/ws"
+      }
+    }
   },
   "bgDisconnectedFrom": {
     "message": "Disconnected from $url$.",
-    "placeholders": { "url": { "content": "$1", "example": "ws://127.0.0.1:17373/ws" } }
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "ws://127.0.0.1:17373/ws"
+      }
+    }
   },
   "bgDisconnectReason": {
     "message": "Disconnected ($code$): $reason$",
     "placeholders": {
-      "code": { "content": "$1", "example": "1006" },
-      "reason": { "content": "$2", "example": "n/a" }
+      "code": {
+        "content": "$1",
+        "example": "1006"
+      },
+      "reason": {
+        "content": "$2",
+        "example": "n/a"
+      }
     }
   },
   "bgWsError": {
     "message": "WebSocket error at $url$.",
-    "placeholders": { "url": { "content": "$1", "example": "ws://127.0.0.1:17373/ws" } }
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "ws://127.0.0.1:17373/ws"
+      }
+    }
   },
-  "bgWsCreateFailed": { "message": "Could not create WebSocket." },
+  "bgWsCreateFailed": {
+    "message": "Could not create WebSocket."
+  },
   "bgCommandOk": {
     "message": "Command '$command$' executed.",
-    "placeholders": { "command": { "content": "$1", "example": "play-pause" } }
+    "placeholders": {
+      "command": {
+        "content": "$1",
+        "example": "play-pause"
+      }
+    }
   },
   "bgCommandFailed": {
     "message": "Command '$command$' could not be executed.",
-    "placeholders": { "command": { "content": "$1", "example": "play-pause" } }
+    "placeholders": {
+      "command": {
+        "content": "$1",
+        "example": "play-pause"
+      }
+    }
   },
   "bgCommandSent": {
     "message": "Command '$command$' sent to YouTube Music.",
-    "placeholders": { "command": { "content": "$1", "example": "play-pause" } }
+    "placeholders": {
+      "command": {
+        "content": "$1",
+        "example": "play-pause"
+      }
+    }
   },
-  "bgNoYtmTab": { "message": "No YouTube Music tab found." },
-  "bgCommandRejected": { "message": "The YouTube Music tab did not accept the command." }
+  "bgNoYtmTab": {
+    "message": "No YouTube Music tab found."
+  },
+  "bgCommandRejected": {
+    "message": "The YouTube Music tab did not accept the command."
+  },
+  "connAuthenticating": {
+    "message": "Checking token"
+  },
+  "connRejected": {
+    "message": "Token rejected"
+  },
+  "msgSaveFailed": {
+    "message": "Not saved. Reopen settings and try saving again."
+  },
+  "msgSavedConnected": {
+    "message": "Saved – companion connected. Open YouTube Music or reload the existing tab."
+  },
+  "msgSavedRejected": {
+    "message": "Saved – token rejected. Copy the current token from the companion, then save and check again."
+  },
+  "msgSavedUnreachable": {
+    "message": "Saved – companion not reachable. Start the companion and try again; if needed, check the URL under Advanced settings."
+  },
+  "msgSavedChanged": {
+    "message": "Saved – settings have since changed. Check the current settings again."
+  },
+  "msgConfigChanged": {
+    "message": "Settings changed. Check the current settings again."
+  }
 }
