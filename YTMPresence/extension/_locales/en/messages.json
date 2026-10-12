@@ -21,7 +21,7 @@
     "message": "No track received"
   },
   "trackNoneHint": {
-    "message": "Open YouTube Music and start a track"
+    "message": "Open YouTube Music or reload the existing tab and start a track."
   },
   "labelCompanion": {
     "message": "Companion"
@@ -120,13 +120,13 @@
     "message": "Token missing"
   },
   "connConnected": {
-    "message": "Connected"
+    "message": "Companion connected"
   },
   "connConnecting": {
     "message": "Connecting"
   },
   "connDisconnected": {
-    "message": "Disconnected"
+    "message": "Connection interrupted"
   },
   "connReady": {
     "message": "Ready"
@@ -305,5 +305,77 @@
   },
   "msgConfigChanged": {
     "message": "Settings changed. Check the current settings again."
+  },
+  "btnSaveAndTest": {
+    "message": "Save and check"
+  },
+  "labelAdvanced": {
+    "message": "Advanced settings"
+  },
+  "labelSavedStatus": {
+    "message": "Saved connection status"
+  },
+  "defaultUrlHint": {
+    "message": "Usually no change is needed. Leave blank for ws://127.0.0.1:17373/ws (with localhost as a fallback)."
+  },
+  "optionsSetupHint": {
+    "message": "Start the companion, copy its token and paste it here. Then choose “Save and check”."
+  },
+  "installationScopeHint": {
+    "message": "Each browser profile and each store or local installation has its own settings. Enable only one YTMPresence extension per profile. Reload existing YouTube Music tabs after switching extensions."
+  },
+  "hintTokenMissing": {
+    "message": "Copy the token in the companion, then save and check in options."
+  },
+  "hintConnecting": {
+    "message": "Connecting. Keep the companion running; the check takes up to four seconds."
+  },
+  "hintAuthenticating": {
+    "message": "The companion is checking the saved token. Please wait."
+  },
+  "hintConnected": {
+    "message": "Companion connection confirmed. Check the visible presence in Discord."
+  },
+  "hintNoTrack": {
+    "message": "Companion connected, no track data yet. Open YouTube Music or reload the existing tab and start a track."
+  },
+  "hintRejected": {
+    "message": "Token rejected. Copy the current token in the companion, then save and check in options."
+  },
+  "hintDisconnected": {
+    "message": "Connection interrupted. Start the companion and check again. If needed, check the URL under Advanced settings."
+  },
+  "labelExtensionVersion": {
+    "message": "Extension version"
+  },
+  "labelCompanionVersion": {
+    "message": "Companion version"
+  },
+  "labelInstallation": {
+    "message": "Installation type"
+  },
+  "installLocal": {
+    "message": "Local/unpacked"
+  },
+  "installPackage": {
+    "message": "Package installation"
+  },
+  "installManaged": {
+    "message": "Managed"
+  },
+  "installUnknown": {
+    "message": "Unknown"
+  },
+  "versionNotReported": {
+    "message": "Not reported"
+  },
+  "msgSavingTesting": {
+    "message": "Saving settings and checking the connection…"
+  },
+  "msgUnsaved": {
+    "message": "Unsaved changes. The status describes the saved connection. Choose “Save and check” to apply these inputs."
+  },
+  "msgSaveResultUnknown": {
+    "message": "No save result received. Reopen options, review the settings, then save and check again."
   }
 }

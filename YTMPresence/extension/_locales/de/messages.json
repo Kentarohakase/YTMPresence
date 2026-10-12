@@ -21,7 +21,7 @@
     "message": "Kein Track empfangen"
   },
   "trackNoneHint": {
-    "message": "YouTube Music öffnen und einen Track starten"
+    "message": "YouTube Music öffnen oder den vorhandenen Tab neu laden und einen Titel starten."
   },
   "labelCompanion": {
     "message": "Companion"
@@ -120,13 +120,13 @@
     "message": "Token fehlt"
   },
   "connConnected": {
-    "message": "Verbunden"
+    "message": "Companion verbunden"
   },
   "connConnecting": {
     "message": "Verbindet"
   },
   "connDisconnected": {
-    "message": "Getrennt"
+    "message": "Verbindung unterbrochen"
   },
   "connReady": {
     "message": "Bereit"
@@ -305,5 +305,77 @@
   },
   "msgConfigChanged": {
     "message": "Einstellungen geändert. Aktuelle Einstellungen erneut prüfen."
+  },
+  "btnSaveAndTest": {
+    "message": "Speichern und prüfen"
+  },
+  "labelAdvanced": {
+    "message": "Erweiterte Einstellungen"
+  },
+  "labelSavedStatus": {
+    "message": "Status der gespeicherten Verbindung"
+  },
+  "defaultUrlHint": {
+    "message": "Normalerweise ist keine Änderung nötig. Leer lassen für ws://127.0.0.1:17373/ws (mit localhost als Ausweichadresse)."
+  },
+  "optionsSetupHint": {
+    "message": "Companion starten, dort den Token kopieren und hier einfügen. Anschließend „Speichern und prüfen“ wählen."
+  },
+  "installationScopeHint": {
+    "message": "Jedes Browserprofil und jede Store- oder lokale Installation hat eigene Einstellungen. Nur eine YTMPresence-Extension je Profil aktivieren. Nach einem Extension-Wechsel vorhandene YouTube-Music-Tabs neu laden."
+  },
+  "hintTokenMissing": {
+    "message": "Token im Companion kopieren und in den Optionen speichern und prüfen."
+  },
+  "hintConnecting": {
+    "message": "Verbindung wird aufgebaut. Companion geöffnet lassen; die Prüfung dauert höchstens vier Sekunden."
+  },
+  "hintAuthenticating": {
+    "message": "Der Companion prüft den gespeicherten Token. Bitte kurz warten."
+  },
+  "hintConnected": {
+    "message": "Companion-Verbindung bestätigt. Die sichtbare Presence bitte in Discord prüfen."
+  },
+  "hintNoTrack": {
+    "message": "Companion verbunden, noch keine Trackdaten. YouTube Music öffnen oder den vorhandenen Tab neu laden und einen Titel starten."
+  },
+  "hintRejected": {
+    "message": "Token abgelehnt. Aktuellen Token im Companion kopieren und in den Optionen speichern und prüfen."
+  },
+  "hintDisconnected": {
+    "message": "Verbindung unterbrochen. Companion starten und erneut prüfen. Bei Bedarf die URL unter Erweiterte Einstellungen prüfen."
+  },
+  "labelExtensionVersion": {
+    "message": "Extension-Version"
+  },
+  "labelCompanionVersion": {
+    "message": "Companion-Version"
+  },
+  "labelInstallation": {
+    "message": "Installationsart"
+  },
+  "installLocal": {
+    "message": "Lokal/entpackt"
+  },
+  "installPackage": {
+    "message": "Paketinstallation"
+  },
+  "installManaged": {
+    "message": "Verwaltet"
+  },
+  "installUnknown": {
+    "message": "Unbekannt"
+  },
+  "versionNotReported": {
+    "message": "Nicht gemeldet"
+  },
+  "msgSavingTesting": {
+    "message": "Einstellungen werden gespeichert und die Verbindung wird geprüft …"
+  },
+  "msgUnsaved": {
+    "message": "Ungespeicherte Änderungen. Die Statusanzeige bezieht sich auf die gespeicherte Verbindung. „Speichern und prüfen“ wählen, um die Eingaben anzuwenden."
+  },
+  "msgSaveResultUnknown": {
+    "message": "Keine Rückmeldung zum Speichern. Optionen erneut öffnen, Einstellungen kontrollieren und erneut speichern und prüfen."
   }
 }

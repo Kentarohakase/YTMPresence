@@ -168,13 +168,18 @@
         .message.err {
             color: #fca5a5;
         }
+        :focus-visible { outline: 2px solid #fbbf24; outline-offset: 3px; }
+        .metadata { margin-top: 12px; color: var(--muted); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+        header { align-items: flex-start; flex-direction: column; }
+        .subtitle { line-height: 1.5; }
+        .track-meta { white-space: normal; }
     </style>
 </head>
 <body>
     <header>
         <div>
             <h1>YTM Presence</h1>
-            <div id="subtitle" class="subtitle" data-i18n="popupLoading">Status wird geladen</div>
+            <div id="subtitle" class="subtitle" role="status" data-i18n="popupLoading">Status wird geladen</div>
         </div>
         <div id="stateBadge" class="badge">...</div>
     </header>
@@ -211,10 +216,16 @@
             <button id="refreshButton" data-i18n="btnRefresh">Aktualisieren</button>
         </div>
 
-        <div id="message" class="message"></div>
+        <div id="message" class="message" role="status"></div>
+        <div class="metadata">
+            <div><span data-i18n="labelExtensionVersion"></span>: <span id="extensionVersion">-</span></div>
+            <div><span data-i18n="labelInstallation"></span>: <span id="installationType">-</span></div>
+            <div><span data-i18n="labelCompanionVersion"></span>: <span id="companionVersion">-</span></div>
+        </div>
     </main>
 
     <script src="i18n.js"></script>
+    <script src="connection-ui.js"></script>
     <script src="popup.js"></script>
 </body>
 </html>
