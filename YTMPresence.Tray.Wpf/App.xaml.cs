@@ -565,7 +565,7 @@ public partial class App : System.Windows.Application
       return;
     }
 
-    _onboardingWindow = new OnboardingWindow(_settings, _settingsPath);
+    _onboardingWindow = new OnboardingWindow(_settings, _settingsPath, GetAppVersion());
     _onboardingWindow.OpenSettingsRequested += (_, __) => ShowSettingsWindow();
     _onboardingWindow.Closed += (_, __) => _onboardingWindow = null;
     _onboardingWindow.Show();

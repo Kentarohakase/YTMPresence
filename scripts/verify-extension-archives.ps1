@@ -31,6 +31,7 @@ $requiredEntries = @(
     "content.js",
     "page.js",
     "i18n.js",
+    "connection-ui.js",
     "options.html",
     "options.js",
     "popup.html",

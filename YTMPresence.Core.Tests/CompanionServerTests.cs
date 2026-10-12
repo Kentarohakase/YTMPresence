@@ -171,7 +171,35 @@ public class CompanionServerTests
     using var doc = JsonDocument.Parse(response);
     Assert.Equal("YTM_TEST_RESULT", doc.RootElement.GetProperty("type").GetString());
     Assert.True(doc.RootElement.GetProperty("ok").GetBoolean());
+    var version = System.Reflection.CustomAttributeExtensions
+      .GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>(typeof(CompanionServer).Assembly)
+      ?.InformationalVersion;
+    Assert.False(string.IsNullOrWhiteSpace(version));
+    Assert.Equal(version, doc.RootElement.GetProperty("companionVersion").GetString());
     Assert.Null(server.GetStatusSnapshot().LastMessageUtc);
+  }
+
+  [Fact]
+  public async Task TestKeepalive_DoesNotReplacePausedPlaybackOrRefreshItsTimestamp()
+  {
+    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+    var port = GetFreePort();
+    await using var server = new CompanionServer(ServerSettings(port));
+    await server.StartAsync();
+    using var client = await ConnectAsync(port, cts.Token);
+    await SendAsync(client, StateJson(Token).Replace("\"isPlaying\":true", "\"isPlaying\":false", StringComparison.Ordinal), cts.Token);
+    await PollUntilAsync(() => server.GetStatusSnapshot().LastMessageUtc is not null, TimeSpan.FromSeconds(5));
+    var before = server.GetStatusSnapshot();
+    Assert.NotNull(before.LastMessageUtc);
+    Assert.False(before.LastIsPlaying);
+
+    await SendAsync(client, JsonSerializer.Serialize(new { type = "YTM_TEST", token = Token, ts = 0 }), cts.Token);
+    using var response = JsonDocument.Parse(await ReceiveAsync(client, cts.Token));
+    Assert.True(response.RootElement.GetProperty("ok").GetBoolean());
+    var after = server.GetStatusSnapshot();
+    Assert.Equal(before.LastMessageUtc, after.LastMessageUtc);
+    Assert.Equal(before.LastTitle, after.LastTitle);
+    Assert.Equal(before.LastIsPlaying, after.LastIsPlaying);
   }
 
   [Fact]

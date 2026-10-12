@@ -354,13 +354,53 @@ public static class UiText
   // OnboardingWindow
   public static string OnboardingWindowTitle => T(de: "YTM Presence Erste Schritte", en: "YTM Presence – Getting started", es: "YTM Presence – Getting started");
   public static string OnboardingHeading => T(de: "YTM Presence einrichten", en: "Set up YTM Presence", es: "Set up YTM Presence");
-  public static string OnboardingIntro => T(de: "Companion läuft. Verbinde jetzt die Browser-Extension mit diesen Daten.", en: "The companion is running. Now connect the browser extension with this data.", es: "The companion is running. Now connect the browser extension with this data.");
+  public static string OnboardingIntro => T(de: "Der Companion läuft. Diese vier Schritte verbinden deine Browser-Extension mit ihm.", en: "The companion is running. Follow these four steps to connect your browser extension.", es: "The companion is running. Follow these four steps to connect your browser extension.");
   public static string OnboardingExtensionDataHeader => T(de: "Extension-Daten", en: "Extension data", es: "Extension data");
-  public static string OnboardingInstructions => T(de: "In Chrome oder Edge: Erweiterungen öffnen, Entwicklermodus aktivieren, extension-Ordner laden, Token und URL in den Optionen speichern.", en: "In Chrome or Edge: open Extensions, enable developer mode, load the extension folder, then save the token and URL in the options.", es: "In Chrome or Edge: open Extensions, enable developer mode, load the extension folder, then save the token and URL in the options.");
+  public static string OnboardingInstructions => T(de: "In Chrome oder Edge die Erweiterungsverwaltung öffnen, Entwicklermodus aktivieren und „Entpackt laden“ wählen. Den Ordner YTMPresence/extension aus dem Repository auswählen. Andere YTMPresence-Versionen deaktivieren, dann mit Schritt 2 fortfahren. Vorhandene YouTube-Music-Tabs neu laden.", en: "In Chrome or Edge, open extension management, enable developer mode and choose “Load unpacked”. Select the repository’s YTMPresence/extension folder. Disable other YTMPresence versions, then continue with step 2. Reload existing YouTube Music tabs.", es: "In Chrome or Edge, open extension management, enable developer mode and choose “Load unpacked”. Select the repository’s YTMPresence/extension folder. Disable other YTMPresence versions, then continue with step 2. Reload existing YouTube Music tabs.");
   public static string ButtonLater => T(de: "Später", en: "Later", es: "Later");
   public static string ButtonDone => T(de: "Fertig", en: "Done", es: "Done");
   public static string ButtonSettingsShort => T(de: "Einstellungen", en: "Settings", es: "Settings");
   public static string ButtonYouTubeMusic => T(de: "YouTube Music", en: "YouTube Music", es: "YouTube Music");
+
+  public static string OnboardingStepInstall => T(de: "1. Extension installieren", en: "1. Install the extension", es: "1. Install the extension");
+
+  public static string OnboardingInstallHint => T(de: "Für Chrome und Edge ist die Extension im Chrome Web Store verfügbar. Für Firefox gilt die verlinkte Anleitung.", en: "For Chrome and Edge, the extension is available in the Chrome Web Store. For Firefox, follow the linked instructions.", es: "For Chrome and Edge, the extension is available in the Chrome Web Store. For Firefox, follow the linked instructions.");
+
+  public static string OnboardingStoreButton => T(de: "Chrome / Edge: Web Store", en: "Chrome / Edge: Web Store", es: "Chrome / Edge: Web Store");
+
+  public static string OnboardingFirefoxButton => T(de: "Firefox-Anleitung", en: "Firefox instructions", es: "Firefox instructions");
+
+  public static string OnboardingStepToken => T(de: "2. Token kopieren", en: "2. Copy the token", es: "2. Copy the token");
+
+  public static string OnboardingCopyTokenButton => T(de: "Token kopieren", en: "Copy token", es: "Copy token");
+
+  public static string OnboardingCopyUrlButton => T(de: "Companion-URL kopieren", en: "Copy companion URL", es: "Copy companion URL");
+
+  public static string OnboardingStepCheck => T(de: "3. In den Optionen speichern und prüfen", en: "3. Save and check in options", es: "3. Save and check in options");
+
+  public static string OnboardingCheckHint => T(de: "Im Browser die Optionen der YTMPresence-Extension öffnen, Token einfügen und „Speichern und prüfen“ wählen. Erst „Companion verbunden“ bestätigt die Verbindung.", en: "In the browser, open the YTMPresence extension options, paste the token and choose “Save and check”. Only “Companion connected” confirms the connection.", es: "In the browser, open the YTMPresence extension options, paste the token and choose “Save and check”. Only “Companion connected” confirms the connection.");
+
+  public static string OnboardingScopeHint => T(de: "Jedes Browserprofil und jede Store- oder lokale Installation hat eigene Einstellungen. Nur eine YTMPresence-Extension je Profil aktivieren. Nach einem Extension-Wechsel vorhandene YouTube-Music-Tabs neu laden.", en: "Each browser profile and each store or local installation has its own settings. Enable only one YTMPresence extension per profile. Reload existing YouTube Music tabs after switching extensions.", es: "Each browser profile and each store or local installation has its own settings. Enable only one YTMPresence extension per profile. Reload existing YouTube Music tabs after switching extensions.");
+
+  public static string OnboardingAdvanced => T(de: "Erweiterte Einstellungen: Companion-URL", en: "Advanced settings: companion URL", es: "Advanced settings: companion URL");
+
+  public static string OnboardingUrlHint => T(de: "Nur bei einer abweichenden Adresse: Diese URL in den erweiterten Extension-Einstellungen speichern und prüfen.", en: "Only when using a different address: save and check this URL in the extension’s advanced settings.", es: "Only when using a different address: save and check this URL in the extension’s advanced settings.");
+
+  public static string OnboardingStepMusic => T(de: "4. YouTube Music öffnen", en: "4. Open YouTube Music", es: "4. Open YouTube Music");
+
+  public static string OnboardingMusicHint => T(de: "Vorhandene Tabs nach einem Extension-Wechsel neu laden, dann einen Titel starten. Eine bestätigte Companion-Verbindung bestätigt noch keine Discord-Presence: Die Anzeige bitte in Discord prüfen. Du kannst die Einrichtung mit „Fertig“ selbst abschließen oder mit „Später“ verlassen.", en: "Reload existing tabs after switching extensions, then start a track. A confirmed companion connection does not confirm Discord presence: check the display in Discord. You can manually complete setup with “Done” or leave with “Later”.", es: "Reload existing tabs after switching extensions, then start a track. A confirmed companion connection does not confirm Discord presence: check the display in Discord. You can manually complete setup with “Done” or leave with “Later”.");
+
+  public static string OnboardingDeveloper => T(de: "Für Entwickler: entpackte Extension", en: "For developers: unpacked extension", es: "For developers: unpacked extension");
+
+  public static string OnboardingTokenCopied => T(de: "Token kopiert. Jetzt in den Extension-Optionen einfügen und speichern und prüfen.", en: "Token copied. Paste it in the extension options, then save and check.", es: "Token copied. Paste it in the extension options, then save and check.");
+
+  public static string OnboardingUrlCopied => T(de: "URL kopiert. Bei Bedarf in den erweiterten Extension-Einstellungen einfügen.", en: "URL copied. If needed, paste it in the extension’s advanced settings.", es: "URL copied. If needed, paste it in the extension’s advanced settings.");
+
+  public static string OnboardingCopyFailed => T(de: "Kopieren fehlgeschlagen. Den Wert im Textfeld markieren und mit Strg+C kopieren.", en: "Copy failed. Select the value in the text field and press Ctrl+C.", es: "Copy failed. Select the value in the text field and press Ctrl+C.");
+
+  public static string OnboardingSaveFailed => T(de: "Abschluss konnte nicht gespeichert werden. Erneut „Fertig“ wählen oder mit „Später“ schließen.", en: "Could not save completion. Choose “Done” again or close with “Later”.", es: "Could not save completion. Choose “Done” again or close with “Later”.");
+
+  public static string OnboardingOpenLinkFailed => T(de: "Link konnte nicht geöffnet werden. Die entsprechende Anleitung oder YouTube Music manuell im Browser öffnen.", en: "Could not open the link. Open the corresponding instructions or YouTube Music manually in your browser.", es: "Could not open the link. Open the corresponding instructions or YouTube Music manually in your browser.");
 
   // SettingsWindow
   public static string SettingsWindowTitle => T(de: "YTM Presence Einstellungen", en: "YTM Presence settings", es: "YTM Presence settings");

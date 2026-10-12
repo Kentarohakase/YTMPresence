@@ -12,7 +12,7 @@ public partial class OnboardingWindow : Window
 
   public event EventHandler? OpenSettingsRequested;
 
-  public OnboardingWindow(AppSettings settings, string settingsPath)
+  public OnboardingWindow(AppSettings settings, string settingsPath, string version)
   {
     InitializeComponent();
 
@@ -21,27 +21,37 @@ public partial class OnboardingWindow : Window
 
     SecurityTokenBox.Text = _settings.SecurityToken;
     CompanionUrlBox.Text = _settings.GetWebSocketEndpoint();
+    VersionText.Text = UiText.AppVersion(version);
   }
 
   private void CopyTokenButton_Click(object sender, RoutedEventArgs e)
   {
-    CopyToClipboard(SecurityTokenBox.Text, "Token kopiert.");
+    CopyToClipboard(SecurityTokenBox.Text, UiText.OnboardingTokenCopied);
   }
 
   private void CopyUrlButton_Click(object sender, RoutedEventArgs e)
   {
-    CopyToClipboard(CompanionUrlBox.Text, "Companion URL kopiert.");
+    CopyToClipboard(CompanionUrlBox.Text, UiText.OnboardingUrlCopied);
   }
 
   private void OpenYtmButton_Click(object sender, RoutedEventArgs e)
+    => OpenLink("https://music.youtube.com/");
+
+  private void OpenStoreButton_Click(object sender, RoutedEventArgs e)
+    => OpenLink("https://chromewebstore.google.com/detail/ytm-discord-presence-brid/obdinnbalnbmpkcaopnhnkdgdkcgligi");
+
+  private void OpenFirefoxButton_Click(object sender, RoutedEventArgs e)
+    => OpenLink("https://github.com/Kentarohakase/YTMPresence#firefox-desktop");
+
+  private void OpenLink(string url)
   {
     try
     {
-      Process.Start(new ProcessStartInfo("https://music.youtube.com/") { UseShellExecute = true });
+      Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
     }
     catch
     {
-      SetStatus(UiText.OpenYouTubeMusicFailed, isError: true);
+      SetStatus(UiText.OnboardingOpenLinkFailed, isError: true);
     }
   }
 
@@ -52,6 +62,7 @@ public partial class OnboardingWindow : Window
 
   private void DoneButton_Click(object sender, RoutedEventArgs e)
   {
+    var previouslyCompleted = _settings.HasSeenOnboarding;
     try
     {
       _settings.HasSeenOnboarding = true;
@@ -60,7 +71,8 @@ public partial class OnboardingWindow : Window
     }
     catch
     {
-      SetStatus("Status konnte nicht gespeichert werden.", isError: true);
+      _settings.HasSeenOnboarding = previouslyCompleted;
+      SetStatus(UiText.OnboardingSaveFailed, isError: true);
     }
   }
 
@@ -78,7 +90,7 @@ public partial class OnboardingWindow : Window
     }
     catch
     {
-      SetStatus("Kopieren fehlgeschlagen.", isError: true);
+      SetStatus(UiText.OnboardingCopyFailed, isError: true);
     }
   }
 

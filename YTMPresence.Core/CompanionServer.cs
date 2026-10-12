@@ -502,7 +502,10 @@ public sealed class CompanionServer : IAsyncDisposable
       {
         type = "YTM_TEST_RESULT",
         ok,
-        message = ok ? "ok" : "invalid-token"
+        message = ok ? "ok" : "invalid-token",
+        companionVersion = System.Reflection.CustomAttributeExtensions
+          .GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>(typeof(CompanionServer).Assembly)
+          ?.InformationalVersion
       });
 
       await SendTextAsync(ws, response, ct);

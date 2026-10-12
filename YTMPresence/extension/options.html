@@ -122,6 +122,13 @@
             outline: 2px solid rgba(217, 35, 35, 0.24);
         }
 
+        details {
+            margin-top: 18px;
+        }
+        summary { cursor: pointer; margin-bottom: 14px; }
+        :focus-visible { outline: 2px solid #fbbf24; outline-offset: 3px; }
+        .metadata { margin-top: 16px; color: var(--muted); font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+        .subtitle { line-height: 1.5; }
         .field + .field {
             margin-top: 14px;
         }
@@ -217,7 +224,7 @@
         <header>
             <div>
                 <h1>YTM Presence</h1>
-                <div id="subtitle" class="subtitle" data-i18n="optionsLoading">Einstellungen werden geladen</div>
+                <div id="subtitle" class="subtitle" role="status" data-i18n="optionsLoading">Einstellungen werden geladen</div>
             </div>
             <div id="stateBadge" class="badge">...</div>
         </header>
@@ -225,29 +232,34 @@
         <div class="layout">
             <section>
                 <h2 data-i18n="labelCompanion">Companion</h2>
-
+                <p data-i18n="optionsSetupHint"></p>
+                <form id="setupForm">
                 <div class="field">
                     <label for="token" data-i18n="labelSecurityToken">Security Token</label>
                     <input id="token" autocomplete="off" spellcheck="false" data-i18n-placeholder="placeholderToken" placeholder="Token aus dem Tray-Menü" />
                 </div>
 
-                <div class="field">
+                <details id="advancedSettings">
+                    <summary data-i18n="labelAdvanced">Erweiterte Einstellungen</summary>
+                    <p data-i18n="defaultUrlHint"></p>
+                    <div class="field">
                     <label for="companionUrl" data-i18n="labelWebsocketUrl">WebSocket URL</label>
                     <input id="companionUrl" spellcheck="false" data-i18n-placeholder="placeholderUrl" placeholder="ws://127.0.0.1:17373/ws" />
-                </div>
+                    </div>
+                    <div class="actions"><button id="resetUrl" type="button" data-i18n="btnResetUrl">Standard-URL</button></div>
+                </details>
 
                 <div class="actions">
-                    <button id="save" class="primary" data-i18n="btnSave">Speichern</button>
-                    <button id="test" data-i18n="btnTest">Verbindung testen</button>
-                    <button id="resetUrl" data-i18n="btnResetUrl">Standard-URL</button>
+                    <button id="save" type="submit" class="primary" data-i18n="btnSaveAndTest">Speichern und prüfen</button>
                 </div>
-
-                <div id="msg" class="message"></div>
+                </form>
+                <div id="msg" class="message" role="status"></div>
+                <p class="privacy" data-i18n="installationScopeHint"></p>
                 <div class="privacy" data-i18n="privacyNote">YTMPresence speichert Token und URL lokal im Browser. Playback-Daten werden nur an den lokalen Companion auf deinem Rechner gesendet.</div>
             </section>
 
             <section>
-                <h2 data-i18n="labelStatus">Status</h2>
+                <h2 data-i18n="labelSavedStatus">Status der gespeicherten Verbindung</h2>
 
                 <div class="rows">
                     <div class="row">
@@ -272,6 +284,12 @@
                     </div>
                 </div>
 
+                <div class="metadata">
+                    <div><span data-i18n="labelExtensionVersion"></span>: <span id="extensionVersion">-</span></div>
+                    <div><span data-i18n="labelInstallation"></span>: <span id="installationType">-</span></div>
+                    <div><span data-i18n="labelCompanionVersion"></span>: <span id="companionVersion">-</span></div>
+                </div>
+
                 <div class="actions">
                     <button id="refresh" data-i18n="btnRefresh">Aktualisieren</button>
                     <button id="openYtm" data-i18n="btnYtm">YT Music</button>
@@ -281,6 +299,7 @@
     </div>
 
     <script src="i18n.js"></script>
+    <script src="connection-ui.js"></script>
     <script src="options.js"></script>
 </body>
 </html>
