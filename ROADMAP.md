@@ -4,7 +4,7 @@ YTMPresence already covers the main workflow: YouTube Music playback reaches Dis
 
 Planning baseline: **1.4.0**, commit `da60499`, reviewed **2026-10-12**. Completed implementation items are checked below; unchecked items remain planned. Milestones describe delivery order, not promised dates or assigned release versions.
 
-Implemented since that baseline: extension regression tests and selection within one browser profile, including recovery after background-worker restart. An [Edge/Discord live run and local-extension retest](docs/LIVE_QA_2026-10-12.md) found and verified the fix for an autoplay timing defect. Single-tab commands, source switching and reload/navigation/closure fallback passed live in Edge. The remaining live matrix and selection across companion connections remain open.
+Implemented since that baseline: extension regression tests and selection within one browser profile, including recovery after background-worker restart. An [Edge/Discord live run and local-extension retest](docs/LIVE_QA_2026-10-12.md) found and verified the fix for an autoplay timing defect. Single-tab commands, source switching and reload/navigation/closure fallback passed live in Edge. Guided onboarding, save-and-check on the authenticated background socket, installation metadata and optional companion-version reporting are also implemented; see the [setup QA report](docs/SETUP_QA_2026-10-12.md). The remaining live matrix and selection across companion connections remain open.
 
 ## Assessment of the baseline
 
@@ -34,7 +34,7 @@ Evidence: [extension background](YTMPresence/extension/background.js), [companio
 - [x] Introduce a small JavaScript test harness for state extraction, message handling and command routing. Use deterministic media/DOM fixtures and mocked browser/WebSocket APIs; keep live YouTube Music checks separate.
 - [x] Cover playing/paused media, audio/video elements, seeks, advertisements, missing metadata, track URL selection and encoded URLs. Reproduce the playback and URL failures recorded in the [changelog](CHANGELOG.md).
 - [x] Cover selected-tab routing, reconnect with pending state, token changes, obsolete-socket commands, tab lifecycle and background-worker recovery. Run the suite in PR CI and the release workflow.
-- [ ] Extend coverage to rejected-token status, reconnect without new playback data and the remaining socket callback races alongside the connection-status work below.
+- [x] Extend coverage to rejected-token status, reconnect without new playback data and the remaining socket callback races alongside the connection-status work below.
 
 **Done when:** tests fail for the reproduced regressions and pass with the intended behavior. Lint and archive verification remain in place.
 
@@ -53,10 +53,10 @@ Edge progress: the [2026-10-12 local-extension retest](docs/LIVE_QA_2026-10-12.m
 
 ### Make connection status reflect accepted work
 
-- [ ] Distinguish socket open, token accepted, disconnected and token rejected in the extension. Use the existing `YTM_TEST_RESULT` response for authentication status, including after token changes.
+- [x] Distinguish socket open, token accepted, disconnected and token rejected in the extension. Use the existing `YTM_TEST_RESULT` response for authentication status, including after token changes.
 - [ ] Distinguish Discord transport connectivity from accepted/rejected activity commands. Correlate replies with their request nonce and expose rejection or timeout in diagnostics.
 - [ ] Exercise Discord restart, companion restart, browser background restart and Windows sleep/resume. Check state replay and deduplication together, including a paused track whose metadata does not change.
-- [ ] Retain bounded reconnect delays and ensure keepalives do not reset playback pause/idle timers.
+- [x] Retain bounded reconnect delays and ensure keepalives do not reset playback pause/idle timers.
 
 **Done when:** a wrong token or rejected activity cannot show a successful state; reconnecting restores the correct eligible presence without manually reloading the page. Automated failure/recovery tests accompany the change; the live QA matrix records browser and Discord versions.
 
@@ -77,9 +77,13 @@ The prerequisite documentation and remaining translations can ship as a small pa
 
 ### Guide users to a working connection
 
-- [ ] Add a direct extension-store link to onboarding and show progress through companion running, extension authenticated, track received and Discord ready.
-- [ ] Preserve manual token copying as the initial setup method. Give specific recovery instructions for a missing token, wrong token, occupied port and unavailable Discord.
-- [ ] Replace the remaining German-only onboarding feedback/error strings with `UiText` resources. Check success and failure paths in both supported languages.
+- [x] Provide four setup steps with a Chrome/Edge store link, separate Firefox/developer instructions, manual token copying, save-and-check and opening/reloading YouTube Music. Show the companion version in onboarding and extension version/install type in popup/options.
+- [x] Authenticate each new background socket before showing connected; share actionable missing/rejected/disconnected/no-track guidance between popup and options. Save settings centrally and distinguish save errors from connection failures.
+- [ ] Extend companion diagnostics to show confirmed extension/track/Discord progress; do not equate the new extension connection badge with a Discord acknowledgement.
+- [x] Preserve manual token copying and explain separate profile/install settings and reloading tabs after switching extensions.
+- [ ] Add companion-side recovery guidance for an occupied port and unavailable Discord.
+- [x] Move the remaining German-only onboarding feedback/error strings into `UiText` and localize new setup texts in German/English.
+- [ ] Complete live setup acceptance in both supported languages, including failure paths; automated extension tests cover both translations.
 - [ ] Review keyboard navigation, focus order and scaling in onboarding, settings and the mini player.
 
 **Done when:** a new user can install both components and reach a working presence following the interface alone; every incomplete step explains the next action. Diagnostics exported during these scenarios contain no token.
@@ -108,6 +112,8 @@ Keep cloud accounts, listening-history analytics and a broad interface rewrite o
 
 ## Next implementation slice
 
-The first implementation slice adds the extension test harness and tab selection in one browser. Its regression tests reproduce and fix a playing tab being overwritten by a paused tab and one command reaching both tabs. The main Edge/Discord workflow now also passes live, including the autoplay timing fix discovered during QA. Next, complete the remaining live matrix, then implement selection across companion connections and truthful authentication/Discord status.
+The extension/tab-selection and guided-setup slices are implemented. Current automated setup checks pass **92 extension tests** and **208 Core tests**; build and packaging results and remaining live acceptance are recorded in [setup QA](docs/SETUP_QA_2026-10-12.md). Finish that acceptance before calling the onboarding slice release-ready.
+
+The next implementation order is: **(1)** source selection across browser/companion connections, **(2)** confirmed Discord activity acknowledgements and actionable failures, **(3)** the remaining release test matrix, including clean-machine prerequisites. Publishing and a version bump are separate tasks; the current checkout remains 1.4.0.
 
 Update this roadmap when a slice ships, move completed changes to the changelog, and reassess the next milestone using bugs and setup feedback. Each implementation should retain passing Core tests, version checks and relevant release checks; new cross-component behavior also needs the matching live QA scenario.

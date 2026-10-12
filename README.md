@@ -22,55 +22,47 @@ On first start the app generates a security token automatically and stores the s
 %APPDATA%\YTMPresence\settings.json
 ```
 
-### 2. Copy the token
+### 2. Follow the four setup steps
 
-Right-click the tray icon:
+Open **Getting started** from the companion tray menu whenever you need the setup guide. It shows the companion version and these steps:
 
-```text
-Copy token
-```
+1. **Install the extension.** For Chrome/Edge, use [YTM Discord Presence Bridge in the Chrome Web Store](https://chromewebstore.google.com/detail/ytm-discord-presence-brid/obdinnbalnbmpkcaopnhnkdgdkcgligi). Firefox uses the [instructions below](#firefox-desktop).
+2. **Copy the token** in the guide or through the tray menu.
+3. **Save and check in the extension options.** Paste the token, then choose **Save and check**. The extension saves the settings first and waits for the companion to accept the token on its active connection. The normal endpoint is `ws://127.0.0.1:17373/ws` (with `localhost` as a fallback when no custom URL is saved). A different local URL can be entered under **Advanced settings**; use the companion's displayed URL if its address was customized.
+4. **Open YouTube Music.** After switching extensions, reload existing [YouTube Music tabs](https://music.youtube.com/), then start a track and check the visible presence in Discord.
 
-### 3. Install the extension
+**Each browser profile and each store/local installation has its own settings.** Copy the token into the options of the installation you actually use. Enable only one YTMPresence extension per profile. A version number alone cannot distinguish an unreleased checkout from the published extension.
 
-In Chrome or Edge through the store — this is the recommended way, because updates then arrive automatically:
+Popup and options show the extension version, installation type and, when reported, companion version. “Package installation” does not necessarily mean “installed from a store”; “Local/unpacked”, “Managed” and “Unknown” are the other labels. A missing companion version is “Not reported”, and different versions do not by themselves prevent connecting.
 
-[YTM Discord Presence Bridge in the Chrome Web Store](https://chromewebstore.google.com/detail/ytm-discord-presence-brid/obdinnbalnbmpkcaopnhnkdgdkcgligi)
+| Status or result | Next action |
+| --- | --- |
+| Token missing | Copy the current token from the companion; paste it in the extension options and save and check. |
+| Connecting / Checking token | Keep the companion running and wait for the four-second check. Opening a socket alone does not produce a green badge. |
+| Saved – token rejected | The settings were saved, but authentication failed. Copy the current companion token and save and check again. |
+| Saved – companion not reachable / Connection interrupted | Start the companion and retry. If needed, check the advanced URL. Network failures reconnect automatically with delays from 500 ms to 10 seconds. |
+| Not saved | Reopen options and retry saving. The previously saved connection has not been replaced by the failed write. |
+| Companion connected, no track data | Open YouTube Music or reload its existing tab and start a track. |
 
-Alternatively as an unpacked extension, for development or testing:
+Unsaved inputs are labelled explicitly; the status always describes the saved background configuration. **Test connection** in the popup retries that saved configuration. A confirmed companion connection is **not** confirmation that Discord accepted or displays a presence: check Discord itself.
 
-1. Open `chrome://extensions` or `edge://extensions`
-2. Enable developer mode
-3. Choose `Load unpacked`
-4. Select the `extension` folder
+The interfaces follow the browser/Windows language; German and English are supported. Setup can be left with **Later** or completed manually with **Done**.
 
-Installing both at once is not useful: each version connects to the same companion.
+#### Firefox Desktop
 
-In Firefox Desktop (126 and later):
+For Firefox Desktop 126 and later, use the Firefox archive from the release:
 
-1. Open `about:debugging#/runtime/this-firefox`
-2. Choose `Load Temporary Add-on…`
-3. Select the `manifest.json` from the Firefox variant of the extension
+1. Extract `YTMPresence-extension-firefox.zip`.
+2. Open `about:debugging#/runtime/this-firefox`.
+3. Choose **Load Temporary Add-on…** and select the extracted `manifest.json`.
+4. Continue with token copying and **Save and check** above.
 
-The interface of both the extension and the tray app follows the browser and Windows language (German and English are supported).
+#### Developer setup: unpacked Chrome/Edge extension
 
-### 4. Configure the extension
-
-Open the extension options and enter:
-
-```text
-Security token: the token from the tray
-Companion WebSocket URL: ws://127.0.0.1:17373/ws
-```
-
-Then reload YouTube Music:
-
-```text
-https://music.youtube.com/
-```
-
-`Test connection` in the extension options tells you whether companion URL and token match.
-
-The extension icon shows the current connection state as a badge. The popup shows companion status, token status and the last track received.
+1. Open `chrome://extensions` or `edge://extensions` and enable developer mode.
+2. Choose **Load unpacked** and select the repository's `YTMPresence/extension` folder (or the extracted Chromium release extension).
+3. Disable other YTMPresence installations in this profile and configure this installation's token.
+4. After source changes, reload the extension, then reload existing YouTube Music tabs. Options should show **Local/unpacked**.
 
 ### Multiple YouTube Music tabs
 

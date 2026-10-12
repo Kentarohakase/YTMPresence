@@ -64,13 +64,29 @@ This checklist is meant for every release tag, before the release is shared wide
 
 - Install on a fresh Windows profile or in a VM.
 - The getting-started window appears on first start.
-- Token and companion URL can be copied.
-- The extension connects once token and URL are saved.
+- The guide shows its companion version and four steps: install extension, copy token, save and check, open YouTube Music. The Chrome/Edge store link, Firefox instructions and separate developer section are reachable.
+- Token and custom companion URL can be copied. “Later” closes without completing setup; “Done” can complete it manually. Copy/save/open-link failures give localized next steps.
+- The extension connects only after the saved token has been accepted on its background socket; merely opening a socket never gives a green badge.
 - The Chromium extension (Chrome/Edge) and the Firefox extension (`about:debugging`) both connect.
 - With an English browser and Windows language, the extension popup, the options and the tray windows appear in English; with German, in German.
 - The app starts reliably without Discord running; diagnostics report Discord as unreachable and connect automatically once Discord is running.
 - The diagnostics window shows server, extension and Discord sensibly.
 - The diagnostics report ZIP can be created and contains no raw `SecurityToken` line.
+
+## Guided setup acceptance
+
+Recorded implementation and results: [2026-10-12 setup QA](SETUP_QA_2026-10-12.md). Distinguish automated fixtures, direct observations and user-assisted checks; leave unperformed rows open.
+
+- Use a fresh local Edge extension or dedicated test profile. Only one YTMPresence installation is enabled. Confirm “Local/unpacked” and the loaded source directory; the unreleased manifest still says 1.4.0.
+- With no token, both popup and options direct the user to copy it. Leave the default URL unchanged, and verify that custom URL controls are under Advanced settings.
+- Enter a wrong token and choose **Save and check**. Expect **Saved – token rejected**, a non-green badge and instructions to copy the current token. Then use the real token without pasting it into the QA report.
+- With no received track, confirm the companion connection and the instruction to open/reload YouTube Music. Do not accept this as evidence of visible Discord presence.
+- Edit the options without saving. The unsaved notice must explain that status describes the saved connection. Popup **Test connection** must still check saved settings.
+- After saving the correct token, reload an existing YouTube Music tab and start a track. Confirm that popup, mini player and visible Discord presence agree.
+- Stop the companion: popup/options must leave the connected state and provide a next action. Restart it without reloading YouTube Music; the selected playing track must return automatically. Repeat with a paused track and verify the existing pause/idle-clear policy still applies.
+- Check extension version/install type in popup and options and companion version in onboarding. An older companion without the optional version field must remain connected and show **Not reported**. A packaged install must be called **Package installation**, without inferring a store origin.
+- Repeat the workflow in German and English. Navigate options using Tab/Shift+Tab and Enter, expand Advanced settings with the keyboard, and check visible focus. In onboarding, check scroll access at reduced window height, button focus, Later and manual Done. Do not change the user's system language just for this check; use a suitable test profile/environment.
+- Record storage failure, unreachable companion, timeout, token switch during checking and late-socket responses in automated regressions. Keep browser/OS live behavior separate from mock results.
 
 ## Multiple tabs in one browser profile
 
