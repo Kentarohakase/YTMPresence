@@ -10,6 +10,7 @@ All notable changes to YTMPresence are documented in this file.
 
 ### Fixed
 
+- Autoplay progress uses the current track's player-bar timeline when available. YouTube Music can reuse a cumulative media timeline across tracks, which previously made the mini player and Discord show the previous track's elapsed time as part of the new track. Invalid or hidden player-bar values retain the media-element fallback.
 - Within one browser profile, a playing YouTube Music tab retains ownership of the presence. Paused background tabs no longer overwrite it, and mini-player commands go only to the selected tab's main frame. Pausing retains the selected tab unless another tab is playing; closing, reloading, navigating away or discarding it chooses a fallback in stable tab-ID order, preferring playing tabs.
 - Background-worker restarts recover playback state from open tabs, including paused tracks. Closed tabs cannot be restored by late recovery responses or replayed after a token change, and obsolete WebSocket connections cannot deliver player commands.
 

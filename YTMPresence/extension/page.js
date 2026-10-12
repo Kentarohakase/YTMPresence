@@ -23,6 +23,27 @@
         return document.querySelector("audio") || document.querySelector("video");
     }
 
+    function readProgress(media) {
+        // Autoplay can reuse a cumulative media timeline across tracks. The
+        // player bar exposes the track-relative seconds displayed by YTM.
+        const progress = document.querySelector("ytmusic-player-bar #progress-bar");
+        if (isVisible(progress)) {
+            const positionText = progress.getAttribute("aria-valuenow")?.trim();
+            const durationText = progress.getAttribute("aria-valuemax")?.trim();
+            const position = Number(positionText);
+            const duration = Number(durationText);
+            if (positionText && durationText && Number.isFinite(position) &&
+                Number.isFinite(duration) && duration > 0 && position >= 0 && position <= duration) {
+                return { position, duration };
+            }
+        }
+
+        return {
+            position: Number.isFinite(media?.currentTime) ? media.currentTime : null,
+            duration: Number.isFinite(media?.duration) ? media.duration : null
+        };
+    }
+
     /**
      * Ermittelt, ob gerade tatsaechlich abgespielt wird.
      *
@@ -544,8 +565,7 @@
         const domMetadata = readDomMetadata();
 
         const audio = getAudioElement();
-        const position = Number.isFinite(audio?.currentTime) ? audio.currentTime : null;
-        const duration = Number.isFinite(audio?.duration) ? audio.duration : null;
+        const { position, duration } = readProgress(audio);
 
         const isPlaying = readIsPlaying(audio, mediaSession);
 
