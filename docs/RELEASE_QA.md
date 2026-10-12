@@ -76,7 +76,7 @@ This checklist is meant for every release tag, before the release is shared wide
 
 Run this smoke check in Chrome, Edge and the packaged Firefox variant; record the tested versions and results. The automated fixtures do not establish live YouTube Music or Discord compatibility.
 
-Recorded run: [2026-10-12 Edge / Discord QA](LIVE_QA_2026-10-12.md). It found and reproduced an autoplay timing defect; the corrected local extension still needs a live retest. The initial run used the Web Store installation and is not a sign-off for the new tab selection.
+Recorded run: [2026-10-12 Edge / Discord QA](LIVE_QA_2026-10-12.md). The corrected local extension passed the Edge retest for single-tab commands, source switching, pause clearing, autoplay timing, reload, navigation and closure. The report separates the initial Web Store run from that retest and lists the remaining scenarios and browsers; it is not a complete release sign-off.
 
 For unpacked-extension testing, confirm the loaded directory is the repository's `YTMPresence/extension`, reload the extension after source changes, and reload the test tabs so their page/content scripts also update. Keep only one YTMPresence extension active in the test profile. The manifest version alone cannot distinguish an unreleased checkout from the published extension.
 

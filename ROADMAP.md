@@ -4,7 +4,7 @@ YTMPresence already covers the main workflow: YouTube Music playback reaches Dis
 
 Planning baseline: **1.4.0**, commit `da60499`, reviewed **2026-10-12**. Completed implementation items are checked below; unchecked items remain planned. Milestones describe delivery order, not promised dates or assigned release versions.
 
-Implemented since that baseline: extension regression tests and selection within one browser profile, including recovery after background-worker restart. An [initial Edge/Discord live run](docs/LIVE_QA_2026-10-12.md) found an autoplay timing defect, now fixed with regression coverage. That run used the Web Store installation; live validation of the corrected local extension and selection across companion connections remain open.
+Implemented since that baseline: extension regression tests and selection within one browser profile, including recovery after background-worker restart. An [Edge/Discord live run and local-extension retest](docs/LIVE_QA_2026-10-12.md) found and verified the fix for an autoplay timing defect. Single-tab commands, source switching and reload/navigation/closure fallback passed live in Edge. The remaining live matrix and selection across companion connections remain open.
 
 ## Assessment of the baseline
 
@@ -46,6 +46,8 @@ Evidence: [extension background](YTMPresence/extension/background.js), [companio
 - [x] Handle tab closure, navigation, reload, discard and background-worker restart. Expose `selectedTabId` in extension runtime status; the popup track follows the selection.
 - [ ] Show the selected source in companion diagnostics and handle disconnected clients across companion connections.
 - [ ] Complete the live multiple-tab scenarios in [release QA](docs/RELEASE_QA.md) in Chrome, Edge and Firefox.
+
+Edge progress: the [2026-10-12 local-extension retest](docs/LIVE_QA_2026-10-12.md) passed targeted commands, simultaneous playback, source switching, pause clearing, autoplay/seek timing and reload/navigation/closure fallback. Worker restart, discard and the other listed environments still need live checks; keep the full-matrix item open.
 
 **Done when:** with two tabs and two browser connections, the displayed track and command target stay aligned; one click affects exactly one source; closing it selects a valid fallback without stale playback state. Cover these cases in automated tests and a live smoke check.
 
@@ -106,6 +108,6 @@ Keep cloud accounts, listening-history analytics and a broad interface rewrite o
 
 ## Next implementation slice
 
-The first implementation slice adds the extension test harness and tab selection in one browser. Its regression tests reproduce and fix a playing tab being overwritten by a paused tab and one command reaching both tabs. Next, complete live QA, then implement selection across companion connections and truthful authentication/Discord status.
+The first implementation slice adds the extension test harness and tab selection in one browser. Its regression tests reproduce and fix a playing tab being overwritten by a paused tab and one command reaching both tabs. The main Edge/Discord workflow now also passes live, including the autoplay timing fix discovered during QA. Next, complete the remaining live matrix, then implement selection across companion connections and truthful authentication/Discord status.
 
 Update this roadmap when a slice ships, move completed changes to the changelog, and reassess the next milestone using bugs and setup feedback. Each implementation should retain passing Core tests, version checks and relevant release checks; new cross-component behavior also needs the matching live QA scenario.
