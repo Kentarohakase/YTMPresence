@@ -76,10 +76,15 @@ This checklist is meant for every release tag, before the release is shared wide
 
 Run this smoke check in Chrome, Edge and the packaged Firefox variant; record the tested versions and results. The automated fixtures do not establish live YouTube Music or Discord compatibility.
 
+Recorded run: [2026-10-12 Edge / Discord QA](LIVE_QA_2026-10-12.md). It found and reproduced an autoplay timing defect; the corrected local extension still needs a live retest. The initial run used the Web Store installation and is not a sign-off for the new tab selection.
+
+For unpacked-extension testing, confirm the loaded directory is the repository's `YTMPresence/extension`, reload the extension after source changes, and reload the test tabs so their page/content scripts also update. Keep only one YTMPresence extension active in the test profile. The manifest version alone cannot distinguish an unreleased checkout from the published extension.
+
 - Open two YouTube Music tabs with distinct tracks. Play in A and keep B paused. The extension popup, mini player and Discord continue to show A when B reports state or gains focus.
 - Use play/pause, next and previous in the mini player. Only A reacts.
 - Pause A while B remains paused. Play resumes A. Start B while A is paused; the displayed track and commands switch to B.
 - Where the browser permits simultaneous playback, keep both tabs playing. The selection stays stable; pausing the selected tab selects the other playing tab.
+- Let the selected tab advance through its autoplay queue, and compare its elapsed/total time with the mini player and Discord. YouTube Music can keep a cumulative media-element timeline; the reported progress must restart relative to the new track. Seek within that track and confirm the displayed progress follows.
 - Close, reload, navigate away from and discard the selected tab in separate checks. A valid fallback is selected; commands are not sent to a removed document. A normal in-page YouTube Music track change still updates the selected source.
 - Restart the extension background worker with both tabs paused. After state recovery, Play targets exactly one tab and the popup identifies that tab's track.
 - Close all YouTube Music tabs. The popup clears the track, commands affect no tab, and Discord clears after the configured idle timeout. Changing the token must not replay the closed track.
