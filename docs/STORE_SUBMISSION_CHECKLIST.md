@@ -65,3 +65,13 @@ The store does not update itself. A GitHub release only reaches users who loaded
 - Upload the new package in the dashboard, otherwise store users stay on the old version.
 - Permission changes trigger another review and can delay approval.
 - Name and short description come from `_locales/`; changing them also requires a new package.
+
+## Release status
+
+GitHub and the store are published separately; record both.
+
+| Version | GitHub release | Chrome Web Store | Notes |
+| --- | --- | --- | --- |
+| 1.5.0 | open | open | No permission changes since 1.4.0. Add the English listing with this upload; the texts are in [CHROME_WEB_STORE.md](CHROME_WEB_STORE.md). |
+| 1.4.0 | published 2026-08-10 | not recorded | Check the dashboard; the last recorded store version is 1.3.1. |
+| 1.3.1 | published 2026-08-09 | approved | First store submission. |
