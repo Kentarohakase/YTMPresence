@@ -21,7 +21,7 @@ This roadmap replaces the draft of 2026-10-12. Release numbers are proposals for
 
 | # | Problem | User impact | Priority |
 | --- | --- | --- | --- |
-| 1 | The published setup (2.2 MB) is framework-dependent and checks no prerequisites. The app needs the .NET 10 Desktop Runtime **and** the ASP.NET Core Runtime (`Microsoft.AspNetCore.App` in [Core](YTMPresence.Core/YTMPresence.Core.csproj)). The README names both since pull request #1. **For 1.5.0 the setup and the ZIP are self-contained; the clean-VM test is still open.** | Users who arrive through the store listing and skip the README install a companion that does not start until they install the missing runtimes themselves. | P0 |
+| 1 | The published setup (2.2 MB) is framework-dependent and checks no prerequisites. The app needs the .NET 10 Desktop Runtime **and** the ASP.NET Core Runtime (`Microsoft.AspNetCore.App` in [Core](YTMPresence.Core/YTMPresence.Core.csproj)). The README names both since pull request #1. **For 1.5.0 the setup and the ZIP are self-contained and passed a clean install test without .NET.** | Users who arrive through the store listing and skip the README install a companion that does not start until they install the missing runtimes themselves. | P0 |
 | 2 | The finished work above is not released. | Store and GitHub users don't get the fixes. | P0 |
 | 3 | `CompanionServer.SendPlayerCommandAsync` sends every command to all authenticated connections. | With two browsers or profiles, one mini-player click controls both. | P1 |
 | 4 | Discord `ERROR` replies are only logged ([DiscordIpcClient](YTMPresence.Core/DiscordIpcClient.cs)). Replies are not matched to the request nonce, and success is assumed once the frame is written. | Diagnostics can report success while Discord shows nothing. | P1 |
@@ -48,7 +48,8 @@ Goal: store and GitHub users get the branch work, and a new user's first start w
 
 - [ ] Finish the cheap open checks from the setup QA: German extension with English companion, a fresh browser profile, and one Chrome smoke run covering tab selection and setup.
 - [x] Build the release setup self-contained (`package-release.ps1 -SelfContained` in the release workflow and CI). Measured on 2026-11-02: setup 61.8 MB instead of 2.2 MB, ZIP 88.7 MB, about 200 MB installed; well within the updater's 300 MB limit and 30-minute download timeout.
-- [ ] Test on a clean Windows VM without .NET: fresh install, update from 1.4.0 keeping settings and token, uninstall.
+- [x] Test on a clean Windows VM without .NET: fresh install, update from 1.4.0 keeping settings and token, uninstall. Passed in Windows Sandbox with `scripts/test-clean-install.ps1`; see the [clean install QA](docs/CLEAN_INSTALL_QA_2026-11-02.md).
+- [ ] Translate the remaining German update-check messages in `UpdateChecker.cs` and the logger's first line; the sandbox log showed both.
 - [ ] Optional, to shrink the setup later: replace the ASP.NET Core WebSocket server with `HttpListener`, so the app no longer depends on `Microsoft.AspNetCore.App`.
 - [x] Add the archive check and `web-ext lint` to the release workflow; move both workflows to a supported Node LTS.
 - [x] Raise the Firefox `strict_min_version` to 140, which removes the desktop lint warning, and state the supported browser minimums in the README (Chrome/Edge 116+ for the WebSocket keepalive, Firefox 140+).
