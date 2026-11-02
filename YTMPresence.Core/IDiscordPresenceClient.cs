@@ -7,6 +7,6 @@ namespace YTMPresence.Core;
 public interface IDiscordPresenceClient
 {
   Task EnsureConnectedAsync(CancellationToken ct);
-  Task SetActivityAsync(DiscordActivity activity, CancellationToken ct);
-  Task ClearActivityAsync(CancellationToken ct);
+  Task<DiscordCommandResult> SetActivityAsync(DiscordActivity activity, CancellationToken ct);
+  Task<DiscordCommandResult> ClearActivityAsync(CancellationToken ct);
 }

@@ -11,7 +11,7 @@ public class DiscordIpcPayloadTests
     // Discords RPC kennt kein CLEAR_ACTIVITY. Der Befehl wurde jahrelang
     // gesendet, von Discord abgelehnt und die Ablehnung verworfen - die
     // Presence blieb stehen, obwohl die App "Discord OK" meldete.
-    var json = DiscordIpcClient.BuildClearActivityJson();
+    var json = DiscordIpcClient.BuildClearActivityJson("abc123");
 
     using var doc = JsonDocument.Parse(json);
     var root = doc.RootElement;
@@ -30,26 +30,22 @@ public class DiscordIpcPayloadTests
     // Die Serialisierungsoptionen des Clients lassen Null-Felder weg. Wuerde
     // die Nachricht darueber gebaut, fiele ausgerechnet 'activity: null' raus
     // und der Befehl haette keine Wirkung.
-    var json = DiscordIpcClient.BuildClearActivityJson();
+    var json = DiscordIpcClient.BuildClearActivityJson("abc123");
 
     Assert.Contains("\"activity\":null", json.Replace(" ", ""));
   }
 
   [Fact]
-  public void ClearActivity_CarriesProcessIdAndUniqueNonce()
+  public void ClearActivity_CarriesProcessIdAndTheGivenNonce()
   {
-    var first = DiscordIpcClient.BuildClearActivityJson();
-    var second = DiscordIpcClient.BuildClearActivityJson();
+    // Die Nonce ordnet Discords Antwort dem Befehl zu. Dass jeder Befehl eine
+    // eigene bekommt, prueft DiscordIpcReplyTests ueber den ganzen Ablauf.
+    var json = DiscordIpcClient.BuildClearActivityJson("abc123");
 
-    using var doc = JsonDocument.Parse(first);
+    using var doc = JsonDocument.Parse(json);
     var args = doc.RootElement.GetProperty("args");
 
     Assert.Equal(Environment.ProcessId, args.GetProperty("pid").GetInt32());
-    Assert.False(string.IsNullOrWhiteSpace(doc.RootElement.GetProperty("nonce").GetString()));
-
-    using var secondDoc = JsonDocument.Parse(second);
-    Assert.NotEqual(
-        doc.RootElement.GetProperty("nonce").GetString(),
-        secondDoc.RootElement.GetProperty("nonce").GetString());
+    Assert.Equal("abc123", doc.RootElement.GetProperty("nonce").GetString());
   }
 }

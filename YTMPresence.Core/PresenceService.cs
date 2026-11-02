@@ -27,6 +27,7 @@ public sealed class PresenceService
   private bool _discordOk = true;
   private string? _lastDiscordError;
   private DateTimeOffset? _lastDiscordOkUtc;
+  private DiscordCommandOutcome? _lastDiscordOutcome;
 
   public bool DiscordOk
   {
@@ -43,16 +44,22 @@ public sealed class PresenceService
     get { lock (_statusSync) return _lastDiscordOkUtc; }
   }
 
+  /// <summary>Discords Antwort auf den letzten Befehl; null nach einem Verbindungsfehler.</summary>
+  public DiscordCommandOutcome? LastDiscordOutcome
+  {
+    get { lock (_statusSync) return _lastDiscordOutcome; }
+  }
+
   public PresenceService(IDiscordPresenceClient discord, AppSettings settings)
   {
     _discord = discord;
     _settings = settings;
   }
 
-  public (bool DiscordOk, string? LastDiscordError, DateTimeOffset? LastDiscordOkUtc) GetStatusSnapshot()
+  public (bool DiscordOk, string? LastDiscordError, DateTimeOffset? LastDiscordOkUtc, DiscordCommandOutcome? LastDiscordOutcome) GetStatusSnapshot()
   {
     lock (_statusSync)
-      return (_discordOk, _lastDiscordError, _lastDiscordOkUtc);
+      return (_discordOk, _lastDiscordError, _lastDiscordOkUtc, _lastDiscordOutcome);
   }
 
   public async Task HandleAsync(YtmState state, CancellationToken ct)
@@ -166,8 +173,7 @@ public sealed class PresenceService
     try
     {
       await _discord.EnsureConnectedAsync(ct);
-      await _discord.ClearActivityAsync(ct);
-      MarkDiscordOk();
+      RecordResult(await _discord.ClearActivityAsync(ct));
     }
     catch (Exception ex)
     {
@@ -242,12 +248,16 @@ public sealed class PresenceService
       // Befehl CLEAR_ACTIVITY benutzte. Seit das Löschen tatsächlich
       // funktioniert, würde derselbe Ablauf die Presence bei jedem Track- und
       // Play/Pause-Wechsel kurz verschwinden lassen.
-      await _discord.SetActivityAsync(activity, ct);
+      var result = await _discord.SetActivityAsync(activity, ct);
 
+      // Auch eine abgelehnte oder unbeantwortete Aktivität gilt als gesendet:
+      // Dieselbe Aktivität erneut zu schicken, würde nur dasselbe Ergebnis
+      // bringen. Die nächste Änderung (spätestens der nächste Fortschritts-
+      // schritt) sendet ohnehin neu.
       _lastPresenceKey = key;
       _lastUpdateUtc = now;
 
-      MarkDiscordOk();
+      RecordResult(result);
     }
     catch (Exception ex)
     {
@@ -518,6 +528,32 @@ public sealed class PresenceService
   private static string AppendAlbum(string artist, string album)
       => string.IsNullOrWhiteSpace(album) ? artist : $"{artist} · {album}";
 
+  // Erst Discords Antwort entscheidet über den Status, nicht das Schreiben
+  // des Befehls.
+  private void RecordResult(DiscordCommandResult result)
+  {
+    switch (result.Outcome)
+    {
+      case DiscordCommandOutcome.Accepted:
+        MarkDiscordOk();
+        return;
+
+      case DiscordCommandOutcome.Rejected:
+        MarkDiscordProblem(DiscordCommandOutcome.Rejected, DescribeRejection(result));
+        return;
+
+      default:
+        MarkDiscordProblem(DiscordCommandOutcome.NoReply, "Discord did not answer.");
+        return;
+    }
+  }
+
+  private static string DescribeRejection(DiscordCommandResult result)
+  {
+    var message = string.IsNullOrWhiteSpace(result.ErrorMessage) ? "no reason given" : result.ErrorMessage;
+    return result.ErrorCode is int code ? $"{message} (code {code})" : message;
+  }
+
   private void MarkDiscordOk()
   {
     lock (_statusSync)
@@ -525,6 +561,17 @@ public sealed class PresenceService
       _discordOk = true;
       _lastDiscordError = null;
       _lastDiscordOkUtc = DateTimeOffset.UtcNow;
+      _lastDiscordOutcome = DiscordCommandOutcome.Accepted;
+    }
+  }
+
+  private void MarkDiscordProblem(DiscordCommandOutcome outcome, string message)
+  {
+    lock (_statusSync)
+    {
+      _discordOk = false;
+      _lastDiscordError = message;
+      _lastDiscordOutcome = outcome;
     }
   }
 
@@ -534,6 +581,7 @@ public sealed class PresenceService
     {
       _discordOk = false;
       _lastDiscordError = ex.Message;
+      _lastDiscordOutcome = null;
     }
   }
 }
