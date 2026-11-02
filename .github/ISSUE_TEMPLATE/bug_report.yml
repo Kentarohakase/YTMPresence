@@ -1,0 +1,107 @@
+name: Bug report
+description: Something in the companion app or the browser extension does not work as expected.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please check the [troubleshooting section](https://github.com/Kentarohakase/YTMPresence#troubleshooting) of the README first.
+
+        **Never paste your security token.** Neither the form nor the diagnostics report needs it.
+
+  - type: input
+    id: companion-version
+    attributes:
+      label: Companion version
+      description: Shown in the diagnostics window under "Version" and in the getting-started window.
+      placeholder: "1.5.0"
+    validations:
+      required: true
+
+  - type: input
+    id: extension-version
+    attributes:
+      label: Extension version and installation type
+      description: Shown in the extension popup and on the options page.
+      placeholder: "1.5.0, Chrome Web Store"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      options:
+        - Chrome
+        - Edge
+        - Firefox
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: browser-version
+    attributes:
+      label: Browser version
+      placeholder: "Chrome 131"
+
+  - type: input
+    id: windows-version
+    attributes:
+      label: Windows version
+      placeholder: "Windows 11 24H2"
+
+  - type: dropdown
+    id: discord-running
+    attributes:
+      label: Was the Discord desktop app running?
+      options:
+        - "Yes"
+        - "No"
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Include the exact wording of any error message.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Start the companion
+        2. Open YouTube Music in Chrome and play a track
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics (optional)
+      description: |
+        Paste relevant lines from the log, or attach the report from the diagnostics window ("Create report", in German "Bericht erstellen").
+        The report never contains the security token, but it does contain your computer name, file paths with your Windows user name and the titles of recently played tracks. Look through it before attaching it.
+
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Before submitting
+      options:
+        - label: I checked the troubleshooting section of the README.
+          required: true
+        - label: This report contains no security token.
+          required: true
