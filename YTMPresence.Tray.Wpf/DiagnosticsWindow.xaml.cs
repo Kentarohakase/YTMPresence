@@ -69,7 +69,8 @@ public partial class DiagnosticsWindow : Window
 
     ServerText.Text = status.IsRunning ? UiText.DiagServerRunning : UiText.DiagServerStopped;
     ExtensionText.Text = status.ConnectedClients > 0
-        ? UiText.DiagExtensionConnected(status.ConnectedClients, AgeText(status.LastMessageUtc))
+        ? UiText.DiagExtensionConnected(status.ConnectedClients, AgeText(status.LastMessageUtc)) +
+          (status.SelectedSource is { } source ? UiText.DiagSelectedSource(source) : "")
         : UiText.DiagExtensionDisconnected(AgeText(status.LastMessageUtc));
 
     DiscordText.Text = status switch
@@ -111,6 +112,7 @@ public partial class DiagnosticsWindow : Window
 
     sb.AppendLine($"Server: {(status.IsRunning ? "running" : "stopped")}");
     sb.AppendLine($"Extension clients: {status.ConnectedClients}");
+    sb.AppendLine($"Selected source: {status.SelectedSource ?? "none"}");
     sb.AppendLine($"Last message: {status.LastMessageUtc?.ToString("O") ?? "never"}");
     sb.AppendLine($"Discord OK: {status.DiscordOk}");
     sb.AppendLine($"Discord error: {status.LastDiscordError ?? ""}");
