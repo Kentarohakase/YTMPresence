@@ -64,6 +64,7 @@ This checklist is meant for every release tag, before the release is shared wide
 
 - Install on a fresh Windows profile or in a VM.
 - Use a machine without any .NET runtime or SDK (`dotnet --list-runtimes` is not found or lists nothing). The self-contained setup starts the app there without further downloads.
+- `.\scripts\test-clean-install.ps1 -SetupPath <new setup> -PreviousSetupPath <previous setup>` runs install, start, update with kept settings and token, and uninstall in Windows Sandbox, which has no .NET and no network. It needs the Windows feature "Windows Sandbox". The checks below stay manual.
 - The getting-started window appears on first start.
 - The guide shows its companion version and four steps: install extension, copy token, save and check, open YouTube Music. The Chrome/Edge store link, Firefox instructions and separate developer section are reachable.
 - Token and custom companion URL can be copied. “Later” closes without completing setup; “Done” can complete it manually. Copy/save/open-link failures give localized next steps.
