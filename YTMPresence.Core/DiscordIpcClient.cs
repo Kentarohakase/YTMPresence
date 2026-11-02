@@ -10,7 +10,7 @@ namespace YTMPresence.Core;
 public sealed class DiscordIpcClient : IDiscordPresenceClient, IAsyncDisposable
 {
   private const int MaxFrameBytes = 10_000_000;
-  internal const string UnavailableMessage = "Discord IPC nicht erreichbar. Läuft Discord Desktop?";
+  internal const string UnavailableMessage = "Discord IPC is not reachable. Is the Discord desktop app running?";
 
   // Wenn Discord nicht läuft, würde jeder eingehende State sonst erneut alle
   // Pipes durchprobieren (bis zu ~5s). Mit einer kurzen Sperre bleibt der
@@ -117,14 +117,14 @@ public sealed class DiscordIpcClient : IDiscordPresenceClient, IAsyncDisposable
 
   private async Task SendJsonFrameAsync(int opcode, object payload, CancellationToken ct)
   {
-    if (_stream is null) throw new InvalidOperationException("Discord IPC nicht verbunden.");
+    if (_stream is null) throw new InvalidOperationException("Discord IPC is not connected.");
 
     await SendRawJsonFrameAsync(opcode, JsonSerializer.Serialize(payload, JsonOptions), ct);
   }
 
   private async Task SendRawJsonFrameAsync(int opcode, string json, CancellationToken ct)
   {
-    if (_stream is null) throw new InvalidOperationException("Discord IPC nicht verbunden.");
+    if (_stream is null) throw new InvalidOperationException("Discord IPC is not connected.");
 
     var data = Encoding.UTF8.GetBytes(json);
 
