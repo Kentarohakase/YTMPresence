@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
 
 using System.Collections.Concurrent;
+using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Security.Cryptography;
 using System.Text;
@@ -92,8 +93,12 @@ public sealed class CompanionServer : IAsyncDisposable
     var discordStatus = _presence.GetStatusSnapshot();
 
     string? selectedSource;
+    string? selectedExtensionVersion;
     lock (_sourceSync)
+    {
       selectedSource = _sources.SelectedLabel;
+      selectedExtensionVersion = _sources.SelectedExtensionVersion;
+    }
 
     lock (_statusSync)
     {
@@ -115,7 +120,9 @@ public sealed class CompanionServer : IAsyncDisposable
           LastDiscordError: discordStatus.LastDiscordError,
           LastDiscordOkUtc: discordStatus.LastDiscordOkUtc,
           LastDiscordOutcome: discordStatus.LastDiscordOutcome,
-          SelectedSource: selectedSource
+          SelectedSource: selectedSource,
+          DiscordNotRunning: discordStatus.DiscordNotRunning,
+          SelectedExtensionVersion: selectedExtensionVersion
       );
     }
   }
@@ -177,6 +184,7 @@ public sealed class CompanionServer : IAsyncDisposable
       var sourceLabel = SourceSelector.DescribeSource(ctx.Request.Headers.UserAgent.ToString(), socketId);
 
       var countedClient = false;
+      string? extensionVersion = null;
 
       // Eigene Frist bis zum ersten gültigen Token. Nach der Authentifizierung
       // wird sie abgeschaltet und wieder gegen RequestAborted gelaufen.
@@ -207,14 +215,17 @@ public sealed class CompanionServer : IAsyncDisposable
           if (json is null)
             break;
 
-          var testOutcome = await TryHandleTestMessageAsync(ws, json, ctx.RequestAborted);
+          var (testOutcome, reportedVersion) = await TryHandleTestMessageAsync(ws, json, ctx.RequestAborted);
           if (testOutcome != TestMessageOutcome.NotATestMessage)
           {
             // Ein gültiges Token im Verbindungstest zählt als Nachweis: Die
             // Extension haelt die Verbindung bei pausierter Wiedergabe genau
             // darueber offen.
             if (testOutcome == TestMessageOutcome.ValidToken)
+            {
               MarkAuthenticated();
+              extensionVersion = reportedVersion ?? extensionVersion;
+            }
 
             continue;
           }
@@ -268,7 +279,7 @@ public sealed class CompanionServer : IAsyncDisposable
           lock (_sourceSync)
           {
             previousId = _sources.SelectedId;
-            current = _sources.Update(socketId, sourceLabel, state, DateTimeOffset.UtcNow);
+            current = _sources.Update(socketId, sourceLabel, state, DateTimeOffset.UtcNow, extensionVersion);
             selectedId = _sources.SelectedId;
           }
 
@@ -545,7 +556,10 @@ public sealed class CompanionServer : IAsyncDisposable
     InvalidToken
   }
 
-  private async Task<TestMessageOutcome> TryHandleTestMessageAsync(WebSocket ws, string json, CancellationToken ct)
+  private async Task<(TestMessageOutcome Outcome, string? ExtensionVersion)> TryHandleTestMessageAsync(
+    WebSocket ws,
+    string json,
+    CancellationToken ct)
   {
     try
     {
@@ -555,11 +569,17 @@ public sealed class CompanionServer : IAsyncDisposable
       if (!root.TryGetProperty("type", out var typeElement) ||
           !string.Equals(typeElement.GetString(), "YTM_TEST", StringComparison.Ordinal))
       {
-        return TestMessageOutcome.NotATestMessage;
+        return (TestMessageOutcome.NotATestMessage, null);
       }
 
       var token = root.TryGetProperty("token", out var tokenElement)
           ? tokenElement.GetString()
+          : null;
+
+      // Optional: Ältere Extensions schicken keine Version.
+      var extensionVersion = root.TryGetProperty("extensionVersion", out var versionElement) &&
+          versionElement.ValueKind == JsonValueKind.String
+          ? NormalizeExtensionVersion(versionElement.GetString())
           : null;
 
       var ok = TokensMatch(token, _settings.SecurityToken);
@@ -585,12 +605,50 @@ public sealed class CompanionServer : IAsyncDisposable
       });
 
       await SendTextAsync(ws, response, ct);
-      return ok ? TestMessageOutcome.ValidToken : TestMessageOutcome.InvalidToken;
+      return ok
+          ? (TestMessageOutcome.ValidToken, extensionVersion)
+          : (TestMessageOutcome.InvalidToken, null);
     }
     catch (Exception ex) when (ex is JsonException or InvalidOperationException)
     {
-      return TestMessageOutcome.NotATestMessage;
+      return (TestMessageOutcome.NotATestMessage, null);
     }
+  }
+
+  /// <summary>
+  /// Nimmt nur eine Versionsnummer wie "1.5.1" an. Der Wert landet in
+  /// Diagnose und Bericht und soll dort nichts anderes transportieren.
+  /// </summary>
+  internal static string? NormalizeExtensionVersion(string? value)
+  {
+    if (string.IsNullOrEmpty(value) || value.Length > 32)
+      return null;
+
+    foreach (var c in value)
+    {
+      if (!char.IsAsciiDigit(c) && c != '.')
+        return null;
+    }
+
+    return value;
+  }
+
+  /// <summary>
+  /// Erkennt, dass der Start am belegten Port gescheitert ist. Kestrel meldet
+  /// das als IOException mit einer AddressInUseException darunter.
+  /// </summary>
+  public static bool IsAddressInUse(Exception ex)
+  {
+    for (Exception? current = ex; current is not null; current = current.InnerException)
+    {
+      if (current is AddressInUseException ||
+          current is SocketException { SocketErrorCode: SocketError.AddressAlreadyInUse })
+      {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /// <summary>

@@ -58,7 +58,7 @@ export function track(title, isPlaying = true, overrides = {}) {
     return { source: "ytmusic", title, artist: "Artist", isPlaying, ...overrides };
 }
 
-export async function background({ token = "test-token", storageReady, initialTabs = [], readState, saveError, socketError } = {}) {
+export async function background({ token = "test-token", storageReady, initialTabs = [], readState, saveError, socketError, manifest = () => ({ version: "1.5.1" }) } = {}) {
     const time = clock();
     const sockets = [];
     const deliveries = [];
@@ -84,7 +84,7 @@ export async function background({ token = "test-token", storageReady, initialTa
             } },
             onChanged: storageChanged
         },
-        runtime: { onMessage: event() },
+        runtime: { onMessage: event(), getManifest: () => manifest() },
         tabs: {
             onRemoved: event(), onUpdated: event(), onReplaced: event(),
             query: async () => [...tabs.keys()].map((id) => ({ id })),

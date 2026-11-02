@@ -78,7 +78,7 @@ public sealed class DiscordIpcClient : IDiscordPresenceClient, IAsyncDisposable
 
       // Während der Cooldown-Phase nicht erneut alle Pipes durchprobieren.
       if (DateTimeOffset.UtcNow < _nextConnectAttemptUtc)
-        throw new InvalidOperationException(UnavailableMessage);
+        throw new DiscordUnavailableException(UnavailableMessage);
 
       try
       {
@@ -398,7 +398,7 @@ public sealed class DiscordIpcClient : IDiscordPresenceClient, IAsyncDisposable
       catch { }
     }
 
-    throw new InvalidOperationException(UnavailableMessage);
+    throw new DiscordUnavailableException(UnavailableMessage);
   }
 
   private static string ResolveUnixIpcPath(int index)
@@ -468,3 +468,9 @@ public sealed class DiscordIpcClient : IDiscordPresenceClient, IAsyncDisposable
     _sendLock.Dispose();
   }
 }
+
+/// <summary>
+/// Discord läuft nicht oder ist über keine Pipe erreichbar. Eigener Typ, damit
+/// die Oberfläche das von anderen Verbindungsfehlern unterscheiden kann.
+/// </summary>
+public sealed class DiscordUnavailableException(string message) : InvalidOperationException(message);

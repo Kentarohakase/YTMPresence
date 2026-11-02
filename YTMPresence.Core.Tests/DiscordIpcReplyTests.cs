@@ -79,6 +79,27 @@ public class DiscordIpcReplyTests
   }
 
   [Fact]
+  public async Task UnreachableDiscord_IsReportedAsUnavailable_AlsoDuringTheCooldown()
+  {
+    // Die Oberflaeche zeigt dann "Discord laeuft nicht". Waehrend der
+    // Wartezeit danach wird nicht erneut verbunden, der Grund bleibt derselbe.
+    var attempts = 0;
+    await using var client = new DiscordIpcClient(
+        "123",
+        _ =>
+        {
+          attempts++;
+          throw new DiscordUnavailableException("not running");
+        },
+        TimeSpan.FromSeconds(1),
+        TimeSpan.FromSeconds(1));
+
+    await Assert.ThrowsAsync<DiscordUnavailableException>(() => client.EnsureConnectedAsync(CancellationToken.None));
+    await Assert.ThrowsAsync<DiscordUnavailableException>(() => client.EnsureConnectedAsync(CancellationToken.None));
+    Assert.Equal(1, attempts);
+  }
+
+  [Fact]
   public async Task CloseFrame_ReportsDiscordsReason()
   {
     // Gegen das echte Discord gemessen: Auf die Client-ID "0" antwortet es mit

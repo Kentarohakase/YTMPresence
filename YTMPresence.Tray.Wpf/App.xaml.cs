@@ -46,6 +46,10 @@ public partial class App : System.Windows.Application
   private readonly string _settingsPath = SettingsStore.GetDefaultSettingsPath();
   private AppSettings _settings = new();
   private CompanionServer? _server;
+
+  // Der letzte Start scheiterte am belegten Port. Sonst stünde im Menü nur
+  // "Server gestoppt", und der Grund wäre allein im Log zu finden.
+  private bool _serverPortInUse;
   private readonly SemaphoreSlim _serverLifecycleGate = new(1, 1);
   private bool _isExiting;
 
@@ -418,16 +422,27 @@ public partial class App : System.Windows.Application
     }
   }
 
-  private static async Task StartServerSafeAsync(CompanionServer server)
+  private async Task StartServerSafeAsync(CompanionServer server)
   {
     try
     {
       await server.StartAsync();
+      _serverPortInUse = false;
       Logger.Info("Server started successfully.");
     }
     catch (Exception ex)
     {
       Logger.Error(ex, "Error while starting server.");
+
+      _serverPortInUse = CompanionServer.IsAddressInUse(ex);
+      if (_serverPortInUse)
+      {
+        _trayIcon?.ShowBalloonTip(
+            10000,
+            UiText.ErrorTitle,
+            UiText.PortInUseMessage(_settings.ListenPort),
+            ToolTipIcon.Warning);
+      }
     }
   }
 
@@ -440,7 +455,9 @@ public partial class App : System.Windows.Application
 
     _serverStatusItem!.Text = status.IsRunning
         ? UiText.ServerRunning(_settings.ListenHost, _settings.ListenPort, _settings.WebSocketPath)
-        : UiText.ServerStopped;
+        : _serverPortInUse
+            ? UiText.ServerPortInUse(_settings.ListenPort)
+            : UiText.ServerStopped;
 
     var clientCount = status.ConnectedClients;
     var lastMsgAge = status.LastMessageUtc is null
@@ -458,6 +475,10 @@ public partial class App : System.Windows.Application
           : " · " + AgeText(DateTimeOffset.UtcNow - status.LastDiscordOkUtc.Value);
 
       _discordStatusItem!.Text = UiText.DiscordOk(okAge);
+    }
+    else if (status.DiscordNotRunning)
+    {
+      _discordStatusItem!.Text = UiText.DiscordNotRunning;
     }
     else if (status.LastDiscordOutcome == DiscordCommandOutcome.NoReply)
     {

@@ -467,12 +467,22 @@ function beginTest(socket, showProgress = true) {
     return promise;
 }
 
+function getExtensionVersion() {
+    // Optional for the companion's diagnostics; reading it must never block the connection.
+    try {
+        return chrome.runtime.getManifest().version || undefined;
+    } catch {
+        return undefined;
+    }
+}
+
 function sendTest(socket, showProgress = true) {
     if (webSocket !== socket) return;
     if (showProgress) setConnectionState("authenticating", t("connAuthenticating"));
     try {
         // This existing protocol message never updates playback/pause/idle timestamps.
-        socket.send(JSON.stringify({ type: "YTM_TEST", token: cachedToken, ts: Date.now() }));
+        // Older companions ignore extensionVersion.
+        socket.send(JSON.stringify({ type: "YTM_TEST", token: cachedToken, extensionVersion: getExtensionVersion(), ts: Date.now() }));
     } catch {
         disconnect(socket, "disconnected", t("testUnreachable"));
     }

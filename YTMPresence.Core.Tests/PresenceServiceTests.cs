@@ -381,10 +381,69 @@ public class PresenceServiceTests
     Assert.Equal("not reachable", status.LastDiscordError);
   }
 
-  private sealed class ThrowingDiscordClient : IDiscordPresenceClient
+  [Fact]
+  public async Task DiscordNotRunning_IsReportedAsSuch()
   {
+    // Die Oberflaeche zeigt dann einen klaren Hinweis statt der englischen
+    // Fehlermeldung des IPC-Clients.
+    var discord = new ThrowingDiscordClient(new DiscordUnavailableException("Discord IPC is not reachable."));
+    var service = new PresenceService(discord, new AppSettings());
+
+    await service.HandleAsync(Playing(), CancellationToken.None);
+
+    var status = service.GetStatusSnapshot();
+    Assert.False(status.DiscordOk);
+    Assert.True(status.DiscordNotRunning);
+  }
+
+  [Fact]
+  public async Task OtherConnectionErrors_AreNotReportedAsDiscordNotRunning()
+  {
+    var discord = new ThrowingDiscordClient();
+    var service = new PresenceService(discord, new AppSettings());
+
+    await service.HandleAsync(Playing(), CancellationToken.None);
+
+    Assert.False(service.GetStatusSnapshot().DiscordNotRunning);
+  }
+
+  [Fact]
+  public async Task DiscordNotRunning_IsClearedOnceDiscordAnswers()
+  {
+    var discord = new SwitchableDiscordClient();
+    var service = new PresenceService(discord, new AppSettings());
+
+    await service.HandleAsync(Playing(title: "First"), CancellationToken.None);
+    Assert.True(service.GetStatusSnapshot().DiscordNotRunning);
+
+    discord.Running = true;
+    await service.HandleAsync(Playing(title: "Second"), CancellationToken.None);
+
+    var status = service.GetStatusSnapshot();
+    Assert.True(status.DiscordOk);
+    Assert.False(status.DiscordNotRunning);
+  }
+
+  private sealed class SwitchableDiscordClient : IDiscordPresenceClient
+  {
+    public bool Running;
+
     public Task EnsureConnectedAsync(CancellationToken ct)
-      => throw new InvalidOperationException("not reachable");
+      => Running ? Task.CompletedTask : throw new DiscordUnavailableException("not running");
+
+    public Task<DiscordCommandResult> SetActivityAsync(DiscordActivity activity, CancellationToken ct)
+      => Task.FromResult(DiscordCommandResult.Accepted);
+
+    public Task<DiscordCommandResult> ClearActivityAsync(CancellationToken ct)
+      => Task.FromResult(DiscordCommandResult.Accepted);
+  }
+
+  private sealed class ThrowingDiscordClient(Exception? error = null) : IDiscordPresenceClient
+  {
+    private readonly Exception _error = error ?? new InvalidOperationException("not reachable");
+
+    public Task EnsureConnectedAsync(CancellationToken ct)
+      => throw _error;
 
     public Task<DiscordCommandResult> SetActivityAsync(DiscordActivity activity, CancellationToken ct)
       => throw new InvalidOperationException("not reachable");
