@@ -76,7 +76,7 @@ Goal: what the mini player and diagnostics show matches what actually happens in
 ## 1.7.0: support and polish
 
 - [ ] Test and document compatibility across versions (an older store extension with a newer companion and the reverse), since the store and GitHub update separately.
-- [ ] Add a bug-report issue template asking for both versions, the browser, reproduction steps and an optional redacted diagnostics export.
+- [x] Add a bug-report issue template asking for both versions, the browser, reproduction steps and an optional redacted diagnostics export.
 - [ ] Review keyboard navigation, focus order and high-DPI scaling in settings and the mini player; onboarding already passed its keyboard check.
 - [ ] Keep a short live QA matrix per release (Chrome, Edge, Firefox × track change, pause/clear, ads, source switch, restarts), recorded with versions under `docs/`.
 

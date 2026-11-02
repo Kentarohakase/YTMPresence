@@ -227,3 +227,7 @@ The companion uses port `17373` by default. If that port is taken, it can be cha
 ### Corrupt settings
 
 If `settings.json` cannot be read as a valid configuration, YTMPresence preserves the file in the same folder as `settings.corrupt-<timestamp>.json` and starts with safe defaults and a new token. The new token then has to be saved in the extension again.
+
+### Reporting a bug
+
+If none of this helps, [open a bug report](https://github.com/Kentarohakase/YTMPresence/issues/new?template=bug_report.yml). It asks for both versions, the browser and the steps that lead to the problem. Never include the security token.
