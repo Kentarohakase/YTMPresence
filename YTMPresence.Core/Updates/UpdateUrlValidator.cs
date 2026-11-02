@@ -53,10 +53,10 @@ public sealed class UpdateUrlValidator
   public Uri Validate(string? url, string context)
   {
     if (string.IsNullOrWhiteSpace(url))
-      throw new UpdateSecurityException($"{context}: URL ist leer.");
+      throw new UpdateSecurityException($"{context}: the URL is empty.");
 
     if (!Uri.TryCreate(url.Trim(), UriKind.Absolute, out var uri))
-      throw new UpdateSecurityException($"{context}: URL ist keine gültige absolute Adresse.");
+      throw new UpdateSecurityException($"{context}: the URL is not a valid absolute address.");
 
     return Validate(uri, context);
   }
@@ -64,46 +64,46 @@ public sealed class UpdateUrlValidator
   public Uri Validate(Uri uri, string context)
   {
     if (!uri.IsAbsoluteUri)
-      throw new UpdateSecurityException($"{context}: URL ist nicht absolut.");
+      throw new UpdateSecurityException($"{context}: the URL is not absolute.");
 
     // file:, ftp:, UNC (\\server\share wird von Uri als file: geparst) usw.
     var isHttps = string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase);
     var isHttp = string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase);
     if (!isHttps && !isHttp)
-      throw new UpdateSecurityException($"{context}: Schema '{uri.Scheme}' ist nicht erlaubt (nur HTTPS).");
+      throw new UpdateSecurityException($"{context}: the scheme '{uri.Scheme}' is not allowed (HTTPS only).");
 
     if (!string.IsNullOrEmpty(uri.UserInfo))
-      throw new UpdateSecurityException($"{context}: URLs mit Benutzerdaten sind nicht erlaubt.");
+      throw new UpdateSecurityException($"{context}: URLs with user information are not allowed.");
 
     if (uri.IsUnc || string.IsNullOrEmpty(uri.Host))
-      throw new UpdateSecurityException($"{context}: URL enthält keinen gültigen Host.");
+      throw new UpdateSecurityException($"{context}: the URL has no valid host.");
 
     if (IsLoopbackHost(uri.Host))
     {
       // Loopback ist ausschließlich im expliziten Testmodus zulässig,
       // dort mit beliebigem Port und auch als HTTP.
       if (!AllowLoopbackHttp)
-        throw new UpdateSecurityException($"{context}: Loopback-Adressen sind für Updates nicht erlaubt.");
+        throw new UpdateSecurityException($"{context}: loopback addresses are not allowed for updates.");
 
       return uri;
     }
 
     if (!isHttps)
-      throw new UpdateSecurityException($"{context}: Nur HTTPS ist als Updatequelle erlaubt.");
+      throw new UpdateSecurityException($"{context}: only HTTPS is allowed as an update source.");
 
     if (IPAddress.TryParse(TrimIpv6Brackets(uri.Host), out var address))
     {
       // Direkte IP-Ziele (inkl. privater und link-local Bereiche) sind nie erlaubt;
       // die Allowlist besteht ausschließlich aus DNS-Namen.
       var kind = DescribeAddress(address);
-      throw new UpdateSecurityException($"{context}: Direkte IP-Adressen sind nicht erlaubt ({kind}).");
+      throw new UpdateSecurityException($"{context}: direct IP addresses are not allowed ({kind}).");
     }
 
     if (!uri.IsDefaultPort)
-      throw new UpdateSecurityException($"{context}: Port {uri.Port} ist nicht erlaubt (nur 443).");
+      throw new UpdateSecurityException($"{context}: port {uri.Port} is not allowed (443 only).");
 
     if (!IsAllowedHost(uri.Host))
-      throw new UpdateSecurityException($"{context}: Host '{uri.Host}' ist nicht als Updatequelle erlaubt.");
+      throw new UpdateSecurityException($"{context}: host '{uri.Host}' is not an allowed update source.");
 
     return uri;
   }
@@ -147,9 +147,9 @@ public sealed class UpdateUrlValidator
   private static string DescribeAddress(IPAddress address)
   {
     if (IPAddress.IsLoopback(address)) return "Loopback";
-    if (IsPrivate(address)) return "privater Bereich";
+    if (IsPrivate(address)) return "private range";
     if (IsLinkLocal(address)) return "link-local";
-    return "öffentliche IP";
+    return "public IP";
   }
 
   private static bool IsPrivate(IPAddress address)

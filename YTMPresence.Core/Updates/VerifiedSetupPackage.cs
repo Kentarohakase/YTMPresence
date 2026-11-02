@@ -59,17 +59,17 @@ public sealed class VerifiedSetupPackage : IDisposable
   public async Task<SetupLaunchLock> AcquireLaunchLockAsync(CancellationToken ct = default)
   {
     if (!ChecksumFileParser.IsValidSha256Hex(Sha256))
-      throw new UpdateSecurityException("Setup-Start blockiert: Es liegt kein gültiger verifizierter SHA256-Hash vor.");
+      throw new UpdateSecurityException("Setup start blocked: there is no valid verified SHA256 hash.");
 
     if (Length <= 0 || _maxAllowedBytes <= 0 || Length > _maxAllowedBytes)
-      throw new UpdateSecurityException("Setup-Start blockiert: Die verifizierte Dateigröße liegt außerhalb des erlaubten Limits.");
+      throw new UpdateSecurityException("Setup start blocked: the verified file size is outside the allowed limit.");
 
     if (!string.Equals(Path.GetFileName(FilePath), FileName, StringComparison.Ordinal))
-      throw new UpdateSecurityException("Setup-Start blockiert: Der Dateiname entspricht nicht dem verifizierten Setup.");
+      throw new UpdateSecurityException("Setup start blocked: the file name does not match the verified setup.");
 
     var expectedPath = Path.GetFullPath(Path.Combine(_workspace.Directory, FileName));
     if (!string.Equals(FilePath, expectedPath, StringComparison.OrdinalIgnoreCase))
-      throw new UpdateSecurityException("Setup-Start blockiert: Die Datei liegt nicht im verifizierten Update-Arbeitsverzeichnis.");
+      throw new UpdateSecurityException("Setup start blocked: the file is not in the verified update directory.");
 
     FileStream stream;
     try
@@ -78,23 +78,23 @@ public sealed class VerifiedSetupPackage : IDisposable
     }
     catch (FileNotFoundException ex)
     {
-      throw new UpdateSecurityException("Setup-Start blockiert: Die verifizierte Setup-Datei existiert nicht mehr.", ex);
+      throw new UpdateSecurityException("Setup start blocked: the verified setup file no longer exists.", ex);
     }
     catch (DirectoryNotFoundException ex)
     {
-      throw new UpdateSecurityException("Setup-Start blockiert: Die verifizierte Setup-Datei existiert nicht mehr.", ex);
+      throw new UpdateSecurityException("Setup start blocked: the verified setup file no longer exists.", ex);
     }
 
     try
     {
       if (stream.Length != Length)
-        throw new UpdateSecurityException("Setup-Start blockiert: Die Dateigröße hat sich seit der Verifikation geändert.");
+        throw new UpdateSecurityException("Setup start blocked: the file size changed after verification.");
 
       var hashBytes = await SHA256.HashDataAsync(stream, ct).ConfigureAwait(false);
       var actual = Convert.ToHexString(hashBytes).ToLowerInvariant();
 
       if (!string.Equals(actual, Sha256, StringComparison.Ordinal))
-        throw new UpdateSecurityException("Setup-Start blockiert: Die Datei wurde nach der Verifikation verändert (SHA256 weicht ab).");
+        throw new UpdateSecurityException("Setup start blocked: the file was modified after verification (SHA256 differs).");
 
       return new SetupLaunchLock(stream);
     }
@@ -153,11 +153,11 @@ public static class UpdateInstaller
     }
     catch (Exception ex)
     {
-      throw new UpdateDownloadException($"Setup konnte nicht gestartet werden: {ex.Message}", ex);
+      throw new UpdateDownloadException($"The setup could not be started: {ex.Message}", ex);
     }
 
     if (!started)
-      throw new UpdateDownloadException("Setup wurde nicht gestartet (kein Prozess erzeugt).");
+      throw new UpdateDownloadException("The setup was not started (no process was created).");
 
     return true;
   }

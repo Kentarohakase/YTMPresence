@@ -43,7 +43,7 @@ public class ChecksumFileParserTests
   {
     var content = $"{HashA}  YTMPresence-extension.zip";
     var ex = Assert.Throws<UpdateSecurityException>(() => ChecksumFileParser.GetRequiredSha256(content, SetupName));
-    Assert.Contains("keine Zeile", ex.Message);
+    Assert.Contains("has no line", ex.Message);
   }
 
   [Fact]
@@ -68,7 +68,7 @@ public class ChecksumFileParserTests
   {
     var content = $"{HashA}  {SetupName}\n{HashA.ToUpperInvariant()}  {SetupName}";
     var ex = Assert.Throws<UpdateSecurityException>(() => ChecksumFileParser.GetRequiredSha256(content, SetupName));
-    Assert.Contains("mehrere", ex.Message);
+    Assert.Contains("several lines", ex.Message);
   }
 
   [Fact]
@@ -76,7 +76,7 @@ public class ChecksumFileParserTests
   {
     var content = $"{HashA}  {SetupName}\n{HashB}  {SetupName}";
     var ex = Assert.Throws<UpdateSecurityException>(() => ChecksumFileParser.GetRequiredSha256(content, SetupName));
-    Assert.Contains("mehrere", ex.Message);
+    Assert.Contains("several lines", ex.Message);
   }
 
   [Fact]

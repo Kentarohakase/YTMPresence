@@ -17,7 +17,7 @@ public static class ChecksumFileParser
   public static string GetRequiredSha256(string checksumsContent, string fileName)
   {
     if (string.IsNullOrWhiteSpace(fileName))
-      throw new UpdateSecurityException("Prüfsummenvergleich: Der erwartete Dateiname ist leer.");
+      throw new UpdateSecurityException("Checksum comparison: the expected file name is empty.");
 
     var matches = new List<string>();
 
@@ -45,20 +45,20 @@ public static class ChecksumFileParser
 
       if (!IsValidSha256Hex(hashField))
         throw new UpdateSecurityException(
-          $"Prüfsummenvergleich: Die SHA256-Zeile für '{fileName}' enthält keinen gültigen Hash.");
+          $"Checksum comparison: the SHA256 line for '{fileName}' does not contain a valid hash.");
 
       matches.Add(hashField.ToLowerInvariant());
     }
 
     if (matches.Count == 0)
       throw new UpdateSecurityException(
-        $"Prüfsummenvergleich: SHA256SUMS.txt enthält keine Zeile für '{fileName}'. Update wird nicht ausgeführt.");
+        $"Checksum comparison: SHA256SUMS.txt has no line for '{fileName}'. The update is not run.");
 
     // Exactly one line is authoritative. Identical duplicates are rejected as
     // ambiguous, just like conflicting duplicates and the release verifier.
     if (matches.Count > 1)
       throw new UpdateSecurityException(
-        $"Prüfsummenvergleich: SHA256SUMS.txt enthält mehrere Zeilen für '{fileName}'. Update wird nicht ausgeführt.");
+        $"Checksum comparison: SHA256SUMS.txt has several lines for '{fileName}'. The update is not run.");
 
     return matches[0];
   }

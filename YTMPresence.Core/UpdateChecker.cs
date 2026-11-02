@@ -35,11 +35,11 @@ public static class UpdateChecker
     HttpMessageHandler? handler = null)
   {
     if (string.IsNullOrWhiteSpace(settings.UpdateApiUrl))
-      return Error(currentVersion, "Update-URL ist leer.");
+      return Error(currentVersion, "The update URL is empty.");
 
     var urlValidator = UpdateUrlValidator.ForSettings(settings);
-    if (!urlValidator.TryValidate(settings.UpdateApiUrl, "Update-Check", out var apiUri))
-      return Error(currentVersion, "Update-URL ist nicht als Updatequelle erlaubt (nur HTTPS zu GitHub).");
+    if (!urlValidator.TryValidate(settings.UpdateApiUrl, "Update check", out var apiUri))
+      return Error(currentVersion, "The update URL is not an allowed update source (HTTPS to GitHub only).");
 
     try
     {
@@ -58,31 +58,31 @@ public static class UpdateChecker
       using var response = await SendWithValidatedRedirectsAsync(
         http, apiUri!, urlValidator, overallCts.Token);
       if (!response.IsSuccessStatusCode)
-        return Error(currentVersion, $"Update-Check fehlgeschlagen: HTTP {(int)response.StatusCode}.");
+        return Error(currentVersion, $"The server answered with HTTP {(int)response.StatusCode}.");
 
       var maxMetadataBytes = DownloadSizePolicy.Default.MaxMetadataBytes;
       if (response.Content.Headers.ContentLength is > 0 && response.Content.Headers.ContentLength > maxMetadataBytes)
-        return Error(currentVersion, "Update-Check fehlgeschlagen: Release-Antwort ist zu groß.");
+        return Error(currentVersion, "The release response is too large.");
 
       // Begrenztes Einlesen: Das Limit gilt auch ohne Content-Length-Header.
       await using var stream = await response.Content.ReadAsStreamAsync(ct);
       var body = await ReadBoundedAsync(stream, maxMetadataBytes, overallCts.Token);
       if (body is null)
-        return Error(currentVersion, "Update-Check fehlgeschlagen: Release-Antwort ist zu groß.");
+        return Error(currentVersion, "The release response is too large.");
 
       var release = JsonSerializer.Deserialize<GitHubRelease>(body, JsonOptions);
 
       if (release is null || release.Draft || string.IsNullOrWhiteSpace(release.TagName))
-        return Error(currentVersion, "Keine gültige Release-Antwort erhalten.");
+        return Error(currentVersion, "No valid release response received.");
 
       // Vorabversionen sind keine Updateziele. /releases/latest filtert sie
       // bereits, aber UpdateApiUrl ist konfigurierbar - die Regel gehört daher
       // in den Code und nicht nur in die Release-Checkliste.
       if (release.Prerelease)
-        return Error(currentVersion, "Das neueste Release ist als Vorabversion markiert und wird nicht installiert.");
+        return Error(currentVersion, "The latest release is marked as a pre-release and is not installed.");
 
       var latestVersion = NormalizeVersionText(release.TagName);
-      var releaseUrl = release.HtmlUrl is { Length: > 0 } htmlUrl && urlValidator.TryValidate(htmlUrl, "Release-Seite", out _)
+      var releaseUrl = release.HtmlUrl is { Length: > 0 } htmlUrl && urlValidator.TryValidate(htmlUrl, "Release page", out _)
         ? htmlUrl
         : "https://github.com/Kentarohakase/YTMPresence/releases";
 
@@ -113,11 +113,11 @@ public static class UpdateChecker
 
       // Asset-URLs, die die Update-Richtlinie verletzen, machen den ganzen
       // Check sichtbar ungültig, statt still einen Download anzubieten.
-      if (setupDownloadUrl is not null && !urlValidator.TryValidate(setupDownloadUrl, "Setup-Asset", out _))
-        return Error(currentVersion, "Update-Check fehlgeschlagen: Die Setup-Download-URL ist nicht als Updatequelle erlaubt.");
+      if (setupDownloadUrl is not null && !urlValidator.TryValidate(setupDownloadUrl, "Setup asset", out _))
+        return Error(currentVersion, "The setup download URL is not an allowed update source.");
 
-      if (checksumsDownloadUrl is not null && !urlValidator.TryValidate(checksumsDownloadUrl, "Prüfsummen-Asset", out _))
-        return Error(currentVersion, "Update-Check fehlgeschlagen: Die Prüfsummen-URL ist nicht als Updatequelle erlaubt.");
+      if (checksumsDownloadUrl is not null && !urlValidator.TryValidate(checksumsDownloadUrl, "Checksums asset", out _))
+        return Error(currentVersion, "The checksums URL is not an allowed update source.");
 
       var isNewer = IsNewer(latestVersion, currentVersion);
       return new UpdateCheckResult(
@@ -135,11 +135,11 @@ public static class UpdateChecker
     }
     catch (OperationCanceledException)
     {
-      return Error(currentVersion, "Update-Check fehlgeschlagen: Zeitüberschreitung beim Laden der Release-Metadaten.");
+      return Error(currentVersion, "Timed out while loading the release metadata.");
     }
     catch (Exception ex)
     {
-      return Error(currentVersion, $"Update-Check fehlgeschlagen: {ex.Message}");
+      return Error(currentVersion, ex.Message);
     }
   }
 
@@ -160,7 +160,7 @@ public static class UpdateChecker
 
     if (matches.Count > 1)
       throw new UpdateSecurityException(
-        $"Update-Check fehlgeschlagen: Das Release enthält {matches.Count} Assets für {description}. Die Auswahl wäre mehrdeutig.");
+        $"The release contains {matches.Count} assets for {description}. The choice would be ambiguous.");
 
     return matches.Count == 1 ? matches[0] : null;
   }
@@ -201,9 +201,9 @@ public static class UpdateChecker
 
     for (var hop = 0; ; hop++)
     {
-      current = validator.Validate(current, hop == 0 ? "Update-Check" : "Update-Check-Redirect");
+      current = validator.Validate(current, hop == 0 ? "Update check" : "Update check redirect");
       if (!visited.Add(current.AbsoluteUri))
-        throw new UpdateSecurityException("Update-Check fehlgeschlagen: Redirect-Schleife erkannt.");
+        throw new UpdateSecurityException("Redirect loop detected.");
 
       using var request = new HttpRequestMessage(HttpMethod.Get, current);
       HttpResponseMessage response;
@@ -220,10 +220,10 @@ public static class UpdateChecker
       try
       {
         if (hop >= maxRedirects)
-          throw new UpdateSecurityException("Update-Check fehlgeschlagen: Zu viele Redirects.");
+          throw new UpdateSecurityException("Too many redirects.");
 
         var location = response.Headers.Location
-          ?? throw new UpdateSecurityException("Update-Check fehlgeschlagen: Redirect ohne Location-Header.");
+          ?? throw new UpdateSecurityException("Redirect without a Location header.");
 
         current = location.IsAbsoluteUri ? location : new Uri(current, location);
       }

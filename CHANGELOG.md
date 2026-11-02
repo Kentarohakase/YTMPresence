@@ -20,6 +20,7 @@ All notable changes to YTMPresence are documented in this file.
 
 ### Fixed
 
+- Update errors no longer repeat their prefix. The tray showed messages like „Update check failed: Update-Check fehlgeschlagen: HTTP 404.“, because the message from the core carried its own German prefix. The messages of the update check, the download and the setup start are now English, like the log; the text around them still follows the Windows language. The first log line is English as well.
 - A green extension badge now requires a positive token response on the current socket, rather than an open socket alone. Four-second checks and bounded reconnect delays ignore obsolete sockets/configurations, and reconnect replays the current selected track after authentication. Keepalive replies do not replay playback or refresh pause/idle state. Popup and options share actionable states and distinguish companion connectivity from visible Discord presence.
 
 - Autoplay progress uses the current track's player-bar timeline when available. YouTube Music can reuse a cumulative media timeline across tracks, which previously made the mini player and Discord show the previous track's elapsed time as part of the new track. Invalid or hidden player-bar values retain the media-element fallback.

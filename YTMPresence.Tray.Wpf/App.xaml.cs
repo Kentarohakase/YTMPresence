@@ -733,7 +733,7 @@ public partial class App : System.Windows.Application
 
       if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
       {
-        Logger.Warn(result.ErrorMessage);
+        Logger.Warn($"Update check failed: {result.ErrorMessage}");
 
         if (showUpToDate)
         {
