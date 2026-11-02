@@ -265,13 +265,10 @@ public sealed class CompanionServer : IAsyncDisposable
 
           state = normalizedState;
 
+          // Vor der Auswahl eintragen: Sobald diese Verbindung ausgewählt ist,
+          // muss ein Befehl sie erreichen können.
           if (!countedClient)
-          {
-            countedClient = true;
-            Interlocked.Increment(ref _connectedClients);
             _authenticatedSockets[socketId] = ws;
-            Logger.Info($"Extension client {sourceLabel} authenticated. Active clients: {Volatile.Read(ref _connectedClients)}");
-          }
 
           YtmState? current;
           int? previousId;
@@ -283,6 +280,18 @@ public sealed class CompanionServer : IAsyncDisposable
             selectedId = _sources.SelectedId;
           }
 
+          if (current is not null)
+            RecordStatus(current);
+
+          // Erst zählen, wenn der Zustand verbucht ist. Sonst sah ein
+          // Status-Abruf dazwischen einen verbundenen Client ohne Track.
+          if (!countedClient)
+          {
+            countedClient = true;
+            Interlocked.Increment(ref _connectedClients);
+            Logger.Info($"Extension client {sourceLabel} authenticated. Active clients: {Volatile.Read(ref _connectedClients)}");
+          }
+
           // Eine andere Verbindung ist ausgewählt: Dieser Zustand ist vermerkt,
           // ändert aber weder Presence noch Mini-Player.
           if (current is null)
@@ -291,7 +300,7 @@ public sealed class CompanionServer : IAsyncDisposable
           if (previousId is not null && previousId != selectedId)
             Logger.Info($"Selected source switched to {DescribeSelectedSource()}.");
 
-          await ApplyStateAsync(current, ctx.RequestAborted);
+          await _presence.HandleAsync(current, ctx.RequestAborted);
         }
       }
       finally
@@ -339,6 +348,12 @@ public sealed class CompanionServer : IAsyncDisposable
 
   private async Task ApplyStateAsync(YtmState state, CancellationToken ct)
   {
+    RecordStatus(state);
+    await _presence.HandleAsync(state, ct);
+  }
+
+  private void RecordStatus(YtmState state)
+  {
     lock (_statusSync)
     {
       _lastMessageUtc = DateTimeOffset.UtcNow;
@@ -351,8 +366,6 @@ public sealed class CompanionServer : IAsyncDisposable
       _lastPositionSeconds = state.PositionSeconds;
       _lastDurationSeconds = state.DurationSeconds;
     }
-
-    await _presence.HandleAsync(state, ct);
   }
 
   /// <summary>
