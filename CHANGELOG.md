@@ -13,6 +13,9 @@ All notable changes to YTMPresence are documented in this file.
 
 ### Changed
 
+- The setup and the ZIP are self-contained and include .NET. Until now they needed both the .NET 10 Desktop Runtime and the ASP.NET Core Runtime, and neither the setup nor the README said so; without the ASP.NET Core Runtime the companion did not start.
+- The Firefox package requires Firefox 140 or later instead of 126. It declares its data use with `data_collection_permissions`, which older versions do not know.
+- The release workflow verifies the extension archives and lints the Firefox package before publishing, as CI already did. Both workflows run on Node 24.
 - Extension options now use **Save and check**. Saving and connection changes are coordinated in the background, while popup retries use the saved configuration on the same connection. Custom URLs are under Advanced settings. Feedback separates storage errors, saved-but-unreachable and saved-but-rejected results, and explains separate browser-profile/install settings.
 
 ### Fixed

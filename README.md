@@ -15,7 +15,9 @@ It only works together with the companion app for Windows from the [releases](ht
 ### Requirements
 
 - Windows (x64) with the Discord desktop app.
-- The companion does not bring .NET with it. Install both of these from the [.NET 10 download page](https://dotnet.microsoft.com/download/dotnet/10.0) first, each as x64:
+- Chrome or Edge 116 or later, or Firefox 140 or later.
+- From 1.5.0 on, the setup and the ZIP include .NET; nothing else has to be installed.
+- 1.4.0 and older do not bring .NET with them. Install both of these from the [.NET 10 download page](https://dotnet.microsoft.com/download/dotnet/10.0) first, each as x64:
   - **.NET Desktop Runtime 10**
   - **ASP.NET Core Runtime 10**
 
@@ -59,7 +61,7 @@ The interfaces follow the browser/Windows language; German and English are suppo
 
 #### Firefox Desktop
 
-For Firefox Desktop 126 and later, use the Firefox archive from the release:
+For Firefox Desktop 140 and later, use the Firefox archive from the release:
 
 1. Extract `YTMPresence-extension-firefox.zip`.
 2. Open `about:debugging#/runtime/this-firefox`.
@@ -153,7 +155,7 @@ If Inno Setup is not on the `PATH`, the compiler can be specified explicitly:
 
 The default build is framework-dependent, so the .NET 10 Desktop Runtime and the ASP.NET Core Runtime 10 have to be installed on any other machine.
 
-For a larger package that brings the runtime along:
+For a larger package that brings the runtime along, as the release workflow and CI build it:
 
 ```powershell
 .\scripts\package-release.ps1 -SelfContained
@@ -171,7 +173,7 @@ artifacts\release\extension\
 artifacts\release\SHA256SUMS.txt
 ```
 
-`YTMPresence-extension.zip` is the Chromium variant (Chrome/Edge); `YTMPresence-extension-firefox.zip` contains the same package with `browser_specific_settings` for Firefox (version 126 and later).
+`YTMPresence-extension.zip` is the Chromium variant (Chrome/Edge); `YTMPresence-extension-firefox.zip` contains the same package with `browser_specific_settings` for Firefox (version 140 and later).
 
 The setup EXE is built with Inno Setup in release builds and keeps the file name `YTMPresence-<version>-win-x64-setup.exe`, so that the in-app update flow stays compatible.
 
@@ -191,7 +193,7 @@ Verification no longer rewrites anything: `SHA256SUMS.txt` is produced solely in
 
 ### The companion does not start
 
-If Windows reports that a .NET framework is missing, install both runtimes listed under [Requirements](#requirements). A message about `Microsoft.AspNetCore.App` means the ASP.NET Core Runtime is missing.
+If Windows reports that a .NET framework is missing, update to 1.5.0 or later, or install both runtimes listed under [Requirements](#requirements). A message about `Microsoft.AspNetCore.App` means the ASP.NET Core Runtime is missing.
 
 ### Discord shows nothing
 

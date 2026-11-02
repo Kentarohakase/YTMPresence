@@ -9,8 +9,8 @@ param(
 #   - background.scripts statt des von Firefox ignorierten service_worker
 #   - explizite Mozilla-Datenerhebungsdeklaration für die lokale Übertragung
 # Version und alle übrigen Felder bleiben aus dem Basismanifest erhalten.
-# Firefox 126 ist die bestehende Mindestversion für options_page. Neuere
-# Versionen verwenden zusätzlich die eingebaute Consent-Anzeige.
+# Firefox 140 ist die Mindestversion, weil erst sie data_collection_permissions
+# kennt und die eingebaute Consent-Anzeige verwendet.
 
 $ErrorActionPreference = "Stop"
 
@@ -34,7 +34,7 @@ $manifest.background | Add-Member -NotePropertyName "scripts" -NotePropertyValue
 
 $gecko = [PSCustomObject]@{
     id                 = "ytmpresence@kentarohakase"
-    strict_min_version = "126.0"
+    strict_min_version = "140.0"
     data_collection_permissions = [PSCustomObject]@{
         required = @("browsingActivity", "websiteContent")
     }
