@@ -9,7 +9,7 @@ test("socket open is not authentication; playback waits for the current socket's
     assert.equal((await app.status()).connectionState, "connecting");
     socket.open();
     assert.equal((await app.status()).connectionState, "authenticating");
-    assert.deepEqual(socket.sent, [{ type: "YTM_TEST", token: "test-token", ts: 10000 }]);
+    assert.deepEqual(socket.sent, [{ type: "YTM_TEST", token: "test-token", extensionVersion: "1.5.1", ts: 10000 }]);
     socket.receive({ type: "YTM_TEST_RESULT", ok: "true" });
     assert.equal((await app.status()).connectionState, "authenticating");
     socket.receive({ type: "YTM_TEST_RESULT", ok: true });
@@ -169,4 +169,14 @@ test("an unanswered keepalive drops authentication after four seconds", async ()
     app.sockets[0].authenticate();
     await app.time.advance(24000);
     assert.equal((await app.status()).connectionState, "disconnected");
+});
+
+test("an unreadable manifest only omits the extension version from the connection test", async () => {
+    const app = await background({ manifest: () => { throw new Error("unavailable"); } });
+    await app.state(1, track("Selected"));
+    const socket = app.sockets[0];
+    socket.open();
+    assert.deepEqual(socket.sent, [{ type: "YTM_TEST", token: "test-token", ts: 10000 }]);
+    socket.receive({ type: "YTM_TEST_RESULT", ok: true });
+    assert.equal((await app.status()).connectionState, "connected");
 });

@@ -25,21 +25,35 @@ internal sealed class SourceSelector
 
   private readonly Dictionary<int, Entry> _sources = new();
 
-  private sealed record Entry(YtmState State, string Label, DateTimeOffset LastSeenUtc, DateTimeOffset? LastPlayingUtc);
+  private sealed record Entry(
+    YtmState State,
+    string Label,
+    string? ExtensionVersion,
+    DateTimeOffset LastSeenUtc,
+    DateTimeOffset? LastPlayingUtc);
 
   public int? SelectedId { get; private set; }
 
   public string? SelectedLabel
     => SelectedId is int id && _sources.TryGetValue(id, out var entry) ? entry.Label : null;
 
+  /// <summary>Version der ausgewählten Extension, sofern sie eine meldet.</summary>
+  public string? SelectedExtensionVersion
+    => SelectedId is int id && _sources.TryGetValue(id, out var entry) ? entry.ExtensionVersion : null;
+
   /// <summary>
   /// Nimmt den Zustand einer Quelle auf. Liefert den Zustand, der jetzt
   /// gelten soll, oder null, wenn eine andere Quelle ausgewählt bleibt.
   /// </summary>
-  public YtmState? Update(int sourceId, string label, YtmState state, DateTimeOffset now)
+  public YtmState? Update(int sourceId, string label, YtmState state, DateTimeOffset now, string? extensionVersion = null)
   {
     _sources.TryGetValue(sourceId, out var previous);
-    _sources[sourceId] = new Entry(state, label, now, state.IsPlaying ? now : previous?.LastPlayingUtc);
+    _sources[sourceId] = new Entry(
+        state,
+        label,
+        extensionVersion ?? previous?.ExtensionVersion,
+        now,
+        state.IsPlaying ? now : previous?.LastPlayingUtc);
 
     if (SelectedId is not int selectedId || !_sources.TryGetValue(selectedId, out var selected))
     {

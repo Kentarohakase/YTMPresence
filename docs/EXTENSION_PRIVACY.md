@@ -15,6 +15,7 @@ On `https://music.youtube.com/*` the extension reads the visible playback data o
 - playback state, position and duration
 - track or video link
 - whether an advertisement was detected
+- the extension's version number, so that the companion's diagnostics can show it
 
 In addition, the extension stores locally in the browser:
 

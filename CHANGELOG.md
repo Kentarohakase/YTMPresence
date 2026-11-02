@@ -12,6 +12,9 @@ All notable changes to YTMPresence are documented in this file.
 
 - The diagnostics window and the diagnostics report name the selected source, for example "Edge 155 #3".
 - When Discord closes the connection, the diagnostics show Discord's reason, for example "Invalid Client ID (code 4000)", instead of only saying that the connection closed.
+- If the companion cannot start because its port is taken, it says so in a notification and in the tray menu ("Server: port 17373 in use") and explains what to do. Until now the menu only showed "Server: stopped", and the reason was in the log alone.
+- When the Discord desktop app is not running, the tray menu shows "Discord: not running" and the diagnostics explain that the companion connects by itself once Discord starts, instead of an English IPC error message.
+- The extension sends its version number with the connection test, and the diagnostics show it next to the selected source. Older companions ignore it; older extensions simply do not report one.
 
 ## [1.5.1] - 2026-11-02
 

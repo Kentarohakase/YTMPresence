@@ -103,6 +103,19 @@ public static class UiText
       es: "Servidor: detenido"
   );
 
+  public static string ServerPortInUse(int port) => T(
+      de: $"Server: Port {port} belegt",
+      en: $"Server: port {port} in use",
+      es: $"Servidor: puerto {port} en uso"
+  );
+
+  // Windows kürzt Benachrichtigungstexte; deshalb knapp halten.
+  public static string PortInUseMessage(int port) => T(
+      de: $"Port {port} wird schon von einem anderen Programm verwendet. Beende es oder wähle in den Einstellungen einen anderen Port und trage die neue Adresse in der Extension ein.",
+      en: $"Port {port} is already used by another program. Close it, or choose another port in the settings and enter the new address in the extension.",
+      es: $"Otro programa ya usa el puerto {port}. Ciérralo o elige otro puerto en la configuración e introduce la nueva dirección en la extensión."
+  );
+
   public static string ServerRunning(string host, int port, string path) => T(
       de: $"Server: läuft ({host}:{port}{path})",
       en: $"Server: running ({host}:{port}{path})",
@@ -155,6 +168,12 @@ public static class UiText
       de: "Discord: keine Antwort",
       en: "Discord: no reply",
       es: "Discord: sin respuesta"
+  );
+
+  public static string DiscordNotRunning => T(
+      de: "Discord: nicht gestartet",
+      en: "Discord: not running",
+      es: "Discord: no iniciado"
   );
 
   public static string TrackNone => T(
@@ -469,10 +488,11 @@ public static class UiText
       en: $"Connected ({clients}), last data: {age}",
       es: $"Connected ({clients}), last data: {age}");
 
-  public static string DiagSelectedSource(string source) => T(
-      de: $" · Quelle: {source}",
-      en: $" · source: {source}",
-      es: $" · source: {source}");
+  public static string DiagSelectedSource(string source, string? extensionVersion) => extensionVersion is null
+      ? T(de: $" · Quelle: {source}", en: $" · source: {source}", es: $" · source: {source}")
+      : T(de: $" · Quelle: {source}, Extension {extensionVersion}",
+          en: $" · source: {source}, extension {extensionVersion}",
+          es: $" · source: {source}, extension {extensionVersion}");
 
   public static string DiagExtensionDisconnected(string age) => T(
       de: $"Nicht verbunden, letzte Daten: {age}",
@@ -498,6 +518,11 @@ public static class UiText
       de: "Keine Antwort von Discord",
       en: "No reply from Discord",
       es: "No reply from Discord");
+
+  public static string DiagDiscordNotRunning => T(
+      de: "Die Discord-Desktop-App läuft nicht. Nach ihrem Start verbindet sich YTMPresence von selbst.",
+      en: "The Discord desktop app is not running. YTMPresence connects by itself once it starts.",
+      es: "The Discord desktop app is not running. YTMPresence connects by itself once it starts.");
 
   public static string DiagInvalidTokens(int count, string age) => T(
       de: $"{count} ungültige Token, zuletzt: {age}",

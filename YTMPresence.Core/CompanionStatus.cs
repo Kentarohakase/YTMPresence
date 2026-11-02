@@ -18,5 +18,7 @@ public sealed record CompanionStatus(
     string? LastDiscordError,
     DateTimeOffset? LastDiscordOkUtc,
     DiscordCommandOutcome? LastDiscordOutcome = null,
-    string? SelectedSource = null
+    string? SelectedSource = null,
+    bool DiscordNotRunning = false,
+    string? SelectedExtensionVersion = null
 );

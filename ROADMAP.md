@@ -67,8 +67,8 @@ Goal: what the mini player and diagnostics show matches what actually happens in
 
 - [x] Select one source across companion connections, using the same rule as inside a browser: the connection with the playing track keeps ownership, otherwise the one that played most recently. Send commands to that connection only. Each extension connection already carries one selected tab, so the selection works per connection without a protocol change, also for older extensions.
 - [x] Match Discord replies to the request nonce. Record *accepted*, *rejected* (with Discord's code and message) and *no reply* after a timeout, and show the result in diagnostics instead of assuming success. The client also waits for Discord's READY before sending; checked against the real Discord on 2026-11-02 (reply after READY in about 5 ms, none before it). Shipped early as 1.5.1, because the READY fix affects every 1.5.0 user.
-- [ ] Show the selected source (browser, extension version), the last received track and the last Discord result in diagnostics. Exported diagnostics stay free of tokens. Done except the extension version: the selected source is named after the browser in the User-Agent, and Discord's last reply and close reason are shown.
-- [ ] Give actionable companion messages for an occupied port and for Discord not running.
+- [x] Show the selected source (browser, extension version), the last received track and the last Discord result in diagnostics. Exported diagnostics stay free of tokens. The source is named after the browser in the User-Agent; the extension reports its version with the connection test.
+- [x] Give actionable companion messages for an occupied port and for Discord not running.
 - [ ] Live checks: Chrome and Edge at the same time; Discord restart; companion restart without reloading the tab; Windows sleep/resume; background-worker restart and tab discard.
 
 **Done when:** with two browsers, one click affects one source and the displayed track matches it; a rejected activity shows as rejected; every listed recovery scenario restores the presence without reloading YouTube Music.

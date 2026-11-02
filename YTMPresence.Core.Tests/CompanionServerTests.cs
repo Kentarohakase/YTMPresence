@@ -393,13 +393,71 @@ public class CompanionServerTests
       var port = ((IPEndPoint)listener.LocalEndpoint).Port;
       await using var server = new CompanionServer(ServerSettings(port));
 
-      await Assert.ThrowsAnyAsync<Exception>(() => server.StartAsync());
+      var ex = await Assert.ThrowsAnyAsync<Exception>(() => server.StartAsync());
       Assert.False(server.IsRunning);
+
+      // Daran erkennt die App den belegten Port und erklärt ihn, statt nur
+      // "Server gestoppt" anzuzeigen.
+      Assert.True(CompanionServer.IsAddressInUse(ex));
     }
     finally
     {
       listener.Stop();
     }
+  }
+
+  [Theory]
+  [InlineData("1.5.1", "1.5.1")]
+  [InlineData("1.6.0.2", "1.6.0.2")]
+  [InlineData("", null)]
+  [InlineData(null, null)]
+  [InlineData("1.5.1-beta", null)]
+  [InlineData("<script>", null)]
+  [InlineData("123456789012345678901234567890123", null)]
+  public void ExtensionVersion_AcceptsOnlyAVersionNumber(string? value, string? expected)
+  {
+    Assert.Equal(expected, CompanionServer.NormalizeExtensionVersion(value));
+  }
+
+  [Fact]
+  public async Task ReportedExtensionVersion_IsShownForTheSelectedSource()
+  {
+    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+    var port = GetFreePort();
+    await using var server = new CompanionServer(ServerSettings(port));
+    await server.StartAsync();
+
+    using var client = await ConnectAsync(port, cts.Token);
+    await SendAsync(client, JsonSerializer.Serialize(new { type = "YTM_TEST", token = Token, extensionVersion = "1.6.0" }), cts.Token);
+    await ReceiveAsync(client, cts.Token);
+    await SendAsync(client, PlaybackJson("Song A", isPlaying: true), cts.Token);
+
+    await PollUntilAsync(() => server.GetStatusSnapshot().SelectedExtensionVersion is not null, TimeSpan.FromSeconds(5));
+    Assert.Equal("1.6.0", server.GetStatusSnapshot().SelectedExtensionVersion);
+  }
+
+  [Fact]
+  public async Task ExtensionVersion_FromAWrongToken_IsIgnored()
+  {
+    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+    var port = GetFreePort();
+    await using var server = new CompanionServer(ServerSettings(port));
+    await server.StartAsync();
+
+    using var client = await ConnectAsync(port, cts.Token);
+    await SendAsync(client, JsonSerializer.Serialize(new { type = "YTM_TEST", token = "wrong", extensionVersion = "9.9.9" }), cts.Token);
+    await ReceiveAsync(client, cts.Token);
+    await SendAsync(client, PlaybackJson("Song A", isPlaying: true), cts.Token);
+
+    await PollUntilAsync(() => server.GetStatusSnapshot().SelectedSource is not null, TimeSpan.FromSeconds(5));
+    Assert.Null(server.GetStatusSnapshot().SelectedExtensionVersion);
+  }
+
+  [Fact]
+  public void OtherStartErrors_AreNotReportedAsPortInUse()
+  {
+    Assert.False(CompanionServer.IsAddressInUse(new InvalidOperationException("something else")));
+    Assert.False(CompanionServer.IsAddressInUse(new IOException("disk", new UnauthorizedAccessException())));
   }
 
   private static string PlaybackJson(string title, bool isPlaying) => JsonSerializer.Serialize(new YtmState(

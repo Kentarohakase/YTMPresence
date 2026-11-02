@@ -28,6 +28,7 @@ public sealed class PresenceService
   private string? _lastDiscordError;
   private DateTimeOffset? _lastDiscordOkUtc;
   private DiscordCommandOutcome? _lastDiscordOutcome;
+  private bool _discordNotRunning;
 
   public bool DiscordOk
   {
@@ -56,10 +57,16 @@ public sealed class PresenceService
     _settings = settings;
   }
 
-  public (bool DiscordOk, string? LastDiscordError, DateTimeOffset? LastDiscordOkUtc, DiscordCommandOutcome? LastDiscordOutcome) GetStatusSnapshot()
+  /// <summary>Der letzte Fehler war: Discord läuft nicht.</summary>
+  public bool DiscordNotRunning
+  {
+    get { lock (_statusSync) return _discordNotRunning; }
+  }
+
+  public (bool DiscordOk, string? LastDiscordError, DateTimeOffset? LastDiscordOkUtc, DiscordCommandOutcome? LastDiscordOutcome, bool DiscordNotRunning) GetStatusSnapshot()
   {
     lock (_statusSync)
-      return (_discordOk, _lastDiscordError, _lastDiscordOkUtc, _lastDiscordOutcome);
+      return (_discordOk, _lastDiscordError, _lastDiscordOkUtc, _lastDiscordOutcome, _discordNotRunning);
   }
 
   public async Task HandleAsync(YtmState state, CancellationToken ct)
@@ -562,6 +569,7 @@ public sealed class PresenceService
       _lastDiscordError = null;
       _lastDiscordOkUtc = DateTimeOffset.UtcNow;
       _lastDiscordOutcome = DiscordCommandOutcome.Accepted;
+      _discordNotRunning = false;
     }
   }
 
@@ -572,6 +580,7 @@ public sealed class PresenceService
       _discordOk = false;
       _lastDiscordError = message;
       _lastDiscordOutcome = outcome;
+      _discordNotRunning = false;
     }
   }
 
@@ -582,6 +591,7 @@ public sealed class PresenceService
       _discordOk = false;
       _lastDiscordError = ex.Message;
       _lastDiscordOutcome = null;
+      _discordNotRunning = ex is DiscordUnavailableException;
     }
   }
 }
