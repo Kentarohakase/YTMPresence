@@ -12,6 +12,15 @@ It only works together with the companion app for Windows from the [releases](ht
 
 ## Installation
 
+### Requirements
+
+- Windows (x64) with the Discord desktop app.
+- The companion does not bring .NET with it. Install both of these from the [.NET 10 download page](https://dotnet.microsoft.com/download/dotnet/10.0) first, each as x64:
+  - **.NET Desktop Runtime 10**
+  - **ASP.NET Core Runtime 10**
+
+  The Desktop Runtime alone is not enough; without the ASP.NET Core Runtime the companion does not start.
+
 ### 1. Start the companion
 
 Run `YTMPresence.exe`. The tray icon then appears in the Windows notification area.
@@ -142,7 +151,7 @@ If Inno Setup is not on the `PATH`, the compiler can be specified explicitly:
 .\scripts\package-release.ps1 -InnoSetupCompiler "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
 ```
 
-The default build is framework-dependent, so the .NET 10 Desktop Runtime has to be installed on any other machine.
+The default build is framework-dependent, so the .NET 10 Desktop Runtime and the ASP.NET Core Runtime 10 have to be installed on any other machine.
 
 For a larger package that brings the runtime along:
 
@@ -179,6 +188,10 @@ An existing release can also be verified separately:
 Verification no longer rewrites anything: `SHA256SUMS.txt` is produced solely in `package-release.ps1`, once all artifacts are final. `verify-release.ps1` then checks that every artifact has exactly one matching hash line and that no stale, duplicate or unknown lines are present (`-RequireInstaller`/`-RequireSetup` additionally requires the setup EXE).
 
 ## Troubleshooting
+
+### The companion does not start
+
+If Windows reports that a .NET framework is missing, install both runtimes listed under [Requirements](#requirements). A message about `Microsoft.AspNetCore.App` means the ASP.NET Core Runtime is missing.
 
 ### Discord shows nothing
 
