@@ -31,6 +31,9 @@ public sealed class DiscordIpcClient : IDiscordPresenceClient, IAsyncDisposable
   private readonly TimeSpan _readyTimeout;
   private TaskCompletionSource? _ready;
 
+  private const int CloseOpcode = 2;
+  private volatile string? _closeReason;
+
   // Erst nach READY verbunden. Der Datenstrom existiert schon vorher, deshalb
   // reicht "_stream ist gesetzt" als Prüfung nicht.
   private volatile bool _isReady;
@@ -251,6 +254,18 @@ public sealed class DiscordIpcClient : IDiscordPresenceClient, IAsyncDisposable
 
         var body = new byte[len];
         await ReadExactAsync(stream, body, ct);
+
+        // Opcode 2: Discord beendet die Verbindung und nennt den Grund, etwa
+        // "Invalid Client ID". Ohne ihn stünde in der Diagnose nur, dass die
+        // Verbindung geschlossen wurde.
+        if (BinaryPrimitives.ReadInt32LittleEndian(header.AsSpan(0, 4)) == CloseOpcode)
+        {
+          _closeReason = DescribeClose(body);
+          Logger.Warn($"Discord closed the connection: {_closeReason}");
+          await ResetAsync();
+          return;
+        }
+
         HandleReply(body);
       }
       catch
@@ -319,6 +334,27 @@ public sealed class DiscordIpcClient : IDiscordPresenceClient, IAsyncDisposable
     {
       // Kein auswertbares JSON: nicht jeder Frame ist eine Antwort.
     }
+  }
+
+  private static string DescribeClose(byte[] body)
+  {
+    try
+    {
+      using var doc = JsonDocument.Parse(body);
+      var root = doc.RootElement;
+      if (root.ValueKind == JsonValueKind.Object)
+      {
+        var message = TryGetString(root, "message") ?? "no reason given";
+        return root.TryGetProperty("code", out var code) && code.ValueKind == JsonValueKind.Number
+            ? $"{message} (code {code.GetRawText()})"
+            : message;
+      }
+    }
+    catch (JsonException)
+    {
+    }
+
+    return "no reason given";
   }
 
   private static string? TryGetString(JsonElement element, string name)
@@ -406,14 +442,21 @@ public sealed class DiscordIpcClient : IDiscordPresenceClient, IAsyncDisposable
       _connectionCts?.Dispose();
       _connectionCts = null;
 
-      _ready?.TrySetException(new InvalidOperationException("The connection to Discord closed before it was ready."));
+      var closeReason = _closeReason;
+      _closeReason = null;
+
+      _ready?.TrySetException(new InvalidOperationException(closeReason is null
+          ? "The connection to Discord closed before it was ready."
+          : $"Discord closed the connection: {closeReason}"));
       _ready = null;
 
       // Antworten auf offene Befehle kommen über diese Verbindung nicht mehr.
       foreach (var nonce in _pendingReplies.Keys)
       {
         if (_pendingReplies.TryRemove(nonce, out var pending))
-          pending.TrySetException(new InvalidOperationException("The connection to Discord closed before it answered."));
+          pending.TrySetException(new InvalidOperationException(closeReason is null
+              ? "The connection to Discord closed before it answered."
+              : $"Discord closed the connection: {closeReason}"));
       }
     }
   }

@@ -79,6 +79,23 @@ public class DiscordIpcReplyTests
   }
 
   [Fact]
+  public async Task CloseFrame_ReportsDiscordsReason()
+  {
+    // Gegen das echte Discord gemessen: Auf die Client-ID "0" antwortet es mit
+    // Opcode 2 {"code":4000,"message":"Invalid Client ID"} und schliesst.
+    await using var discord = new FakeDiscord();
+    await using var client = discord.CreateClient();
+
+    var connect = client.EnsureConnectedAsync(CancellationToken.None);
+    await discord.ReadHandshakeAsync();
+    await discord.SendCloseAsync(4000, "Invalid Client ID");
+
+    var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => connect.WaitAsync(TestTimeout));
+    Assert.Contains("Invalid Client ID", ex.Message);
+    Assert.Contains("4000", ex.Message);
+  }
+
+  [Fact]
   public async Task ReplyWithMatchingNonce_IsAccepted()
   {
     await using var discord = new FakeDiscord();
@@ -256,6 +273,10 @@ public class DiscordIpcReplyTests
     // Wie Discord: READY nach dem Handshake, ohne Nonce.
     public Task SendReadyAsync()
       => SendAsync(1, """{"cmd":"DISPATCH","evt":"READY","data":{"v":1}}""");
+
+    // Wie Discord bei einer ungueltigen Client-ID: Opcode 2 mit Grund.
+    public Task SendCloseAsync(int code, string message)
+      => SendAsync(2, JsonSerializer.Serialize(new { code, message }));
 
     public async Task<Command> ReadCommandAsync()
     {
