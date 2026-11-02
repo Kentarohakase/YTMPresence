@@ -11,23 +11,26 @@ public class PresenceServiceTests
     public int ClearCount;
     public DiscordActivity? LastActivity;
 
+    // Was Discord auf den naechsten Befehl antwortet.
+    public DiscordCommandResult NextResult = DiscordCommandResult.Accepted;
+
     public Task EnsureConnectedAsync(CancellationToken ct)
     {
       EnsureCount++;
       return Task.CompletedTask;
     }
 
-    public Task SetActivityAsync(DiscordActivity activity, CancellationToken ct)
+    public Task<DiscordCommandResult> SetActivityAsync(DiscordActivity activity, CancellationToken ct)
     {
       SetCount++;
       LastActivity = activity;
-      return Task.CompletedTask;
+      return Task.FromResult(NextResult);
     }
 
-    public Task ClearActivityAsync(CancellationToken ct)
+    public Task<DiscordCommandResult> ClearActivityAsync(CancellationToken ct)
     {
       ClearCount++;
-      return Task.CompletedTask;
+      return Task.FromResult(NextResult);
     }
   }
 
@@ -40,13 +43,13 @@ public class PresenceServiceTests
 
     public Task EnsureConnectedAsync(CancellationToken ct) => Task.CompletedTask;
 
-    public Task SetActivityAsync(DiscordActivity activity, CancellationToken ct)
+    public Task<DiscordCommandResult> SetActivityAsync(DiscordActivity activity, CancellationToken ct)
       => SimulateOperationAsync(ct);
 
-    public Task ClearActivityAsync(CancellationToken ct)
+    public Task<DiscordCommandResult> ClearActivityAsync(CancellationToken ct)
       => SimulateOperationAsync(ct);
 
-    private async Task SimulateOperationAsync(CancellationToken ct)
+    private async Task<DiscordCommandResult> SimulateOperationAsync(CancellationToken ct)
     {
       var active = Interlocked.Increment(ref _activeOperations);
       InterlockedExtensions.Max(ref _maxConcurrentOperations, active);
@@ -54,6 +57,7 @@ public class PresenceServiceTests
       try
       {
         await Task.Delay(25, ct);
+        return DiscordCommandResult.Accepted;
       }
       finally
       {
@@ -258,6 +262,135 @@ public class PresenceServiceTests
     // Uebersetzungen selbst deckt PresenceTextTests ab.
     Assert.Equal(PresenceText.Advertisement, discord.LastActivity?.State);
     Assert.Equal("YouTube Music", discord.LastActivity?.Details);
+  }
+
+  [Fact]
+  public async Task AcceptedActivity_ReportsDiscordOk()
+  {
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings());
+
+    await service.HandleAsync(Playing(), CancellationToken.None);
+
+    var status = service.GetStatusSnapshot();
+    Assert.True(status.DiscordOk);
+    Assert.Null(status.LastDiscordError);
+    Assert.NotNull(status.LastDiscordOkUtc);
+    Assert.Equal(DiscordCommandOutcome.Accepted, status.LastDiscordOutcome);
+  }
+
+  [Fact]
+  public async Task RejectedActivity_IsReportedWithDiscordsReason()
+  {
+    // Frueher galt die Presence als gesetzt, sobald der Befehl geschrieben war.
+    // Eine Ablehnung stand nur im Log, die Diagnose meldete weiter OK.
+    var discord = new FakeDiscordClient
+    {
+      NextResult = DiscordCommandResult.Rejected(4000, "child \"activity\" fails")
+    };
+    var service = new PresenceService(discord, new AppSettings());
+
+    await service.HandleAsync(Playing(), CancellationToken.None);
+
+    var status = service.GetStatusSnapshot();
+    Assert.False(status.DiscordOk);
+    Assert.Equal(DiscordCommandOutcome.Rejected, status.LastDiscordOutcome);
+    Assert.Contains("child \"activity\" fails", status.LastDiscordError);
+    Assert.Contains("4000", status.LastDiscordError);
+    Assert.Null(status.LastDiscordOkUtc);
+  }
+
+  [Fact]
+  public async Task RejectedActivity_IsNotResentForTheSameState()
+  {
+    // Dieselbe Aktivitaet wuerde nur erneut abgelehnt.
+    var discord = new FakeDiscordClient
+    {
+      NextResult = DiscordCommandResult.Rejected(4000, "invalid")
+    };
+    var service = new PresenceService(discord, new AppSettings());
+
+    await service.HandleAsync(Playing(), CancellationToken.None);
+    await service.HandleAsync(Playing(), CancellationToken.None);
+
+    Assert.Equal(1, discord.SetCount);
+  }
+
+  [Fact]
+  public async Task UnansweredActivity_IsReportedAsNoReply()
+  {
+    var discord = new FakeDiscordClient { NextResult = DiscordCommandResult.NoReply };
+    var service = new PresenceService(discord, new AppSettings());
+
+    await service.HandleAsync(Playing(), CancellationToken.None);
+
+    var status = service.GetStatusSnapshot();
+    Assert.False(status.DiscordOk);
+    Assert.Equal(DiscordCommandOutcome.NoReply, status.LastDiscordOutcome);
+    Assert.False(string.IsNullOrWhiteSpace(status.LastDiscordError));
+  }
+
+  [Fact]
+  public async Task AcceptedActivity_AfterRejection_RestoresDiscordOk()
+  {
+    var discord = new FakeDiscordClient
+    {
+      NextResult = DiscordCommandResult.Rejected(4000, "invalid")
+    };
+    var service = new PresenceService(discord, new AppSettings());
+
+    await service.HandleAsync(Playing(title: "First"), CancellationToken.None);
+    discord.NextResult = DiscordCommandResult.Accepted;
+    await service.HandleAsync(Playing(title: "Second"), CancellationToken.None);
+
+    var status = service.GetStatusSnapshot();
+    Assert.True(status.DiscordOk);
+    Assert.Null(status.LastDiscordError);
+    Assert.Equal(DiscordCommandOutcome.Accepted, status.LastDiscordOutcome);
+  }
+
+  [Fact]
+  public async Task RejectedClear_IsReported()
+  {
+    var discord = new FakeDiscordClient
+    {
+      NextResult = DiscordCommandResult.Rejected(4000, "cannot clear")
+    };
+    var service = new PresenceService(discord, new AppSettings { OnlyShowWhenPlaying = true });
+
+    await service.HandleAsync(Playing(isPlaying: false), CancellationToken.None);
+
+    var status = service.GetStatusSnapshot();
+    Assert.True(discord.ClearCount >= 1);
+    Assert.False(status.DiscordOk);
+    Assert.Equal(DiscordCommandOutcome.Rejected, status.LastDiscordOutcome);
+    Assert.Contains("cannot clear", status.LastDiscordError);
+  }
+
+  [Fact]
+  public async Task ConnectionError_ClearsTheLastOutcome()
+  {
+    var discord = new ThrowingDiscordClient();
+    var service = new PresenceService(discord, new AppSettings());
+
+    await service.HandleAsync(Playing(), CancellationToken.None);
+
+    var status = service.GetStatusSnapshot();
+    Assert.False(status.DiscordOk);
+    Assert.Null(status.LastDiscordOutcome);
+    Assert.Equal("not reachable", status.LastDiscordError);
+  }
+
+  private sealed class ThrowingDiscordClient : IDiscordPresenceClient
+  {
+    public Task EnsureConnectedAsync(CancellationToken ct)
+      => throw new InvalidOperationException("not reachable");
+
+    public Task<DiscordCommandResult> SetActivityAsync(DiscordActivity activity, CancellationToken ct)
+      => throw new InvalidOperationException("not reachable");
+
+    public Task<DiscordCommandResult> ClearActivityAsync(CancellationToken ct)
+      => throw new InvalidOperationException("not reachable");
   }
 
   [Fact]

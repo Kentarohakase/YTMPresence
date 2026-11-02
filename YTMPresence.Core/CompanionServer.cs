@@ -105,7 +105,8 @@ public sealed class CompanionServer : IAsyncDisposable
           LastUnauthorizedUtc: _lastUnauthorizedUtc,
           DiscordOk: discordStatus.DiscordOk,
           LastDiscordError: discordStatus.LastDiscordError,
-          LastDiscordOkUtc: discordStatus.LastDiscordOkUtc
+          LastDiscordOkUtc: discordStatus.LastDiscordOkUtc,
+          LastDiscordOutcome: discordStatus.LastDiscordOutcome
       );
     }
   }

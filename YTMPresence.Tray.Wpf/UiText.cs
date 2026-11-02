@@ -145,6 +145,18 @@ public static class UiText
       es: $"Discord: error · {error}"
   );
 
+  public static string DiscordRejected(string error) => T(
+      de: $"Discord: abgelehnt · {error}",
+      en: $"Discord: rejected · {error}",
+      es: $"Discord: rechazado · {error}"
+  );
+
+  public static string DiscordNoReply => T(
+      de: "Discord: keine Antwort",
+      en: "Discord: no reply",
+      es: "Discord: sin respuesta"
+  );
+
   public static string TrackNone => T(
       de: "Track: —",
       en: "Track: —",
@@ -471,6 +483,16 @@ public static class UiText
       de: $"Fehler: {message}",
       en: $"Error: {message}",
       es: $"Error: {message}");
+
+  public static string DiagDiscordRejected(string message) => T(
+      de: $"Abgelehnt: {message}",
+      en: $"Rejected: {message}",
+      es: $"Rejected: {message}");
+
+  public static string DiagDiscordNoReply => T(
+      de: "Keine Antwort von Discord",
+      en: "No reply from Discord",
+      es: "No reply from Discord");
 
   public static string DiagInvalidTokens(int count, string age) => T(
       de: $"{count} ungültige Token, zuletzt: {age}",

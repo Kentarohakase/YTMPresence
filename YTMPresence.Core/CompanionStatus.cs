@@ -16,5 +16,6 @@ public sealed record CompanionStatus(
     DateTimeOffset? LastUnauthorizedUtc,
     bool DiscordOk,
     string? LastDiscordError,
-    DateTimeOffset? LastDiscordOkUtc
+    DateTimeOffset? LastDiscordOkUtc,
+    DiscordCommandOutcome? LastDiscordOutcome = null
 );

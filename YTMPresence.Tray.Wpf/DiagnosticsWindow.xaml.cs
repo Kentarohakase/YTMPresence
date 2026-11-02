@@ -72,9 +72,13 @@ public partial class DiagnosticsWindow : Window
         ? UiText.DiagExtensionConnected(status.ConnectedClients, AgeText(status.LastMessageUtc))
         : UiText.DiagExtensionDisconnected(AgeText(status.LastMessageUtc));
 
-    DiscordText.Text = status.DiscordOk
-        ? UiText.DiagDiscordOk(AgeText(status.LastDiscordOkUtc))
-        : UiText.DiagDiscordError(status.LastDiscordError ?? "unknown");
+    DiscordText.Text = status switch
+    {
+      { DiscordOk: true } => UiText.DiagDiscordOk(AgeText(status.LastDiscordOkUtc)),
+      { LastDiscordOutcome: DiscordCommandOutcome.Rejected } => UiText.DiagDiscordRejected(status.LastDiscordError ?? "unknown"),
+      { LastDiscordOutcome: DiscordCommandOutcome.NoReply } => UiText.DiagDiscordNoReply,
+      _ => UiText.DiagDiscordError(status.LastDiscordError ?? "unknown")
+    };
 
     TrackText.Text = string.IsNullOrWhiteSpace(status.LastTitle)
         ? UiText.PlayerNoTrack
@@ -110,6 +114,7 @@ public partial class DiagnosticsWindow : Window
     sb.AppendLine($"Last message: {status.LastMessageUtc?.ToString("O") ?? "never"}");
     sb.AppendLine($"Discord OK: {status.DiscordOk}");
     sb.AppendLine($"Discord error: {status.LastDiscordError ?? ""}");
+    sb.AppendLine($"Discord last reply: {status.LastDiscordOutcome?.ToString() ?? "none"}");
     sb.AppendLine($"Track: {status.LastTitle ?? ""} - {status.LastArtist ?? ""}");
     sb.AppendLine($"Playing: {status.LastIsPlaying?.ToString() ?? ""}");
     sb.AppendLine($"Progress: {FormatProgress(status.LastPositionSeconds, status.LastDurationSeconds, status.LastIsPlaying)}");

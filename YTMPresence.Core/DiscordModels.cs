@@ -33,3 +33,27 @@ public sealed record DiscordAssets(
 public sealed record DiscordButton(
     [property: JsonPropertyName("label")] string Label,
     [property: JsonPropertyName("url")] string Url);
+
+/// <summary>
+/// Was Discord auf einen Befehl geantwortet hat. Erst die Antwort sagt, ob
+/// die Presence wirklich gesetzt wurde; das Schreiben des Frames allein nicht.
+/// </summary>
+[JsonConverter(typeof(JsonStringEnumConverter<DiscordCommandOutcome>))]
+public enum DiscordCommandOutcome
+{
+  Accepted,
+  Rejected,
+  NoReply
+}
+
+public sealed record DiscordCommandResult(
+    DiscordCommandOutcome Outcome,
+    int? ErrorCode = null,
+    string? ErrorMessage = null)
+{
+  public static DiscordCommandResult Accepted { get; } = new(DiscordCommandOutcome.Accepted);
+  public static DiscordCommandResult NoReply { get; } = new(DiscordCommandOutcome.NoReply);
+
+  public static DiscordCommandResult Rejected(int? code, string? message)
+    => new(DiscordCommandOutcome.Rejected, code, message);
+}

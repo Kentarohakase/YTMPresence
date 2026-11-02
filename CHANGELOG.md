@@ -2,6 +2,16 @@
 
 All notable changes to YTMPresence are documented in this file.
 
+## [Unreleased]
+
+### Changed
+
+- The companion waits for Discord's answer to every activity update and reports it: accepted, rejected with Discord's code and reason, or no answer within three seconds. Until now an update counted as successful once it was written; a rejection only appeared in the log while the diagnostics showed OK. The tray menu, the diagnostics window and the diagnostics report show the result.
+
+### Fixed
+
+- The first presence after connecting to Discord is no longer lost. Discord silently drops commands that arrive before its READY message, and the companion sent the activity right after the handshake. After every start of the companion or of Discord the first update vanished; with a paused track, whose details do not change, the presence could stay missing for a long time. The companion now waits for READY before it sends anything.
+
 ## [1.5.0] - 2026-11-02
 
 ### Added

@@ -459,13 +459,19 @@ public partial class App : System.Windows.Application
 
       _discordStatusItem!.Text = UiText.DiscordOk(okAge);
     }
+    else if (status.LastDiscordOutcome == DiscordCommandOutcome.NoReply)
+    {
+      _discordStatusItem!.Text = UiText.DiscordNoReply;
+    }
     else
     {
       var err = string.IsNullOrWhiteSpace(status.LastDiscordError)
           ? "unknown error"
           : status.LastDiscordError;
 
-      _discordStatusItem!.Text = UiText.DiscordError(Truncate(err, 60));
+      _discordStatusItem!.Text = status.LastDiscordOutcome == DiscordCommandOutcome.Rejected
+          ? UiText.DiscordRejected(Truncate(err, 60))
+          : UiText.DiscordError(Truncate(err, 60));
     }
 
     if (!string.IsNullOrWhiteSpace(status.LastTitle) && !string.IsNullOrWhiteSpace(status.LastArtist))
