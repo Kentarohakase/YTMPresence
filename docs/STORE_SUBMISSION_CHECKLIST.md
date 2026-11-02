@@ -72,6 +72,6 @@ GitHub and the store are published separately; record both.
 
 | Version | GitHub release | Chrome Web Store | Notes |
 | --- | --- | --- | --- |
-| 1.5.0 | open | open | No permission changes since 1.4.0. Add the English listing with this upload; the texts are in [CHROME_WEB_STORE.md](CHROME_WEB_STORE.md). |
+| 1.5.0 | published 2026-11-02 | open | No permission changes since 1.4.0. Add the English listing with this upload; the texts are in [CHROME_WEB_STORE.md](CHROME_WEB_STORE.md). |
 | 1.4.0 | published 2026-08-10 | not recorded | Check the dashboard; the last recorded store version is 1.3.1. |
 | 1.3.1 | published 2026-08-09 | approved | First store submission. |
