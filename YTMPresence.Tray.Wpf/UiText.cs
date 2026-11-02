@@ -420,6 +420,17 @@ public static class UiText
   public static string SettingsOnlyShowWhenPlaying => T(de: "Presence nur anzeigen, wenn Musik läuft", en: "Only show presence while music plays", es: "Only show presence while music plays");
   public static string GroupDiscord => T(de: "Discord", en: "Discord", es: "Discord");
   public static string LabelClientId => T(de: "Client ID", en: "Client ID", es: "Client ID");
+  public static string SettingsTokenCopied => T(de: "Token kopiert.", en: "Token copied.", es: "Token copied.");
+  public static string SettingsTokenCopyFailed => T(de: "Token konnte nicht kopiert werden.", en: "The token could not be copied.", es: "The token could not be copied.");
+  public static string SettingsTokenGenerated => T(de: "Neuer Token erzeugt. Speichern nicht vergessen.", en: "New token generated. Remember to save.", es: "New token generated. Remember to save.");
+  public static string SettingsHostEmpty => T(de: "Host darf nicht leer sein.", en: "Host must not be empty.", es: "Host must not be empty.");
+  public static string SettingsHostNotUrl => T(de: "Host darf nur Hostname oder IP enthalten, keine URL.", en: "Host may only contain a host name or IP address, not a URL.", es: "Host may only contain a host name or IP address, not a URL.");
+  public static string SettingsWebSocketPathEmpty => T(de: "WebSocket-Pfad darf nicht leer sein.", en: "WebSocket path must not be empty.", es: "WebSocket path must not be empty.");
+  public static string SettingsWebSocketPathInvalid => T(de: "WebSocket-Pfad darf keine Leerzeichen, Query oder Fragment enthalten.", en: "WebSocket path must not contain spaces, a query or a fragment.", es: "WebSocket path must not contain spaces, a query or a fragment.");
+  public static string SettingsClientIdEmpty => T(de: "Discord Client ID darf nicht leer sein.", en: "Discord client ID must not be empty.", es: "Discord client ID must not be empty.");
+  public static string SettingsTokenEmpty => T(de: "Security Token darf nicht leer sein.", en: "Security token must not be empty.", es: "Security token must not be empty.");
+  public static string SettingsNotANumber(string label) => T(de: $"{label} muss eine Zahl sein.", en: $"{label} must be a number.", es: $"{label} must be a number.");
+  public static string SettingsOutOfRange(string label, int min, int max) => T(de: $"{label} muss zwischen {min} und {max} liegen.", en: $"{label} must be between {min} and {max}.", es: $"{label} must be between {min} and {max}.");
 
   // PlayerWindow
   public static string PlayerWindowTitle => T(de: "YTM Presence Player", en: "YTM Presence player", es: "YTM Presence player");
@@ -486,6 +497,28 @@ public static class UiText
       en: " (check on startup is disabled)",
       es: " (check on startup is disabled)");
 
+  public static string DiagWindowTitle => T(de: "YTM Presence Diagnose", en: "YTM Presence diagnostics", es: "YTM Presence diagnostics");
+  public static string DiagHeading => T(de: "Diagnose", en: "Diagnostics", es: "Diagnostics");
+  public static string DiagLabelProgress => T(de: "Fortschritt", en: "Progress", es: "Progress");
+  public static string DiagLabelSecurity => T(de: "Sicherheit", en: "Security", es: "Security");
+  public static string DiagLabelSettings => T(de: "Einstellungen", en: "Settings", es: "Settings");
+  public static string DiagLabelUpdateCheck => T(de: "Update-Check", en: "Update check", es: "Update check");
+  public static string DiagLabelUpdated => T(de: "Aktualisiert", en: "Updated", es: "Updated");
+  public static string DiagButtonCreateReport => T(de: "Bericht erstellen", en: "Create report", es: "Create report");
+
+  public static string DiagCopied => T(de: "Diagnose kopiert.", en: "Diagnostics copied.", es: "Diagnostics copied.");
+  public static string DiagCopyFailed => T(de: "Kopieren fehlgeschlagen.", en: "Copying failed.", es: "Copying failed.");
+
+  public static string DiagReportCreated(string path) => T(
+      de: $"Bericht erstellt: {path}",
+      en: $"Report created: {path}",
+      es: $"Report created: {path}");
+
+  public static string DiagReportFailed(string message) => T(
+      de: $"Bericht fehlgeschlagen: {message}",
+      en: $"Report failed: {message}",
+      es: $"Report failed: {message}");
+
   // --- Mini-Player -------------------------------------------------------
 
   public static string PlayerStatePlaying => T(de: "Läuft", en: "Playing", es: "Playing");
@@ -498,6 +531,9 @@ public static class UiText
   public static string TooltipNext => T(de: "Weiter", en: "Next", es: "Next");
   public static string ButtonOpen => T(de: "Öffnen", en: "Open", es: "Open");
   public static string TooltipOpenTrack => T(de: "Track öffnen", en: "Open track", es: "Open track");
+  public static string PlayerNoExtension => T(de: "Keine Extension verbunden", en: "No extension connected", es: "No extension connected");
+  public static string PlayerCommandSent(string label) => T(de: $"{label} gesendet", en: $"{label} sent", es: $"{label} sent");
+  public static string PlayerCommandFailed(string label) => T(de: $"{label} fehlgeschlagen", en: $"{label} failed", es: $"{label} failed");
 
   // UpdateDownloadWindow
   public static string UpdateWindowTitle => T(de: "YTM Presence Update", en: "YTM Presence update", es: "YTM Presence update");
