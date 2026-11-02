@@ -26,7 +26,7 @@ public static class Logger
       _currentLogFilePath = Path.Combine(_logDirectory, "app.log");
       _initialized = true;
 
-      WriteInternal("INFO", $"Logger initialisiert. Log-Datei: {_currentLogFilePath}");
+      WriteInternal("INFO", $"Logger initialized. Log file: {_currentLogFilePath}");
     }
   }
 

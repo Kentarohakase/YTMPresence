@@ -38,7 +38,7 @@ public sealed class TemporaryUpdateWorkspace : IDisposable
       return new TemporaryUpdateWorkspace(candidate);
     }
 
-    throw new UpdateDownloadException("Es konnte kein eindeutiges temporäres Update-Verzeichnis erstellt werden.");
+    throw new UpdateDownloadException("Could not create a unique temporary update directory.");
   }
 
   public void Dispose()

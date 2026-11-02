@@ -104,7 +104,7 @@ public class UpdateCheckerTests
     var result = await Check("0.8.11", ReleaseJson("v1.0.0", prerelease: true));
 
     Assert.False(result.IsUpdateAvailable);
-    Assert.Contains("Vorabversion", result.ErrorMessage);
+    Assert.Contains("pre-release", result.ErrorMessage);
   }
 
   [Fact]
@@ -122,7 +122,7 @@ public class UpdateCheckerTests
     var result = await Check("0.8.11", ReleaseJson("v1.0.0", assetsJson: assets));
 
     Assert.False(result.IsUpdateAvailable);
-    Assert.Contains("mehrdeutig", result.ErrorMessage);
+    Assert.Contains("ambiguous", result.ErrorMessage);
     Assert.Null(result.SetupDownloadUrl);
     Assert.Null(result.SetupAssetName);
   }
@@ -191,7 +191,7 @@ public class UpdateCheckerTests
       "0.8.11", settings, CancellationToken.None, new StubHandler(HttpStatusCode.OK, ReleaseJson("v1.0.0")));
 
     Assert.False(result.IsUpdateAvailable);
-    Assert.Contains("nicht als Updatequelle erlaubt", result.ErrorMessage);
+    Assert.Contains("not an allowed update source", result.ErrorMessage);
   }
 
   [Fact]
@@ -202,7 +202,7 @@ public class UpdateCheckerTests
       "0.8.11", settings, CancellationToken.None, new StubHandler(HttpStatusCode.OK, ReleaseJson("v1.0.0")));
 
     Assert.False(result.IsUpdateAvailable);
-    Assert.Contains("nicht als Updatequelle erlaubt", result.ErrorMessage);
+    Assert.Contains("not an allowed update source", result.ErrorMessage);
   }
 
   [Fact]
@@ -236,7 +236,7 @@ public class UpdateCheckerTests
   {
     var result = await Check("0.8.11", ReleaseJson("v1.0.0", setupUrl: "https://evil.example/setup.exe"));
     Assert.False(result.IsUpdateAvailable);
-    Assert.Contains("Setup-Download-URL", result.ErrorMessage);
+    Assert.Contains("setup download URL", result.ErrorMessage);
   }
 
   [Fact]
@@ -244,7 +244,7 @@ public class UpdateCheckerTests
   {
     var result = await Check("0.8.11", ReleaseJson("v1.0.0", checksumsUrl: "http://github.com/SHA256SUMS.txt"));
     Assert.False(result.IsUpdateAvailable);
-    Assert.Contains("Prüfsummen-URL", result.ErrorMessage);
+    Assert.Contains("checksums URL", result.ErrorMessage);
   }
 
   [Fact]
@@ -254,7 +254,7 @@ public class UpdateCheckerTests
     var result = await Check("0.8.11", huge);
 
     Assert.False(result.IsUpdateAvailable);
-    Assert.Contains("zu groß", result.ErrorMessage);
+    Assert.Contains("too large", result.ErrorMessage);
   }
 
   [Fact]
@@ -308,6 +308,6 @@ public class UpdateCheckerTests
       "0.8.11", Settings(), CancellationToken.None, routes);
 
     Assert.False(result.IsUpdateAvailable);
-    Assert.Contains("Schleife", result.ErrorMessage);
+    Assert.Contains("loop", result.ErrorMessage);
   }
 }

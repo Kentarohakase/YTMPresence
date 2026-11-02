@@ -76,16 +76,16 @@ public sealed class UpdateDownloadService : IDisposable
     ArgumentNullException.ThrowIfNull(update);
 
     if (string.IsNullOrWhiteSpace(update.SetupDownloadUrl))
-      throw new UpdateSecurityException("Dieses Release enthält kein Setup-Asset.");
+      throw new UpdateSecurityException("This release has no setup asset.");
 
     if (string.IsNullOrWhiteSpace(update.ChecksumsDownloadUrl))
       throw new UpdateSecurityException(
-        "Dieses Release enthält keine SHA256SUMS.txt. Ohne Prüfsumme wird kein Update ausgeführt.");
+        "This release has no SHA256SUMS.txt. Without a checksum no update is run.");
 
-    var setupUri = _options.UrlValidator.Validate(update.SetupDownloadUrl, "Setup-Download");
-    var checksumsUri = _options.UrlValidator.Validate(update.ChecksumsDownloadUrl, "Prüfsummen-Download");
+    var setupUri = _options.UrlValidator.Validate(update.SetupDownloadUrl, "Setup download");
+    var checksumsUri = _options.UrlValidator.Validate(update.ChecksumsDownloadUrl, "Checksums download");
     var fileName = ResolveSetupFileName(update, setupUri);
-    EnsureOriginalAssetFileName(checksumsUri, UpdateArtifactNames.ChecksumsFileName, "Prüfsummen-Download");
+    EnsureOriginalAssetFileName(checksumsUri, UpdateArtifactNames.ChecksumsFileName, "Checksums download");
 
     var workspace = TemporaryUpdateWorkspace.Create(workspaceRoot);
     try
@@ -102,7 +102,7 @@ public sealed class UpdateDownloadService : IDisposable
       var actualHash = await ComputeSha256Async(partPath, ct).ConfigureAwait(false);
       if (!string.Equals(actualHash, expectedHash, StringComparison.Ordinal))
         throw new UpdateSecurityException(
-          "SHA256-Prüfsumme stimmt nicht überein. Die heruntergeladene Datei wird verworfen.");
+          "The SHA256 checksum does not match. The downloaded file is discarded.");
 
       // Atomarer Wechsel im selben Verzeichnis: Erst ab hier existiert eine
       // ausführbare Setup-Datei; eine .part-Datei wird nie gestartet.
@@ -137,10 +137,10 @@ public sealed class UpdateDownloadService : IDisposable
         !candidate.EndsWith(UpdateArtifactNames.SetupFileNameSuffix, StringComparison.OrdinalIgnoreCase) ||
         !candidate.All(static c => c is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or >= '0' and <= '9' or '.' or '-' or '_'))
     {
-      throw new UpdateSecurityException("Der Setup-Dateiname des Releases ist ungültig oder nicht erlaubt.");
+      throw new UpdateSecurityException("The release's setup file name is invalid or not allowed.");
     }
 
-    EnsureOriginalAssetFileName(setupUri, candidate, "Setup-Download");
+    EnsureOriginalAssetFileName(setupUri, candidate, "Setup download");
     return candidate;
   }
 
@@ -150,7 +150,7 @@ public sealed class UpdateDownloadService : IDisposable
     var actualFileName = Uri.UnescapeDataString(escapedSegment);
     if (!string.Equals(actualFileName, expectedFileName, StringComparison.Ordinal))
       throw new UpdateSecurityException(
-        $"{context}: Der URL-Dateiname '{actualFileName}' entspricht nicht exakt dem erwarteten Artefakt '{expectedFileName}'.");
+        $"{context}: the file name '{actualFileName}' in the URL does not exactly match the expected artifact '{expectedFileName}'.");
   }
 
   private async Task<string> DownloadTextAsync(Uri uri, long maxBytes, CancellationToken ct)
@@ -172,19 +172,19 @@ public sealed class UpdateDownloadService : IDisposable
     }
     catch (OperationCanceledException) when (!ct.IsCancellationRequested)
     {
-      throw new UpdateDownloadException("Zeitüberschreitung beim Laden der Prüfsummendatei.");
+      throw new UpdateDownloadException("Timed out while loading the checksums file.");
     }
     catch (HttpRequestException ex)
     {
-      throw new UpdateDownloadException($"Netzwerkfehler beim Laden der Prüfsummendatei: {ex.Message}", ex);
+      throw new UpdateDownloadException($"Network error while loading the checksums file: {ex.Message}", ex);
     }
     catch (IOException ex)
     {
-      throw new UpdateDownloadException($"Der Prüfsummen-Download wurde unterbrochen: {ex.Message}", ex);
+      throw new UpdateDownloadException($"The checksums download was interrupted: {ex.Message}", ex);
     }
     catch (DecoderFallbackException ex)
     {
-      throw new UpdateSecurityException("Die Prüfsummendatei ist nicht gültig UTF-8-codiert.", ex);
+      throw new UpdateSecurityException("The checksums file is not valid UTF-8.", ex);
     }
   }
 
@@ -217,21 +217,21 @@ public sealed class UpdateDownloadService : IDisposable
 
       if (totalBytes.HasValue && written != totalBytes.Value)
         throw new UpdateDownloadException(
-          $"Der Download ist unvollständig ({written} von {totalBytes.Value} Bytes). Die Datei wird verworfen.");
+          $"The download is incomplete ({written} of {totalBytes.Value} bytes). The file is discarded.");
 
       return written;
     }
     catch (OperationCanceledException) when (!ct.IsCancellationRequested)
     {
-      throw new UpdateDownloadException("Zeitüberschreitung beim Herunterladen des Updates.");
+      throw new UpdateDownloadException("Timed out while downloading the update.");
     }
     catch (HttpRequestException ex)
     {
-      throw new UpdateDownloadException($"Netzwerkfehler beim Herunterladen des Updates: {ex.Message}", ex);
+      throw new UpdateDownloadException($"Network error while downloading the update: {ex.Message}", ex);
     }
     catch (IOException ex)
     {
-      throw new UpdateDownloadException($"Der Update-Download wurde unterbrochen: {ex.Message}", ex);
+      throw new UpdateDownloadException($"The update download was interrupted: {ex.Message}", ex);
     }
   }
 
@@ -247,7 +247,7 @@ public sealed class UpdateDownloadService : IDisposable
     for (var hop = 0; ; hop++)
     {
       if (!visited.Add(current.AbsoluteUri))
-        throw new UpdateSecurityException($"Redirect-Schleife erkannt bei '{current}'. Update wird abgebrochen.");
+        throw new UpdateSecurityException($"Redirect loop detected at '{current}'. The update is cancelled.");
 
       using var request = new HttpRequestMessage(HttpMethod.Get, current);
 
@@ -262,11 +262,11 @@ public sealed class UpdateDownloadService : IDisposable
         }
         catch (OperationCanceledException) when (!ct.IsCancellationRequested)
         {
-          throw new UpdateDownloadException($"Zeitüberschreitung beim Verbindungsaufbau zu '{current.Host}'.");
+          throw new UpdateDownloadException($"Timed out while connecting to '{current.Host}'.");
         }
         catch (HttpRequestException ex)
         {
-          throw new UpdateDownloadException($"Netzwerkfehler bei '{current.Host}': {ex.Message}", ex);
+          throw new UpdateDownloadException($"Network error at '{current.Host}': {ex.Message}", ex);
         }
       }
 
@@ -276,7 +276,7 @@ public sealed class UpdateDownloadService : IDisposable
         {
           var status = (int)response.StatusCode;
           response.Dispose();
-          throw new UpdateDownloadException($"Download fehlgeschlagen: HTTP {status} von '{current.Host}'.");
+          throw new UpdateDownloadException($"Download failed: HTTP {status} from '{current.Host}'.");
         }
 
         return response;
@@ -286,10 +286,10 @@ public sealed class UpdateDownloadService : IDisposable
       try
       {
         if (hop >= _options.MaxRedirects)
-          throw new UpdateSecurityException("Zu viele Redirects. Update wird abgebrochen.");
+          throw new UpdateSecurityException("Too many redirects. The update is cancelled.");
 
         var location = response.Headers.Location
-          ?? throw new UpdateSecurityException("Redirect ohne Location-Header. Update wird abgebrochen.");
+          ?? throw new UpdateSecurityException("Redirect without a Location header. The update is cancelled.");
 
         // Relative Redirects werden gegen die aktuelle URL aufgelöst und
         // anschließend wie jede andere URL vollständig validiert.
@@ -317,7 +317,7 @@ public sealed class UpdateDownloadService : IDisposable
     var contentLength = response.Content.Headers.ContentLength;
     if (contentLength.HasValue && contentLength.Value > maxBytes)
       throw new UpdateDownloadException(
-        $"Der Download von '{uri.Host}' ist mit {contentLength.Value} Bytes größer als das Limit von {maxBytes} Bytes.");
+        $"The download from '{uri.Host}' has {contentLength.Value} bytes, more than the limit of {maxBytes} bytes.");
   }
 
   /// <summary>
@@ -350,7 +350,7 @@ public sealed class UpdateDownloadService : IDisposable
         }
         catch (OperationCanceledException) when (!ct.IsCancellationRequested)
         {
-          throw new UpdateDownloadException("Die Verbindung liefert keine Daten mehr (Stall-Timeout).");
+          throw new UpdateDownloadException("The connection stopped delivering data (stall timeout).");
         }
       }
 
@@ -360,7 +360,7 @@ public sealed class UpdateDownloadService : IDisposable
       written += read;
       if (written > maxBytes)
         throw new UpdateDownloadException(
-          $"Der Download überschreitet das Größenlimit von {maxBytes} Bytes und wurde abgebrochen.");
+          $"The download exceeds the size limit of {maxBytes} bytes and was cancelled.");
 
       await destination.WriteAsync(buffer.AsMemory(0, read), ct).ConfigureAwait(false);
       progress?.Report(new UpdateDownloadProgress(written, totalForProgress));

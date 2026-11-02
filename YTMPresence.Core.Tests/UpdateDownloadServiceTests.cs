@@ -271,7 +271,7 @@ public class UpdateDownloadServiceTests : IDisposable
 
     using var service = Service(routes, overallChecksumsTimeout: TimeSpan.FromMilliseconds(100));
     var ex = await Assert.ThrowsAsync<UpdateDownloadException>(() => DownloadAsync(service));
-    Assert.Contains("Zeitüberschreitung", ex.Message);
+    Assert.Contains("Timed out", ex.Message);
     AssertNoWorkspaceLeftBehind();
   }
 
@@ -354,7 +354,7 @@ public class UpdateDownloadServiceTests : IDisposable
 
     using var service = Service(routes, maxSetupBytes: 1024 * 1024);
     var ex = await Assert.ThrowsAsync<UpdateDownloadException>(() => DownloadAsync(service));
-    Assert.Contains("Limit", ex.Message);
+    Assert.Contains("limit", ex.Message);
     AssertNoWorkspaceLeftBehind();
   }
 
@@ -369,7 +369,7 @@ public class UpdateDownloadServiceTests : IDisposable
 
     using var service = Service(routes, maxSetupBytes: 16 * 1024);
     var ex = await Assert.ThrowsAsync<UpdateDownloadException>(() => DownloadAsync(service));
-    Assert.Contains("Größenlimit", ex.Message);
+    Assert.Contains("size limit", ex.Message);
     AssertNoWorkspaceLeftBehind();
   }
 
@@ -410,7 +410,7 @@ public class UpdateDownloadServiceTests : IDisposable
 
     using var service = Service(routes);
     var ex = await Assert.ThrowsAsync<UpdateDownloadException>(() => DownloadAsync(service));
-    Assert.Contains("unterbrochen", ex.Message);
+    Assert.Contains("interrupted", ex.Message);
     AssertNoWorkspaceLeftBehind();
   }
 
@@ -426,7 +426,7 @@ public class UpdateDownloadServiceTests : IDisposable
 
     using var service = Service(routes);
     var ex = await Assert.ThrowsAsync<UpdateDownloadException>(() => DownloadAsync(service));
-    Assert.Contains("unvollständig", ex.Message);
+    Assert.Contains("incomplete", ex.Message);
     AssertNoWorkspaceLeftBehind();
   }
 
@@ -539,7 +539,7 @@ public class UpdateDownloadServiceTests : IDisposable
 
     using var service = Service(routes);
     var ex = await Assert.ThrowsAsync<UpdateSecurityException>(() => DownloadAsync(service));
-    Assert.Contains("Schleife", ex.Message);
+    Assert.Contains("loop", ex.Message);
   }
 
   [Fact]
@@ -559,7 +559,7 @@ public class UpdateDownloadServiceTests : IDisposable
 
     using var service = Service(routes, maxRedirects: 3);
     var ex = await Assert.ThrowsAsync<UpdateSecurityException>(() => DownloadAsync(service));
-    Assert.Contains("Zu viele Redirects", ex.Message);
+    Assert.Contains("Too many redirects", ex.Message);
   }
 
   [Fact]

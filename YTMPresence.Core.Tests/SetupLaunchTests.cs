@@ -97,7 +97,7 @@ public class SetupLaunchTests : IDisposable
 
     var ex = await Assert.ThrowsAsync<UpdateSecurityException>(
       () => UpdateInstaller.LaunchVerifiedSetupAsync(package, _ => started = true));
-    Assert.Contains("verändert", ex.Message);
+    Assert.Contains("modified", ex.Message);
     Assert.False(started);
   }
 
@@ -109,7 +109,7 @@ public class SetupLaunchTests : IDisposable
 
     var ex = await Assert.ThrowsAsync<UpdateSecurityException>(
       () => UpdateInstaller.LaunchVerifiedSetupAsync(package, _ => started = true));
-    Assert.Contains("existiert nicht mehr", ex.Message);
+    Assert.Contains("no longer exists", ex.Message);
     Assert.False(started);
   }
 
@@ -136,7 +136,7 @@ public class SetupLaunchTests : IDisposable
 
     var ex = await Assert.ThrowsAsync<UpdateSecurityException>(
       () => UpdateInstaller.LaunchVerifiedSetupAsync(package, _ => true));
-    Assert.Contains("Dateigröße", ex.Message);
+    Assert.Contains("file size", ex.Message);
   }
 
   [Theory]
@@ -177,7 +177,7 @@ public class SetupLaunchTests : IDisposable
     // bedeutet: App bleibt benutzbar.
     var ex = await Assert.ThrowsAsync<UpdateDownloadException>(
       () => UpdateInstaller.LaunchVerifiedSetupAsync(package, _ => false));
-    Assert.Contains("nicht gestartet", ex.Message);
+    Assert.Contains("not started", ex.Message);
     Assert.True(File.Exists(package.FilePath));
   }
 
