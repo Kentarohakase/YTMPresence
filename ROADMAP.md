@@ -55,7 +55,7 @@ Goal: store and GitHub users get the branch work, and a new user's first start w
 - [x] Add the archive check and `web-ext lint` to the release workflow; move both workflows to a supported Node LTS.
 - [x] Raise the Firefox `strict_min_version` to 140, which removes the desktop lint warning, and state the supported browser minimums in the README (Chrome/Edge 116+ for the WebSocket keepalive, Firefox 140+).
 - [x] Bump to 1.5.0 and finish the changelog.
-- [ ] Tag `v1.5.0` after the live checks; the release workflow publishes the GitHub release.
+- [x] Tag `v1.5.0`; the release workflow published the GitHub release on 2026-11-02. All four artifacts match `SHA256SUMS.txt`; the setup has 61.7 MB.
 - [ ] Upload the extension to the Chrome Web Store and add the English listing. Record GitHub and store status separately in the [store checklist](docs/STORE_SUBMISSION_CHECKLIST.md).
 
 **Done when:** 1.5.0 is live on GitHub and in the store; a clean VM reaches onboarding with the setup alone; updating from 1.4.0 keeps settings and token; `main` contains the branch work.
