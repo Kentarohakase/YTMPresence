@@ -1,6 +1,6 @@
 # YTMPresence Roadmap
 
-Reviewed **2026-11-02**. Baseline: **1.4.0**, released 2026-08-10 on GitHub and in the Chrome Web Store (`main` at `da60499`).
+Reviewed **2026-11-02**. Baseline: **1.4.0**, released 2026-08-10 on GitHub (`main` at `da60499`). The Chrome Web Store has 1.3.1 on record; a 1.4.0 upload is not recorded.
 
 This roadmap replaces the draft of 2026-10-12. Release numbers are proposals for ordering the work, not promised dates.
 
@@ -54,7 +54,9 @@ Goal: store and GitHub users get the branch work, and a new user's first start w
 - [ ] Optional, to shrink the setup later: replace the ASP.NET Core WebSocket server with `HttpListener`, so the app no longer depends on `Microsoft.AspNetCore.App`.
 - [x] Add the archive check and `web-ext lint` to the release workflow; move both workflows to a supported Node LTS.
 - [x] Raise the Firefox `strict_min_version` to 140, which removes the desktop lint warning, and state the supported browser minimums in the README (Chrome/Edge 116+ for the WebSocket keepalive, Firefox 140+).
-- [ ] Bump to 1.5.0, write the changelog, publish on GitHub, upload to the Chrome Web Store and add the English listing. Record GitHub and store status separately in the [store checklist](docs/STORE_SUBMISSION_CHECKLIST.md).
+- [x] Bump to 1.5.0 and finish the changelog.
+- [ ] Tag `v1.5.0` after the live checks; the release workflow publishes the GitHub release.
+- [ ] Upload the extension to the Chrome Web Store and add the English listing. Record GitHub and store status separately in the [store checklist](docs/STORE_SUBMISSION_CHECKLIST.md).
 
 **Done when:** 1.5.0 is live on GitHub and in the store; a clean VM reaches onboarding with the setup alone; updating from 1.4.0 keeps settings and token; `main` contains the branch work.
 

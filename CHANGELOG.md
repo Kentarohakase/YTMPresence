@@ -2,33 +2,34 @@
 
 All notable changes to YTMPresence are documented in this file.
 
-## [Unreleased]
+## [1.5.0] - 2026-11-02
 
 ### Added
 
 - A four-step companion setup guide with Chrome/Edge store and Firefox links, a separate developer section, manual token copying and localized German/English feedback. Companion version is shown in setup; extension version and installation type are shown in popup/options without additional permissions.
 - Optional `companionVersion` in `YTM_TEST_RESULT`. Older peers remain compatible; missing versions show “Not reported”, and mismatched versions do not block the connection.
-
 - An extension behavior suite using Node's built-in test runner, executed in CI and the release workflow. It covers tab selection, targeted commands, tab lifecycle, background restart, pending state, playback extraction and track URLs without contacting YouTube Music or Discord.
+- `scripts/test-clean-install.ps1` tests install, start, update and uninstall in Windows Sandbox, which has no .NET and no network.
 
 ### Changed
 
-- The setup and the ZIP are self-contained and include .NET. Until now they needed both the .NET 10 Desktop Runtime and the ASP.NET Core Runtime, and neither the setup nor the README said so; without the ASP.NET Core Runtime the companion did not start.
+- The setup and the ZIP are self-contained and include .NET. Until now they needed both the .NET 10 Desktop Runtime and the ASP.NET Core Runtime, and neither the setup nor the README said so; without the ASP.NET Core Runtime the companion did not start. The setup grows from 2.2 MB to about 62 MB.
+- Extension options now use **Save and check**. Saving and connection changes are coordinated in the background, while popup retries use the saved configuration on the same connection. Custom URLs are under Advanced settings. Feedback separates storage errors, saved-but-unreachable and saved-but-rejected results, and explains separate browser-profile/install settings.
 - The Firefox package requires Firefox 140 or later instead of 126. It declares its data use with `data_collection_permissions`, which older versions do not know.
 - The release workflow verifies the extension archives and lints the Firefox package before publishing, as CI already did. Both workflows run on Node 24.
-- Extension options now use **Save and check**. Saving and connection changes are coordinated in the background, while popup retries use the saved configuration on the same connection. Custom URLs are under Advanced settings. Feedback separates storage errors, saved-but-unreachable and saved-but-rejected results, and explains separate browser-profile/install settings.
 
 ### Fixed
 
+- Within one browser profile, a playing YouTube Music tab retains ownership of the presence. Paused background tabs no longer overwrite it, and mini-player commands go only to the selected tab's main frame. Pausing retains the selected tab unless another tab is playing; closing, reloading, navigating away or discarding it chooses a fallback in stable tab-ID order, preferring playing tabs.
+- Autoplay progress uses the current track's player-bar timeline when available. YouTube Music can reuse a cumulative media timeline across tracks, which previously made the mini player and Discord show the previous track's elapsed time as part of the new track. Invalid or hidden player-bar values retain the media-element fallback.
+- A green extension badge now requires a positive token response on the current socket, rather than an open socket alone. Four-second checks and bounded reconnect delays ignore obsolete sockets/configurations, and reconnect replays the current selected track after authentication. Keepalive replies do not replay playback or refresh pause/idle state. Popup and options share actionable states and distinguish companion connectivity from visible Discord presence.
+- Background-worker restarts recover playback state from open tabs, including paused tracks. Closed tabs cannot be restored by late recovery responses or replayed after a token change, and obsolete WebSocket connections cannot deliver player commands.
 - Update errors no longer repeat their prefix. The tray showed messages like „Update check failed: Update-Check fehlgeschlagen: HTTP 404.“, because the message from the core carried its own German prefix. The messages of the update check, the download and the setup start are now English, like the log; the text around them still follows the Windows language. The first log line is English as well.
 - The settings, diagnostics and mini-player windows follow the Windows language completely. Their status and validation messages were hard-coded German („Token kopiert.“, „Host darf nicht leer sein.“, „Keine Extension verbunden“), and the diagnostics window mixed German title, buttons and labels with English ones in either language. The diagnostics report itself stays English, like the log; its two German lines are English now. The Discord connection errors shown in diagnostics are English as well.
-- A green extension badge now requires a positive token response on the current socket, rather than an open socket alone. Four-second checks and bounded reconnect delays ignore obsolete sockets/configurations, and reconnect replays the current selected track after authentication. Keepalive replies do not replay playback or refresh pause/idle state. Popup and options share actionable states and distinguish companion connectivity from visible Discord presence.
 
-- Autoplay progress uses the current track's player-bar timeline when available. YouTube Music can reuse a cumulative media timeline across tracks, which previously made the mini player and Discord show the previous track's elapsed time as part of the new track. Invalid or hidden player-bar values retain the media-element fallback.
-- Within one browser profile, a playing YouTube Music tab retains ownership of the presence. Paused background tabs no longer overwrite it, and mini-player commands go only to the selected tab's main frame. Pausing retains the selected tab unless another tab is playing; closing, reloading, navigating away or discarding it chooses a fallback in stable tab-ID order, preferring playing tabs.
-- Background-worker restarts recover playback state from open tabs, including paused tracks. Closed tabs cannot be restored by late recovery responses or replayed after a token change, and obsolete WebSocket connections cannot deliver player commands.
+### Known limitations
 
-Selection across different browser profiles/connections remains a separate roadmap item. This change keeps the existing companion protocol and idle-clear behavior.
+- With several browsers or browser profiles connected at the same time, the companion still sends mini-player commands to all of them. Selecting one source across connections is planned for 1.6.0. The companion protocol and the idle-clear behavior are unchanged.
 
 ## [1.4.0] - 2026-08-09
 

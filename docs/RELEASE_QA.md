@@ -79,7 +79,7 @@ This checklist is meant for every release tag, before the release is shared wide
 
 Recorded implementation and results: [2026-10-12 setup QA](SETUP_QA_2026-10-12.md). Distinguish automated fixtures, direct observations and user-assisted checks; leave unperformed rows open.
 
-- Use a fresh local Edge extension or dedicated test profile. Only one YTMPresence installation is enabled. Confirm “Local/unpacked” and the loaded source directory; the unreleased manifest still says 1.4.0.
+- Use a fresh local Edge extension or dedicated test profile. Only one YTMPresence installation is enabled. Confirm “Local/unpacked” and the loaded source directory; an unreleased build can carry the same manifest version as the published one.
 - With no token, both popup and options direct the user to copy it. Leave the default URL unchanged, and verify that custom URL controls are under Advanced settings.
 - Enter a wrong token and choose **Save and check**. Expect **Saved – token rejected**, a non-green badge and instructions to copy the current token. Then use the real token without pasting it into the QA report.
 - With no received track, confirm the companion connection and the instruction to open/reload YouTube Music. Do not accept this as evidence of visible Discord presence.
