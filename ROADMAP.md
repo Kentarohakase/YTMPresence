@@ -1,6 +1,6 @@
 # YTMPresence Roadmap
 
-Reviewed **2026-11-02**. Baseline: **1.4.0**, released 2026-08-10 on GitHub (`main` at `da60499`). The Chrome Web Store has 1.3.1 on record; a 1.4.0 upload is not recorded.
+Reviewed **2026-11-02**. Baseline: **1.4.0**, released 2026-08-10 on GitHub and in the Chrome Web Store (`main` at `da60499`).
 
 This roadmap replaces the draft of 2026-10-12. Release numbers are proposals for ordering the work, not promised dates.
 
@@ -27,7 +27,7 @@ This roadmap replaces the draft of 2026-10-12. Release numbers are proposals for
 | 4 | Discord `ERROR` replies are only logged ([DiscordIpcClient](YTMPresence.Core/DiscordIpcClient.cs)). Replies are not matched to the request nonce, and success is assumed once the frame is written. | Diagnostics can report success while Discord shows nothing. | P1 |
 | 5 | The release workflow runs both test suites but not the extension archive check or `web-ext lint`; those run only in CI. The branch pins Node 20 in both workflows, which reached end of life in April 2026. **Fixed for 1.5.0.** | A tag can publish an archive that CI would have rejected. | P2 |
 | 6 | The Firefox package declares `strict_min_version` 126 but uses `data_collection_permissions`, which needs Firefox 140, so `web-ext lint` warns. Firefox has no persistent install path. **Minimum raised to 140 for 1.5.0.** One lint warning remains for Firefox for Android, which only supports the key from 142; the package does not target Android, and 142 as the minimum would exclude Firefox ESR 140. | Firefox remains a developer option. | P2 |
-| 7 | The Chrome Web Store listing exists only in German, although the extension defaults to English. English texts are already prepared in [CHROME_WEB_STORE.md](docs/CHROME_WEB_STORE.md). | English-speaking users see a German listing. | P2 |
+| 7 | The Chrome Web Store listing exists only in German, although the extension defaults to English. English texts are already prepared in [CHROME_WEB_STORE.md](docs/CHROME_WEB_STORE.md). **English listing added with the 1.5.0 upload.** | English-speaking users see a German listing. | P2 |
 
 ## Principles
 
@@ -56,7 +56,8 @@ Goal: store and GitHub users get the branch work, and a new user's first start w
 - [x] Raise the Firefox `strict_min_version` to 140, which removes the desktop lint warning, and state the supported browser minimums in the README (Chrome/Edge 116+ for the WebSocket keepalive, Firefox 140+).
 - [x] Bump to 1.5.0 and finish the changelog.
 - [x] Tag `v1.5.0`; the release workflow published the GitHub release on 2026-11-02. All four artifacts match `SHA256SUMS.txt`; the setup has 61.7 MB.
-- [ ] Upload the extension to the Chrome Web Store and add the English listing. Record GitHub and store status separately in the [store checklist](docs/STORE_SUBMISSION_CHECKLIST.md).
+- [x] Upload the extension to the Chrome Web Store and add the English listing. Submitted on 2026-11-02; GitHub and store status are recorded separately in the [store checklist](docs/STORE_SUBMISSION_CHECKLIST.md).
+- [ ] Store review approves 1.5.0; update the status table.
 
 **Done when:** 1.5.0 is live on GitHub and in the store; a clean VM reaches onboarding with the setup alone; updating from 1.4.0 keeps settings and token; `main` contains the branch work.
 

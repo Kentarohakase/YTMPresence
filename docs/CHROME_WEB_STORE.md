@@ -8,7 +8,7 @@ This document records the submitted texts. They can be reused for Microsoft Edge
 
 **For every new version:** the package has to be uploaded in the dashboard as well. A GitHub release alone does not reach store users.
 
-> **Note on listing language.** The listing was submitted in German, while the manifest declares `default_locale: "en"`. The Chrome Web Store supports several listing languages; adding an English listing would match the extension itself and reach a wider audience. English versions of the texts are provided below.
+> **Note on listing language.** The listing was first submitted in German, while the manifest declares `default_locale: "en"`. An English listing was added with the 1.5.0 upload on 2026-11-02, using the English texts below.
 
 ## Store name
 
