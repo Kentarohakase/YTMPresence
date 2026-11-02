@@ -72,6 +72,7 @@ GitHub and the store are published separately; record both.
 
 | Version | GitHub release | Chrome Web Store | Notes |
 | --- | --- | --- | --- |
+| 1.5.1 | open | not uploaded | Companion fix only; the extension is unchanged apart from its version number. Uploading it now would mean withdrawing the pending 1.5.0 review. |
 | 1.5.0 | published 2026-11-02 | submitted 2026-11-02, in review | No permission changes since 1.4.0. The English listing was added with this upload. |
 | 1.4.0 | published 2026-08-10 | published | Confirmed in the dashboard on 2026-11-02. |
 | 1.3.1 | published 2026-08-09 | approved | First store submission. |
