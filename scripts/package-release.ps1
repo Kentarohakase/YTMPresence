@@ -182,6 +182,12 @@ Copy-Item -Path (Join-Path $appOutput "*") -Destination $bundleAppDir -Recurse -
 Copy-Item -LiteralPath $extensionOutput -Destination $bundleExtensionDir -Recurse
 
 $summaryPath = Join-Path $releaseRoot "RELEASE.txt"
+$runtimeNote = if ($SelfContained) {
+    "This package is self-contained and includes .NET. Nothing else has to be installed."
+}
+else {
+    "This package is framework-dependent. The target PC needs the .NET 10 Desktop Runtime and the ASP.NET Core Runtime 10 (x64)."
+}
 $summary = @"
 YTMPresence Release
 ===================
@@ -199,14 +205,11 @@ Extension zip:
 $extensionZip
 
 Installation:
-1. Starte YTMPresence.exe aus dem app-Ordner.
-2. Kopiere den Token aus dem Tray-Menü.
-3. Lade den extension-Ordner als entpackte Erweiterung.
-4. Füge den Token in den Extension-Optionen ein.
+1. Start YTMPresence.exe from the app folder.
+2. Open Getting started from the tray menu and follow the four steps.
 
 Runtime:
-Dieses Paket ist framework-dependent, außer es wurde mit -SelfContained gebaut.
-Framework-dependent Pakete benötigen die .NET 10 Desktop Runtime auf dem Ziel-PC.
+$runtimeNote
 "@
 
 Set-Content -LiteralPath $summaryPath -Value $summary -Encoding UTF8

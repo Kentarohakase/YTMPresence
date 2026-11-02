@@ -29,7 +29,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
 
       - name: Test extension behavior
         run: node --test
@@ -86,9 +86,21 @@ jobs:
       - name: Test
         run: dotnet test YTMPresence.Core.Tests/YTMPresence.Core.Tests.csproj -c Release --no-build
 
+      # Self-contained: Setup und ZIP bringen .NET mit, damit die App auch
+      # ohne installierte Desktop- und ASP.NET-Core-Runtime startet.
       - name: Package release
         shell: pwsh
-        run: ./scripts/package-release.ps1 -InnoSetupCompiler "$env:INNO_SETUP_COMPILER"
+        run: ./scripts/package-release.ps1 -SelfContained -InnoSetupCompiler "$env:INNO_SETUP_COMPILER"
+
+      # Dieselben Prüfungen wie in CI: Ein Tag darf kein Archiv
+      # veröffentlichen, das CI abgelehnt hätte.
+      - name: Verify extension archives
+        shell: pwsh
+        run: ./scripts/verify-extension-archives.ps1
+
+      - name: Lint packaged extension (web-ext)
+        shell: pwsh
+        run: npx --yes web-ext lint --source-dir artifacts/release/archive-check/YTMPresence-extension-firefox
 
       - name: Prepare release notes
         shell: pwsh

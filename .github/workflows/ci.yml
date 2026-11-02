@@ -27,7 +27,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
 
       - name: Verify version consistency
         shell: pwsh
@@ -65,7 +65,7 @@ jobs:
       # gebauten Archive nie anfasst.
       - name: Package release artifacts
         shell: pwsh
-        run: ./scripts/package-release.ps1 -SkipInstaller
+        run: ./scripts/package-release.ps1 -SelfContained -SkipInstaller
 
       - name: Verify release artifacts
         shell: pwsh
