@@ -2,6 +2,17 @@
 
 All notable changes to YTMPresence are documented in this file.
 
+## [Unreleased]
+
+### Fixed
+
+- With several browsers or browser profiles connected at once, one of them decides the presence, the mini player and the target of player commands. A paused browser no longer overwrites the presence of a playing one, and a click in the mini player affects one browser instead of all of them. The rule matches the one within a browser: a playing source keeps the selection; when it pauses, another one that is playing takes over; when the selected browser disconnects, the remaining one takes over at once. The extension protocol is unchanged, so older extensions benefit as well.
+
+### Changed
+
+- The diagnostics window and the diagnostics report name the selected source, for example "Edge 155 #3".
+- When Discord closes the connection, the diagnostics show Discord's reason, for example "Invalid Client ID (code 4000)", instead of only saying that the connection closed.
+
 ## [1.5.1] - 2026-11-02
 
 ### Fixed

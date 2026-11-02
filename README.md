@@ -81,7 +81,9 @@ Within one browser profile, the extension selects one tab for both the displayed
 
 Closing, reloading, navigating away from or discarding the selected tab selects an available fallback. After a background-worker restart, the extension retrieves the latest state from open tabs, preferring a playing tab. When no source remains, the popup clears its track and the companion clears Discord presence through its existing idle timeout (120 seconds by default).
 
-Selection across separate browser profiles or browsers is planned separately; each extension connection still has its own selection.
+### Several browsers or profiles
+
+The companion applies the same rule across browsers and browser profiles: a playing browser keeps the selection, another playing one takes over when it pauses, and the remaining one takes over at once when the selected browser closes. Only the selected browser receives mini-player commands. The diagnostics window shows which one is selected, for example "Edge 155 #3".
 
 ## Changelog
 

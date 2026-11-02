@@ -74,6 +74,10 @@ public sealed class CompanionServer : IAsyncDisposable
   private readonly ConcurrentDictionary<int, WebSocket> _authenticatedSockets = new();
   private int _socketIdCounter;
 
+  // Genau eine Verbindung bestimmt Presence, Mini-Player und Befehlsziel.
+  private readonly SourceSelector _sources = new();
+  private readonly object _sourceSync = new();
+
   public CompanionServer(AppSettings settings)
   {
     _settings = settings;
@@ -86,6 +90,10 @@ public sealed class CompanionServer : IAsyncDisposable
   public CompanionStatus GetStatusSnapshot()
   {
     var discordStatus = _presence.GetStatusSnapshot();
+
+    string? selectedSource;
+    lock (_sourceSync)
+      selectedSource = _sources.SelectedLabel;
 
     lock (_statusSync)
     {
@@ -106,7 +114,8 @@ public sealed class CompanionServer : IAsyncDisposable
           DiscordOk: discordStatus.DiscordOk,
           LastDiscordError: discordStatus.LastDiscordError,
           LastDiscordOkUtc: discordStatus.LastDiscordOkUtc,
-          LastDiscordOutcome: discordStatus.LastDiscordOutcome
+          LastDiscordOutcome: discordStatus.LastDiscordOutcome,
+          SelectedSource: selectedSource
       );
     }
   }
@@ -165,6 +174,7 @@ public sealed class CompanionServer : IAsyncDisposable
 
       var socketId = Interlocked.Increment(ref _socketIdCounter);
       _activeSockets[socketId] = ws;
+      var sourceLabel = SourceSelector.DescribeSource(ctx.Request.Headers.UserAgent.ToString(), socketId);
 
       var countedClient = false;
 
@@ -249,23 +259,28 @@ public sealed class CompanionServer : IAsyncDisposable
             countedClient = true;
             Interlocked.Increment(ref _connectedClients);
             _authenticatedSockets[socketId] = ws;
-            Logger.Info($"Extension client authenticated. Active clients: {Volatile.Read(ref _connectedClients)}");
+            Logger.Info($"Extension client {sourceLabel} authenticated. Active clients: {Volatile.Read(ref _connectedClients)}");
           }
 
-          lock (_statusSync)
+          YtmState? current;
+          int? previousId;
+          int? selectedId;
+          lock (_sourceSync)
           {
-            _lastMessageUtc = DateTimeOffset.UtcNow;
-            _lastTitle = state.Title;
-            _lastArtist = state.Artist;
-            _lastAlbum = state.Album;
-            _lastAlbumArtUrl = state.AlbumArtUrl;
-            _lastTrackUrl = GetBestTrackUrl(state, fallbackUrl: state.Url);
-            _lastIsPlaying = state.IsPlaying;
-            _lastPositionSeconds = state.PositionSeconds;
-            _lastDurationSeconds = state.DurationSeconds;
+            previousId = _sources.SelectedId;
+            current = _sources.Update(socketId, sourceLabel, state, DateTimeOffset.UtcNow);
+            selectedId = _sources.SelectedId;
           }
 
-          await _presence.HandleAsync(state, ctx.RequestAborted);
+          // Eine andere Verbindung ist ausgewählt: Dieser Zustand ist vermerkt,
+          // ändert aber weder Presence noch Mini-Player.
+          if (current is null)
+            continue;
+
+          if (previousId is not null && previousId != selectedId)
+            Logger.Info($"Selected source switched to {DescribeSelectedSource()}.");
+
+          await ApplyStateAsync(current, ctx.RequestAborted);
         }
       }
       finally
@@ -276,7 +291,8 @@ public sealed class CompanionServer : IAsyncDisposable
         if (countedClient)
         {
           Interlocked.Decrement(ref _connectedClients);
-          Logger.Info($"Extension client disconnected. Active clients: {Volatile.Read(ref _connectedClients)}");
+          Logger.Info($"Extension client {sourceLabel} disconnected. Active clients: {Volatile.Read(ref _connectedClients)}");
+          await SelectFallbackSourceAsync(socketId);
         }
         else if (!authenticated && authCts.IsCancellationRequested && !ctx.RequestAborted.IsCancellationRequested)
         {
@@ -308,6 +324,59 @@ public sealed class CompanionServer : IAsyncDisposable
     _idleTask = RunIdleLoopAsync(serverCts.Token);
 
     Logger.Info("CompanionServer started successfully.");
+  }
+
+  private async Task ApplyStateAsync(YtmState state, CancellationToken ct)
+  {
+    lock (_statusSync)
+    {
+      _lastMessageUtc = DateTimeOffset.UtcNow;
+      _lastTitle = state.Title;
+      _lastArtist = state.Artist;
+      _lastAlbum = state.Album;
+      _lastAlbumArtUrl = state.AlbumArtUrl;
+      _lastTrackUrl = GetBestTrackUrl(state, fallbackUrl: state.Url);
+      _lastIsPlaying = state.IsPlaying;
+      _lastPositionSeconds = state.PositionSeconds;
+      _lastDurationSeconds = state.DurationSeconds;
+    }
+
+    await _presence.HandleAsync(state, ct);
+  }
+
+  /// <summary>
+  /// Schließt die ausgewählte Verbindung, gilt sofort der letzte Zustand der
+  /// neuen Auswahl. Sonst bliebe die Presence der getrennten Quelle stehen,
+  /// bis die neue zufällig wieder etwas sendet; ein pausierter Tab tut das nicht.
+  /// </summary>
+  private async Task SelectFallbackSourceAsync(int closedSocketId)
+  {
+    YtmState? fallback;
+    lock (_sourceSync)
+      fallback = _sources.Remove(closedSocketId, DateTimeOffset.UtcNow);
+
+    // Beim Beenden schließen alle Verbindungen nacheinander; keine davon soll
+    // dabei noch eine Presence setzen.
+    if (fallback is null || !IsRunning)
+      return;
+
+    Logger.Info($"Selected source switched to {DescribeSelectedSource()}.");
+
+    try
+    {
+      using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+      await ApplyStateAsync(fallback, timeout.Token);
+    }
+    catch (Exception ex) when (ex is OperationCanceledException or ObjectDisposedException)
+    {
+      // Der Server wird gerade beendet.
+    }
+  }
+
+  private string DescribeSelectedSource()
+  {
+    lock (_sourceSync)
+      return _sources.SelectedLabel ?? "none";
   }
 
   private async Task RunIdleLoopAsync(CancellationToken ct)
@@ -409,34 +478,40 @@ public sealed class CompanionServer : IAsyncDisposable
       ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
     });
 
-    var sent = 0;
-
-    foreach (var pair in _authenticatedSockets.ToArray())
+    // Nur die ausgewählte Verbindung bekommt den Befehl. Früher ging er an
+    // alle: Mit Chrome und Edge gleichzeitig pausierte ein Klick beide.
+    int? targetId;
+    string? targetLabel;
+    lock (_sourceSync)
     {
-      var ws = pair.Value;
-
-      try
-      {
-        if (ws.State != WebSocketState.Open)
-        {
-          _authenticatedSockets.TryRemove(pair.Key, out _);
-          continue;
-        }
-
-        await SendTextAsync(ws, message, ct);
-        sent++;
-      }
-      catch (Exception ex) when (ex is WebSocketException or OperationCanceledException or ConnectionAbortedException)
-      {
-        _authenticatedSockets.TryRemove(pair.Key, out _);
-        Logger.Warn($"Player command '{command}' could not be sent to extension socket {pair.Key}: {ex.Message}");
-      }
+      targetId = _sources.SelectedId;
+      targetLabel = _sources.SelectedLabel;
     }
 
-    if (sent > 0)
-      Logger.Info($"Player command '{command}' sent to {sent} extension socket(s).");
+    if (targetId is not int socketId || !_authenticatedSockets.TryGetValue(socketId, out var ws))
+    {
+      Logger.Info($"Player command '{command}' not sent: no selected source.");
+      return false;
+    }
 
-    return sent > 0;
+    try
+    {
+      if (ws.State != WebSocketState.Open)
+      {
+        _authenticatedSockets.TryRemove(socketId, out _);
+        return false;
+      }
+
+      await SendTextAsync(ws, message, ct);
+      Logger.Info($"Player command '{command}' sent to {targetLabel}.");
+      return true;
+    }
+    catch (Exception ex) when (ex is WebSocketException or OperationCanceledException or ConnectionAbortedException)
+    {
+      _authenticatedSockets.TryRemove(socketId, out _);
+      Logger.Warn($"Player command '{command}' could not be sent to {targetLabel}: {ex.Message}");
+      return false;
+    }
   }
 
   private async Task CloseAllSocketsAsync()

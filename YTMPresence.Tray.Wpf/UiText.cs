@@ -469,6 +469,11 @@ public static class UiText
       en: $"Connected ({clients}), last data: {age}",
       es: $"Connected ({clients}), last data: {age}");
 
+  public static string DiagSelectedSource(string source) => T(
+      de: $" · Quelle: {source}",
+      en: $" · source: {source}",
+      es: $" · source: {source}");
+
   public static string DiagExtensionDisconnected(string age) => T(
       de: $"Nicht verbunden, letzte Daten: {age}",
       en: $"Not connected, last data: {age}",

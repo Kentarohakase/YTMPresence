@@ -401,4 +401,134 @@ public class CompanionServerTests
       listener.Stop();
     }
   }
+
+  private static string PlaybackJson(string title, bool isPlaying) => JsonSerializer.Serialize(new YtmState(
+    Source: "ytmusic",
+    Title: title,
+    Artist: "Test Artist",
+    Album: null,
+    AlbumArtUrl: null,
+    IsPlaying: isPlaying,
+    PositionSeconds: null,
+    DurationSeconds: null,
+    Url: "https://music.youtube.com/watch?v=abc123",
+    ShareUrl: null,
+    IsAd: false,
+    TimestampUnixMs: 0,
+    Token: Token));
+
+  // Bricht ein ClientWebSocket-Empfang ab, ist der Socket danach unbrauchbar.
+  // Deshalb nur als letzter Schritt eines Tests verwenden.
+  private static async Task<string?> TryReceiveAsync(ClientWebSocket socket, TimeSpan timeout)
+  {
+    using var cts = new CancellationTokenSource(timeout);
+    try
+    {
+      return await ReceiveAsync(socket, cts.Token);
+    }
+    catch (Exception ex) when (ex is OperationCanceledException or WebSocketException)
+    {
+      return null;
+    }
+  }
+
+  private static async Task<(ClientWebSocket Playing, ClientWebSocket Paused)> ConnectPlayingAndPausedAsync(
+    CompanionServer server,
+    int port,
+    CancellationToken ct)
+  {
+    var playing = await ConnectAsync(port, ct);
+    await SendAsync(playing, PlaybackJson("Song A", isPlaying: true), ct);
+    await PollUntilAsync(() => server.GetStatusSnapshot().LastTitle == "Song A", TimeSpan.FromSeconds(5));
+
+    var paused = await ConnectAsync(port, ct);
+    await SendAsync(paused, PlaybackJson("Song B", isPlaying: false), ct);
+    await PollUntilAsync(() => server.GetStatusSnapshot().ConnectedClients == 2, TimeSpan.FromSeconds(5));
+
+    return (playing, paused);
+  }
+
+  [Fact]
+  public async Task SecondConnection_DoesNotReplaceThePlayingOne_AndCommandsReachOnlyTheSelection()
+  {
+    // Mit Chrome und Edge gleichzeitig ueberschrieb der pausierte Browser die
+    // Presence des spielenden, und ein Klick im Mini-Player steuerte beide.
+    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+    var port = GetFreePort();
+    await using var server = new CompanionServer(ServerSettings(port));
+    await server.StartAsync();
+
+    var (playing, paused) = await ConnectPlayingAndPausedAsync(server, port, cts.Token);
+    using var _ = playing;
+    using var __ = paused;
+
+    var snapshot = server.GetStatusSnapshot();
+    Assert.Equal(2, snapshot.ConnectedClients);
+    Assert.Equal("Song A", snapshot.LastTitle);
+    Assert.True(snapshot.LastIsPlaying);
+
+    Assert.True(await server.SendPlayerCommandAsync("play-pause", cts.Token));
+
+    var command = await ReceiveAsync(playing, cts.Token);
+    Assert.Contains("\"type\":\"YTM_COMMAND\"", command);
+    Assert.Contains("\"command\":\"play-pause\"", command);
+    Assert.Null(await TryReceiveAsync(paused, TimeSpan.FromMilliseconds(500)));
+  }
+
+  [Fact]
+  public async Task ClosingTheSelectedConnection_SelectsTheRemainingOne()
+  {
+    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+    var port = GetFreePort();
+    await using var server = new CompanionServer(ServerSettings(port));
+    await server.StartAsync();
+
+    var (playing, paused) = await ConnectPlayingAndPausedAsync(server, port, cts.Token);
+    using var _ = playing;
+    using var __ = paused;
+
+    // Wie ein Browser, der den Tab oder das Profil schliesst.
+    playing.Abort();
+
+    // Der pausierte Browser sendet nichts mehr von sich aus. Sein letzter
+    // Zustand muss trotzdem sofort gelten.
+    await PollUntilAsync(() => server.GetStatusSnapshot().LastTitle == "Song B", TimeSpan.FromSeconds(5));
+    var snapshot = server.GetStatusSnapshot();
+    Assert.Equal("Song B", snapshot.LastTitle);
+    Assert.False(snapshot.LastIsPlaying);
+    Assert.Equal(1, snapshot.ConnectedClients);
+
+    Assert.True(await server.SendPlayerCommandAsync("next", cts.Token));
+    var command = await ReceiveAsync(paused, cts.Token);
+    Assert.Contains("\"command\":\"next\"", command);
+  }
+
+  [Fact]
+  public async Task PlayerCommand_WithoutAnySource_IsNotSent()
+  {
+    var port = GetFreePort();
+    await using var server = new CompanionServer(ServerSettings(port));
+    await server.StartAsync();
+
+    Assert.False(await server.SendPlayerCommandAsync("play-pause"));
+  }
+
+  [Fact]
+  public async Task SelectedSource_IsNamedAfterTheBrowser()
+  {
+    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+    var port = GetFreePort();
+    await using var server = new CompanionServer(ServerSettings(port));
+    await server.StartAsync();
+
+    using var client = new ClientWebSocket();
+    client.Options.SetRequestHeader(
+      "User-Agent",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.4283.45");
+    await client.ConnectAsync(new Uri($"ws://127.0.0.1:{port}/ws"), cts.Token);
+    await SendAsync(client, PlaybackJson("Song A", isPlaying: true), cts.Token);
+
+    await PollUntilAsync(() => server.GetStatusSnapshot().SelectedSource is not null, TimeSpan.FromSeconds(5));
+    Assert.StartsWith("Edge 155 #", server.GetStatusSnapshot().SelectedSource);
+  }
 }
