@@ -91,7 +91,7 @@ public partial class DiagnosticsWindow : Window
   private string BuildReport(CompanionStatus? status, string version, string endpoint, string logPath)
   {
     var sb = new StringBuilder();
-    sb.AppendLine("YTMPresence Diagnose");
+    sb.AppendLine("YTMPresence diagnostics");
     sb.AppendLine($"Version: {version}");
     sb.AppendLine($"Endpoint: {endpoint}");
     sb.AppendLine($"Settings: {_settingsPath}");
@@ -101,7 +101,7 @@ public partial class DiagnosticsWindow : Window
 
     if (status is null)
     {
-      sb.AppendLine("Status: keine Serverdaten");
+      sb.AppendLine("Status: no server data");
       return sb.ToString();
     }
 
@@ -185,11 +185,11 @@ public partial class DiagnosticsWindow : Window
     try
     {
       System.Windows.Clipboard.SetText(_lastReport);
-      StatusText.Text = "Diagnose kopiert.";
+      StatusText.Text = UiText.DiagCopied;
     }
     catch
     {
-      StatusText.Text = "Kopieren fehlgeschlagen.";
+      StatusText.Text = UiText.DiagCopyFailed;
     }
   }
 
@@ -199,13 +199,13 @@ public partial class DiagnosticsWindow : Window
     {
       UpdateStatus();
       var reportPath = CreateDiagnosticPackage();
-      StatusText.Text = $"Bericht erstellt: {reportPath}";
+      StatusText.Text = UiText.DiagReportCreated(reportPath);
       OpenPath(Path.GetDirectoryName(reportPath) ?? reportPath);
     }
     catch (Exception ex)
     {
       Logger.Error(ex, "Error creating diagnostic package.");
-      StatusText.Text = $"Bericht fehlgeschlagen: {ex.Message}";
+      StatusText.Text = UiText.DiagReportFailed(ex.Message);
     }
   }
 

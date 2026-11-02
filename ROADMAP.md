@@ -50,7 +50,7 @@ Goal: store and GitHub users get the branch work, and a new user's first start w
 - [x] Build the release setup self-contained (`package-release.ps1 -SelfContained` in the release workflow and CI). Measured on 2026-11-02: setup 61.8 MB instead of 2.2 MB, ZIP 88.7 MB, about 200 MB installed; well within the updater's 300 MB limit and 30-minute download timeout.
 - [x] Test on a clean Windows VM without .NET: fresh install, update from 1.4.0 keeping settings and token, uninstall. Passed in Windows Sandbox with `scripts/test-clean-install.ps1`; see the [clean install QA](docs/CLEAN_INSTALL_QA_2026-11-02.md).
 - [x] Translate the remaining German update-check messages in `UpdateChecker.cs` and the logger's first line; the sandbox log showed both. The download, checksum and setup-start messages are English now too, and the tray no longer shows the update prefix twice.
-- [ ] Translate the exception messages in `DiscordIpcClient.cs` (`Discord IPC nicht erreichbar`, `Discord IPC nicht verbunden`).
+- [x] Translate the exception messages in `DiscordIpcClient.cs` (`Discord IPC nicht erreichbar`, `Discord IPC nicht verbunden`). The hard-coded German status texts in the settings, diagnostics and mini-player windows go through `UiText` now as well.
 - [ ] Optional, to shrink the setup later: replace the ASP.NET Core WebSocket server with `HttpListener`, so the app no longer depends on `Microsoft.AspNetCore.App`.
 - [x] Add the archive check and `web-ext lint` to the release workflow; move both workflows to a supported Node LTS.
 - [x] Raise the Firefox `strict_min_version` to 140, which removes the desktop lint warning, and state the supported browser minimums in the README (Chrome/Edge 116+ for the WebSocket keepalive, Firefox 140+).

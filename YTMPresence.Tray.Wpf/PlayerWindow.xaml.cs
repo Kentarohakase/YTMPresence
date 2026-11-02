@@ -101,8 +101,8 @@ public partial class PlayerWindow : Window
     NextButton.IsEnabled = effectiveEnabled;
 
     if (!isEnabled)
-      CommandStatusText.Text = "Keine Extension verbunden";
-    else if (!_isSendingCommand && CommandStatusText.Text == "Keine Extension verbunden")
+      CommandStatusText.Text = UiText.PlayerNoExtension;
+    else if (!_isSendingCommand && CommandStatusText.Text == UiText.PlayerNoExtension)
       CommandStatusText.Text = "";
   }
 
@@ -238,11 +238,11 @@ public partial class PlayerWindow : Window
     try
     {
       var sent = await _sendCommand(command);
-      CommandStatusText.Text = sent ? $"{label} gesendet" : "Keine Extension verbunden";
+      CommandStatusText.Text = sent ? UiText.PlayerCommandSent(label) : UiText.PlayerNoExtension;
     }
     catch
     {
-      CommandStatusText.Text = $"{label} fehlgeschlagen";
+      CommandStatusText.Text = UiText.PlayerCommandFailed(label);
     }
     finally
     {
@@ -264,7 +264,7 @@ public partial class PlayerWindow : Window
 
   private async void NextButton_Click(object sender, RoutedEventArgs e)
   {
-    await SendCommandAsync("next", "Weiter");
+    await SendCommandAsync("next", UiText.TooltipNext);
   }
 
   private void TopMostBox_Changed(object sender, RoutedEventArgs e)

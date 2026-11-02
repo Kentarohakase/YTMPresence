@@ -53,31 +53,31 @@ public partial class SettingsWindow : Window
     try
     {
       System.Windows.Clipboard.SetText(SecurityTokenBox.Text.Trim());
-      SetStatus("Token kopiert.", isError: false);
+      SetStatus(UiText.SettingsTokenCopied, isError: false);
     }
     catch
     {
-      SetStatus("Token konnte nicht kopiert werden.", isError: true);
+      SetStatus(UiText.SettingsTokenCopyFailed, isError: true);
     }
   }
 
   private void GenerateTokenButton_Click(object sender, RoutedEventArgs e)
   {
     SecurityTokenBox.Text = SecurityTokenHelper.GenerateSecureToken();
-    SetStatus("Neuer Token erzeugt. Speichern nicht vergessen.", isError: false);
+    SetStatus(UiText.SettingsTokenGenerated, isError: false);
   }
 
   private void SaveButton_Click(object sender, RoutedEventArgs e)
   {
-    if (!TryReadInt(ListenPortBox, "Port", 1, 65535, out var listenPort)) return;
-    if (!TryReadInt(MinUpdateSecondsBox, "Discord Update-Intervall", 5, 300, out var minUpdateSeconds)) return;
-    if (!TryReadInt(IdleClearSecondsBox, "Idle-Clear", 10, 3600, out var idleClearSeconds)) return;
-    if (!TryReadInt(PausedClearSecondsBox, "Pause-Clear", 10, 3600, out var pausedClearSeconds)) return;
+    if (!TryReadInt(ListenPortBox, UiText.LabelPort, 1, 65535, out var listenPort)) return;
+    if (!TryReadInt(MinUpdateSecondsBox, UiText.LabelDiscordUpdateInterval, 5, 300, out var minUpdateSeconds)) return;
+    if (!TryReadInt(IdleClearSecondsBox, UiText.LabelIdleClearSeconds, 10, 3600, out var idleClearSeconds)) return;
+    if (!TryReadInt(PausedClearSecondsBox, UiText.LabelPausedClearSeconds, 10, 3600, out var pausedClearSeconds)) return;
 
     var listenHost = ListenHostBox.Text.Trim();
     if (string.IsNullOrWhiteSpace(listenHost))
     {
-      SetStatus("Host darf nicht leer sein.", isError: true);
+      SetStatus(UiText.SettingsHostEmpty, isError: true);
       ListenHostBox.Focus();
       return;
     }
@@ -86,7 +86,7 @@ public partial class SettingsWindow : Window
         listenHost.Contains('/') ||
         listenHost.Contains('\\'))
     {
-      SetStatus("Host darf nur Hostname oder IP enthalten, keine URL.", isError: true);
+      SetStatus(UiText.SettingsHostNotUrl, isError: true);
       ListenHostBox.Focus();
       return;
     }
@@ -94,7 +94,7 @@ public partial class SettingsWindow : Window
     var webSocketPath = WebSocketPathBox.Text.Trim();
     if (string.IsNullOrWhiteSpace(webSocketPath))
     {
-      SetStatus("WebSocket-Pfad darf nicht leer sein.", isError: true);
+      SetStatus(UiText.SettingsWebSocketPathEmpty, isError: true);
       WebSocketPathBox.Focus();
       return;
     }
@@ -106,7 +106,7 @@ public partial class SettingsWindow : Window
         webSocketPath.Contains('?') ||
         webSocketPath.Contains('#'))
     {
-      SetStatus("WebSocket-Pfad darf keine Leerzeichen, Query oder Fragment enthalten.", isError: true);
+      SetStatus(UiText.SettingsWebSocketPathInvalid, isError: true);
       WebSocketPathBox.Focus();
       return;
     }
@@ -114,7 +114,7 @@ public partial class SettingsWindow : Window
     var discordClientId = DiscordClientIdBox.Text.Trim();
     if (string.IsNullOrWhiteSpace(discordClientId))
     {
-      SetStatus("Discord Client ID darf nicht leer sein.", isError: true);
+      SetStatus(UiText.SettingsClientIdEmpty, isError: true);
       DiscordClientIdBox.Focus();
       return;
     }
@@ -122,7 +122,7 @@ public partial class SettingsWindow : Window
     var token = SecurityTokenBox.Text.Trim();
     if (string.IsNullOrWhiteSpace(token))
     {
-      SetStatus("Security Token darf nicht leer sein.", isError: true);
+      SetStatus(UiText.SettingsTokenEmpty, isError: true);
       return;
     }
 
@@ -164,14 +164,14 @@ public partial class SettingsWindow : Window
   {
     if (!int.TryParse(box.Text.Trim(), out value))
     {
-      SetStatus($"{label} muss eine Zahl sein.", isError: true);
+      SetStatus(UiText.SettingsNotANumber(label), isError: true);
       box.Focus();
       return false;
     }
 
     if (value < min || value > max)
     {
-      SetStatus($"{label} muss zwischen {min} und {max} liegen.", isError: true);
+      SetStatus(UiText.SettingsOutOfRange(label, min, max), isError: true);
       box.Focus();
       return false;
     }
