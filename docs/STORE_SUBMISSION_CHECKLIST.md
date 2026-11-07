@@ -7,14 +7,14 @@ This checklist covers the Chrome Web Store, Microsoft Edge Add-ons and compatibl
 - Check the manifest version in `YTMPresence/extension/manifest.json`.
 - Build the release: `.\scripts\package-release.ps1`
 - Inspect the extension ZIP: `artifacts\release\YTMPresence-extension.zip`
-- Have the privacy URL ready: `https://github.com/Kentarohakase/YTMPresence/blob/main/docs/EXTENSION_PRIVACY.md`
-- Take the store text from [CHROME_WEB_STORE.md](CHROME_WEB_STORE.md).
-- Verify that no local tokens, logs or build artifacts ended up in the extension ZIP.
+- Use this privacy URL: `https://github.com/Kentarohakase/YTMPresence/blob/main/docs/EXTENSION_PRIVACY.md`
+- Use the store text in [CHROME_WEB_STORE.md](CHROME_WEB_STORE.md).
+- Check the extension ZIP for local tokens, logs or build artifacts; none should be included.
 
 ## Required information
 
-- Name and short description come from `_locales/<language>/messages.json` (`appName`, `appDescription`) and are not maintained in the dashboard. Changing them requires a new package.
-- The full description has to mention the companion app **in the first paragraph**. Without it the extension does nothing; users who only discover that after installing will rate accordingly.
+- Name and short description are read from `_locales/<language>/messages.json` (`appName`, `appDescription`). They cannot be edited in the dashboard; changes require a new package.
+- State **in the first paragraph** that the extension requires the companion app, so users see the requirement before installing.
 - Category: Music or Productivity
 - Language: German, optionally English as a second listing
 - Privacy policy: `docs/EXTENSION_PRIVACY.md` as a GitHub URL
@@ -24,13 +24,13 @@ This checklist covers the Chrome Web Store, Microsoft Edge Add-ons and compatibl
 ## Explaining the permissions
 
 - `storage`: stores the token and companion URL locally.
-- `https://music.youtube.com/*`: reads playback data on YouTube Music only, and finds the tabs for player commands.
+- `https://music.youtube.com/*`: reads playback data only on YouTube Music and finds YouTube Music tabs for player commands.
 - `localhost` and `127.0.0.1`: connects to the local companion only.
-- `tabs` is deliberately not requested. Should it ever be added back: Chrome then displays "Read your browsing history" at install time, and adding a permission after the fact triggers a fresh review.
+- The extension does not request `tabs`. Adding it would display Chrome's "Read your browsing history" warning at installation and require a new review.
 
 ## Data collection in the dashboard
 
-The answers have to match the Firefox metadata (`browsingActivity`, `websiteContent` in `browser_specific_settings.gecko.data_collection_permissions`):
+Use answers consistent with the Firefox metadata (`browsingActivity`, `websiteContent` in `browser_specific_settings.gecko.data_collection_permissions`):
 
 - Collected: website activity and website content (track metadata, the current YouTube Music URL).
 - Transferred locally only, to `127.0.0.1`/`localhost`; no sharing with third parties, no sale, no creditworthiness or lending purposes.
@@ -48,8 +48,8 @@ Prepare screenshots of:
 
 Requirements:
 
-- Store icon (labelled „Händlersymbol" in the German interface, which is Google's rendering of "store icon"): 128x128 PNG. `YTMPresence/extension/icons/icon128.png` meets the requirement; Google additionally recommends 16 px of transparent padding around a 96x96 graphic.
-- Screenshots: 1280x800 or 640x400, at least one, at most five. The first image appears as the preview in search results — that is where the Discord presence belongs, not the options page.
+- Store icon (labelled „Händlersymbol" in the German interface): 128x128 PNG. `YTMPresence/extension/icons/icon128.png` meets the requirement; Google also recommends 16 px of transparent padding around a 96x96 graphic.
+- Screenshots: 1280x800 or 640x400, at least one, at most five. Show Discord presence in the first image, which appears as the search-result preview.
 - Before uploading, check that the security token is not legible in any image.
 
 ## After the upload
@@ -60,9 +60,9 @@ Requirements:
 
 ## For every further version
 
-The store does not update itself. A GitHub release only reaches users who loaded the extension unpacked.
+Store updates require a separate upload; a GitHub release alone only reaches users who loaded the extension unpacked.
 
-- Upload the new package in the dashboard, otherwise store users stay on the old version.
+- Upload the new package in the dashboard for store users to receive the update.
 - Permission changes trigger another review and can delay approval.
 - Name and short description come from `_locales/`; changing them also requires a new package.
 

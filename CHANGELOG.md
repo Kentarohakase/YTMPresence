@@ -6,25 +6,25 @@ All notable changes to YTMPresence are documented in this file.
 
 ### Fixed
 
-- With several browsers or browser profiles connected at once, one of them decides the presence, the mini player and the target of player commands. A paused browser no longer overwrites the presence of a playing one, and a click in the mini player affects one browser instead of all of them. The rule matches the one within a browser: a playing source keeps the selection; when it pauses, another one that is playing takes over; when the selected browser disconnects, the remaining one takes over at once. The extension protocol is unchanged, so older extensions benefit as well.
+- When several browsers or profiles are connected, Discord presence, the mini player and its controls now use one selected source. Paused sources cannot replace a playing one, and commands reach only that source. Selection follows the same rules as within one browser: keep the playing source; on pause, switch only if another is playing; on disconnect, choose an available source immediately. The extension protocol is unchanged, so older extensions also benefit.
 
 ### Changed
 
-- The diagnostics window and the diagnostics report name the selected source, for example "Edge 155 #3".
-- When Discord closes the connection, the diagnostics show Discord's reason, for example "Invalid Client ID (code 4000)", instead of only saying that the connection closed.
-- If the companion cannot start because its port is taken, it says so in a notification and in the tray menu ("Server: port 17373 in use") and explains what to do. Until now the menu only showed "Server: stopped", and the reason was in the log alone.
-- When the Discord desktop app is not running, the tray menu shows "Discord: not running" and the diagnostics explain that the companion connects by itself once Discord starts, instead of an English IPC error message.
-- The extension sends its version number with the connection test, and the diagnostics show it next to the selected source. Older companions ignore it; older extensions simply do not report one.
+- The diagnostics window and report identify the selected source, for example "Edge 155 #3".
+- When Discord closes the connection, diagnostics include its reason, for example "Invalid Client ID (code 4000)".
+- If the companion's port is occupied, a notification explains how to resolve it and the tray menu shows "Server: port 17373 in use". Previously, the menu showed only "Server: stopped", with the reason available in the log.
+- When the Discord desktop app is closed, the tray menu shows "Discord: not running". Diagnostics explain that the companion will connect automatically when Discord starts, replacing the English IPC error message.
+- The extension includes its version in the connection test, and diagnostics show it next to the selected source. Older companions ignore the field; older extensions do not report a version.
 
 ## [1.5.1] - 2026-11-02
 
 ### Fixed
 
-- The first presence after connecting to Discord is no longer lost. Discord silently drops commands that arrive before its READY message, and the companion sent the activity right after the handshake. After every start of the companion or of Discord the first update vanished; with a paused track, whose details do not change, the presence could stay missing for a long time. The companion now waits for READY before it sends anything.
+- The first presence update after starting the companion or Discord is no longer lost. The companion now waits for Discord's READY message before sending commands. Previously, Discord dropped the update sent immediately after the handshake; a paused track could remain missing until its details changed.
 
 ### Changed
 
-- The companion waits for Discord's answer to every activity update and reports it: accepted, rejected with Discord's code and reason, or no answer within three seconds. Until now an update counted as successful once it was written; a rejection only appeared in the log while the diagnostics showed OK. The tray menu, the diagnostics window and the diagnostics report show the result.
+- The tray menu, diagnostics window and report show Discord's response to each activity update: accepted, rejected with a code and reason, or no response within three seconds. Previously, sending an update counted as success, even if Discord rejected it; rejections appeared only in the log.
 
 ### Notes
 
@@ -34,26 +34,26 @@ All notable changes to YTMPresence are documented in this file.
 
 ### Added
 
-- A four-step companion setup guide with Chrome/Edge store and Firefox links, a separate developer section, manual token copying and localized German/English feedback. Companion version is shown in setup; extension version and installation type are shown in popup/options without additional permissions.
+- A four-step setup guide with Chrome/Edge store and Firefox links, a separate developer section, manual token copying and feedback in German and English. The guide shows the companion version; the extension popup and options show the extension version and installation type without requesting additional permissions.
 - Optional `companionVersion` in `YTM_TEST_RESULT`. Older peers remain compatible; missing versions show “Not reported”, and mismatched versions do not block the connection.
-- An extension behavior suite using Node's built-in test runner, executed in CI and the release workflow. It covers tab selection, targeted commands, tab lifecycle, background restart, pending state, playback extraction and track URLs without contacting YouTube Music or Discord.
+- Extension tests run in CI and the release workflow using Node's built-in test runner. They cover tab selection, targeted commands, tab lifecycle, background restarts, pending state, playback extraction and track URLs without contacting YouTube Music or Discord.
 - `scripts/test-clean-install.ps1` tests install, start, update and uninstall in Windows Sandbox, which has no .NET and no network.
 
 ### Changed
 
-- The setup and the ZIP are self-contained and include .NET. Until now they needed both the .NET 10 Desktop Runtime and the ASP.NET Core Runtime, and neither the setup nor the README said so; without the ASP.NET Core Runtime the companion did not start. The setup grows from 2.2 MB to about 62 MB.
-- Extension options now use **Save and check**. Saving and connection changes are coordinated in the background, while popup retries use the saved configuration on the same connection. Custom URLs are under Advanced settings. Feedback separates storage errors, saved-but-unreachable and saved-but-rejected results, and explains separate browser-profile/install settings.
-- The Firefox package requires Firefox 140 or later instead of 126. It declares its data use with `data_collection_permissions`, which older versions do not know.
+- The setup and ZIP now include .NET. Earlier packages required both the .NET 10 Desktop Runtime and the ASP.NET Core Runtime, but neither the setup nor the README listed both; without the ASP.NET Core Runtime, the companion would not start. The setup size increases from 2.2 MB to about 62 MB.
+- Extension options now use **Save and check**. The background script coordinates saving and connection changes; popup retries use the saved configuration on the same connection. Custom URLs are under Advanced settings. Status messages distinguish storage failures, an unreachable companion and a rejected token, and explain that each browser profile and installation has separate settings.
+- The Firefox package requires Firefox 140 or later instead of 126. Earlier versions do not support `data_collection_permissions`, which the package uses to declare its data use.
 - The release workflow verifies the extension archives and lints the Firefox package before publishing, as CI already did. Both workflows run on Node 24.
 
 ### Fixed
 
-- Within one browser profile, a playing YouTube Music tab retains ownership of the presence. Paused background tabs no longer overwrite it, and mini-player commands go only to the selected tab's main frame. Pausing retains the selected tab unless another tab is playing; closing, reloading, navigating away or discarding it chooses a fallback in stable tab-ID order, preferring playing tabs.
-- Autoplay progress uses the current track's player-bar timeline when available. YouTube Music can reuse a cumulative media timeline across tracks, which previously made the mini player and Discord show the previous track's elapsed time as part of the new track. Invalid or hidden player-bar values retain the media-element fallback.
-- A green extension badge now requires a positive token response on the current socket, rather than an open socket alone. Four-second checks and bounded reconnect delays ignore obsolete sockets/configurations, and reconnect replays the current selected track after authentication. Keepalive replies do not replay playback or refresh pause/idle state. Popup and options share actionable states and distinguish companion connectivity from visible Discord presence.
+- Within one browser profile, a playing YouTube Music tab stays selected for presence and mini-player commands. Paused background tabs no longer replace it, and commands go only to the selected tab's main frame. Pausing keeps the selection unless another tab is playing. Closing, reloading, navigating away from or discarding the tab selects a fallback in stable tab-ID order, preferring playing tabs.
+- Autoplay progress uses the current track's player-bar timeline when available. YouTube Music can reuse a cumulative media timeline across tracks, which previously added the previous track's elapsed time to the new track in the mini player and Discord. The media element remains the fallback when player-bar values are invalid or hidden.
+- The extension badge turns green only after the companion accepts the token on the current socket. Connection checks take up to four seconds, and reconnect delays are bounded; both ignore obsolete sockets and configurations. After reconnecting and authenticating, the extension resends the selected track. Keepalive replies neither resend playback nor reset pause or idle state. Popup and options use the same status messages and next steps, and distinguish a companion connection from visible Discord presence.
 - Background-worker restarts recover playback state from open tabs, including paused tracks. Closed tabs cannot be restored by late recovery responses or replayed after a token change, and obsolete WebSocket connections cannot deliver player commands.
-- Update errors no longer repeat their prefix. The tray showed messages like „Update check failed: Update-Check fehlgeschlagen: HTTP 404.“, because the message from the core carried its own German prefix. The messages of the update check, the download and the setup start are now English, like the log; the text around them still follows the Windows language. The first log line is English as well.
-- The settings, diagnostics and mini-player windows follow the Windows language completely. Their status and validation messages were hard-coded German („Token kopiert.“, „Host darf nicht leer sein.“, „Keine Extension verbunden“), and the diagnostics window mixed German title, buttons and labels with English ones in either language. The diagnostics report itself stays English, like the log; its two German lines are English now. The Discord connection errors shown in diagnostics are English as well.
+- Update errors no longer repeat their prefix, as in „Update check failed: Update-Check fehlgeschlagen: HTTP 404.“. Core messages for update checks, downloads and setup launch are now English, matching the log; surrounding interface text still follows the Windows language. The first log line is also English.
+- The settings, diagnostics and mini-player windows now follow the Windows language throughout. Previously, status and validation messages such as „Token kopiert.“, „Host darf nicht leer sein.“ and „Keine Extension verbunden“ stayed German, and diagnostics mixed German and English labels. The diagnostics report remains English, with its two German lines translated. Discord connection errors in diagnostics are also English.
 
 ### Known limitations
 
@@ -63,61 +63,61 @@ All notable changes to YTMPresence are documented in this file.
 
 ### Changed
 
-- The project documentation is now in English: the changelog including its history, the README and everything under `docs/`. The extension is published in an international store, and German documentation no longer matched that.
+- The changelog, including earlier entries, the README and all documentation under `docs/` are now in English for the extension's international audience.
 
 ### Fixed
 
-- **The Discord presence is no longer hard-coded to German.** Playback state, the paused line, the advertisement notice and the label of the track button were fixed strings — an English user was showing their contacts „Pausiert bei 1:23" and a button called „Auf YouTube Music öffnen". This is the text *other people* read, not the app's own interface. `PresenceText` in the core project now translates according to the system language, falling back to English instead of German.
-- The diagnostics window and the getting-started window follow the system language as well. Server state, the connection and Discord lines, the age labels, the update-check line and the error message when opening YouTube Music were all hard-coded German. The visible interface is now fully translated.
-- Log messages are English. They were German, which was the least useful of the options: understandable to the maintainer, opaque to everyone else, and no longer matching the now-English documentation. Logs are deliberately **not** translatable — a log line is a search key, and a localised message no longer matches the string in the source when a user reports it. The diagnostics window keeps following the system language; that is the surface built for users, whereas the log is the surface built for diagnosis.
+- Discord presence text now follows the system language. Playback state, paused position, advertisement notices and the track button shown to other Discord users previously stayed German, including „Pausiert bei 1:23" and „Auf YouTube Music öffnen". `PresenceText` now translates these strings, with English as the fallback.
+- The diagnostics and getting-started windows now translate server state, connection and Discord status, age labels, update-check status and errors when opening YouTube Music. These strings previously stayed German regardless of the system language.
+- Log messages are now English and are not localized, so reported messages match the source and can be searched consistently. The diagnostics window continues to follow the system language.
 - The mini player follows the Windows language. Playback state, the no-track placeholder and the label of the previous-track command were hard-coded German and stayed German even when the rest of the interface ran in English.
 
 ## [1.3.1] - 2026-08-09
 
 ### Changed
 
-- **The extension no longer requests the `tabs` permission.** It was never needed: `tabs.query` with a URL filter and `tabs.sendMessage` both work through the host permission for `https://music.youtube.com/*`, `tabs.create` needs no permission at all, and only the tab ID is read from the results. In exchange, Chrome displayed "Read your browsing history" at install time — for a capability the extension never used.
-- The short description and store text now mention the companion app first. Without it the extension does nothing, because Discord Rich Presence cannot be set from a browser. The short description comes from `_locales/<language>/messages.json` and is taken by Chrome from the manifest, not from the store dashboard.
+- The extension no longer requests the unused `tabs` permission, removing Chrome's "Read your browsing history" warning at installation. `tabs.query` with a URL filter and `tabs.sendMessage` use the existing host permission for `https://music.youtube.com/*`; `tabs.create` needs no permission. Only tab IDs are read from query results.
+- The short description and store text now state the companion app requirement first, since a browser cannot set Discord Rich Presence. Chrome reads the short description from `_locales/<language>/messages.json` through the manifest, not from the store dashboard.
 - `docs/STORE_SUBMISSION_CHECKLIST.md` now contains the data-collection answers for the Chrome dashboard, aligned with the Firefox metadata already declared.
 
 ## [1.3.0] - 2026-08-09
 
 ### Fixed
 
-- **The presence can be cleared again.** To clear it, the Discord IPC client sent the command `CLEAR_ACTIVITY` — which does not exist in the RPC protocol; the documented commands are `SET_ACTIVITY`, `SEND_ACTIVITY_JOIN_INVITE` and `CLOSE_ACTIVITY_REQUEST`. Discord rejected the command, the rejection was discarded, and the app kept reporting "Discord OK". As a result the presence stayed up: `OnlyShowWhenPlaying` had no effect, `PausedClearSeconds` had no effect, and it did not disappear on shutdown either. Clearing now uses `SET_ACTIVITY` with `activity: null`.
-- **Track URLs no longer lose their percent encoding.** Normalisation used `Uri.ToString()` in three places — per the documentation the *unescaped* canonical form ("All characters are unescaped except #, ? and %"). `?q=Sam%20Smith` therefore became `?q=Sam Smith` with real spaces. Discord then rejected the entire activity (`"url" must be a valid uri`) and no presence appeared at all. The search links used as a fallback when no video ID can be found were affected. `AbsoluteUri` is used instead.
-- An invalid button URL no longer costs the whole presence. The URL is validated before the button is built; if it does not hold up, only that button is dropped and a log line states why.
-- A presence update is no longer preceded by a clear. The former "Discord cache fix" sent a clear on every track and play/pause change and waited 200 ms. That was inconsequential while clearing used the non-existent `CLEAR_ACTIVITY` command — with clearing repaired, the same sequence would have made the presence vanish briefly on every track change. `SET_ACTIVITY` replaces the activity on its own anyway.
-- Error responses from Discord are logged instead of discarded. That gap is exactly what hid the wrong command for the entire lifetime of the project.
+- Discord presence clears again on pause, timeout and shutdown. The client used the unsupported `CLEAR_ACTIVITY` command, discarded Discord's rejection and reported "Discord OK". This prevented `OnlyShowWhenPlaying` and `PausedClearSeconds` from working. Clearing now uses `SET_ACTIVITY` with `activity: null`.
+- Track URLs retain their percent encoding. URL normalization used `Uri.ToString()` in three places, turning `?q=Sam%20Smith` into `?q=Sam Smith`. Discord rejected the entire activity with `"url" must be a valid uri`. This affected fallback search links when no video ID was available. The code now uses `AbsoluteUri`.
+- Invalid button URLs no longer prevent the presence from appearing. The URL is validated before the button is built; an invalid button is omitted and the reason is logged.
+- Track and play/pause updates no longer clear the presence first or wait 200 ms before sending it. `SET_ACTIVITY` replaces the activity directly. Removing the old "Discord cache fix" avoids a brief disappearance now that clearing works; the previous `CLEAR_ACTIVITY` command had been ignored.
+- Error responses from Discord are now logged. Previously, discarded responses hid the unsupported clear command.
 
 ### Added
 
-- The diagnostics window shows the last successful update check. Failures of the automatic check at startup deliberately go to the log only, so that no balloon appears every time the machine boots without a network — but that also meant the check could fail for months without anyone noticing. If the last success is more than two weeks ago, the line says so explicitly; if the check at startup is disabled, that is stated too. The timestamp is stored in the settings and included in the diagnostics report.
+- Diagnostics now show the last successful update check and flag checks older than two weeks or disabled startup checks. The timestamp is saved in settings and included in the diagnostics report. Failed startup checks still appear only in the log, avoiding notifications when the machine starts offline.
 
 ## [1.2.0] - 2026-08-05
 
 ### Added
 
-- `scripts/verify-extension-archives.ps1` inspects the built extension archives the way a store upload pipeline sees them: entry names (path separators, absolute paths, traversal), a real extraction to disk, and resolution of every `__MSG_*__` placeholder against the default-language catalogue.
-- CI now builds the release artifacts itself (`package-release.ps1 -SkipInstaller`), verifies them, and lints the **extracted** Firefox variant from the built archive rather than the source folder. Linting the source misses packaging defects because it never touches the archives.
+- `scripts/verify-extension-archives.ps1` checks built extension archives for invalid path separators, absolute paths and path traversal, extracts them to disk, and resolves every `__MSG_*__` placeholder against the default-language catalogue.
+- CI now builds release artifacts with `package-release.ps1 -SkipInstaller`, verifies them, and lints the extracted Firefox archive to catch packaging defects that source-folder checks miss.
 
 ### Changed
 
-- **The companion WebSocket now checks the `Origin` of the handshake.** WebSocket connections are not subject to the same-origin policy: until now any website you visited could talk to the local companion and guess tokens through `YTM_TEST` without limit. In practice the 256-bit token protected against that, but it remained a fingerprinting surface and an open endpoint. Extension origins (`chrome-extension:`, `moz-extension:`, `safari-web-extension:`) and a missing origin for local non-browser clients are allowed; web origins are rejected with HTTP 403.
-- Sockets that do not present a valid token within 60 seconds are closed. A valid token in the connection test counts as proof, because that is exactly how the extension keeps the connection alive while playback is paused.
-- The duplicated implementation of the instance-key calculation (`InstallerCoordination.GetInstanceKey` and `MakeInstanceKey` in `installer/YTMPresence.iss`) is marked as such on both sides, with a shared test vector. `docs/RELEASE_QA.md` now checks the self-shutdown as an item of its own: it is the only visible evidence that both sides compute the same key — if they drift apart, the installer silently falls back to the Restart Manager and the update still looks successful.
-- The setup asset of a release is selected exactly once; name and download URL then come from the same asset. Multiple assets ending in `-setup.exe` are rejected as ambiguous, just like conflicting checksum lines, instead of silently taking the first — the order of the GitHub response is not guaranteed.
+- The companion WebSocket now checks the handshake's `Origin`. Previously, websites could connect to the local endpoint and make unlimited token guesses through `YTM_TEST`, since WebSockets are not restricted by the same-origin policy. The 256-bit token protected access, but the endpoint remained available for fingerprinting. Extension origins (`chrome-extension:`, `moz-extension:`, `safari-web-extension:`) and a missing origin for local non-browser clients are allowed; web origins receive HTTP 403.
+- Sockets are closed if they do not present a valid token within 60 seconds. Connection tests with a valid token count as authentication, allowing the extension to keep the connection alive while playback is paused.
+- The matching instance-key implementations, `InstallerCoordination.GetInstanceKey` and `MakeInstanceKey` in `installer/YTMPresence.iss`, now reference each other and share a test vector. `docs/RELEASE_QA.md` adds a separate self-shutdown check to verify that both produce the same key. A mismatch can go unnoticed because the installer falls back to the Restart Manager and still completes the update.
+- Setup selection now takes the file name and download URL from a single asset. Releases with multiple `-setup.exe` assets are rejected as ambiguous, like conflicting checksum lines, rather than relying on GitHub's unspecified response order.
 - Releases marked `prerelease: true` are no longer offered as updates. `/releases/latest` already filters them, but `UpdateApiUrl` is configurable.
-- Selection and verification of the checksum asset now both compare the file name ordinally. A differently cased `sha256sums.txt` is therefore never offered in the first place, instead of failing later with a misleading security message. The artifact names live in `UpdateArtifactNames` as a single source.
+- Checksum asset selection and verification now both use ordinal file-name comparison. A differently cased `sha256sums.txt` is rejected during selection rather than later with a misleading security message. Artifact names are defined centrally in `UpdateArtifactNames`.
 
 ### Fixed
 
-- **Paused playback is recognised as paused again.** The extension read the playback state preferentially from `navigator.mediaSession.playbackState` and only fell back to the media element when that was empty. Since YouTube Music does not update that value reliably on pause, the extension kept reporting "playing" — the presence stayed up in Discord, and neither `OnlyShowWhenPlaying` nor `PausedClearSeconds` could take effect, because the companion never saw a pause. The media element's `paused` is now authoritative; `mediaSession` only serves as a fallback. Seeks (`seeking`) are skipped so that the presence does not flicker while scrubbing.
-- The search for the media element now considers `<video>` as well. If YouTube Music offered no `<audio>`, position, duration and playback state previously had no source at all, and the state silently fell back to "playing".
-- **The presence no longer links an arbitrary video from the page.** `getPlayerBarWatchUrl` contained selectors without a container scope (`a[href*="/watch?v="]` and `a[href*="music.youtube.com/watch?v="]`) which grab the first matching link in the entire document — on YouTube Music that means queue entries, recommendation tiles or the sidebar. Since that source also took precedence, a track that had never played was linked. Only anchors inside `<ytmusic-player-bar>` count now, and the artwork comes first: the player sets it per track and it is the only source that reliably refers to the current title.
-- The track URL now considers the address bar as well. As of 2026-08, YouTube Music provides neither the player-bar anchors nor `canonical`, and `og:url` points at `/app_shell` without a video ID — leaving the artwork, the last fallback, as the only working source. The candidates are reordered by reliability: player bar, artwork, address bar, canonical. The previously identical branches for `video` and default mode were merged.
-- Release ZIPs use forward slashes as path separators. `Compress-Archive` on Windows PowerShell 5.1 writes backslashes, which violates the ZIP specification: spec-compliant extractors — including the upload pipelines of the Chrome Web Store and addons.mozilla.org — read `_locales\en\messages.json` as a flat file name rather than a directory, so the `__MSG_*__` placeholders in the manifest fail to resolve. Both extension ZIPs and the bundle ZIP were affected.
-- `verify-release.ps1` no longer normalises backslash entries to forward slashes but aborts naming the offending entries. The previous normalisation reported exactly the defect it was meant to find as being in order.
+- Pausing playback is detected correctly again, allowing `OnlyShowWhenPlaying` and `PausedClearSeconds` to clear the presence. YouTube Music does not reliably update `navigator.mediaSession.playbackState` on pause, so the extension now reads the media element's `paused` property first and uses `mediaSession` only as a fallback. Updates during seeks (`seeking`) are skipped to avoid flicker.
+- Media detection now includes `<video>`. Previously, pages without an `<audio>` element had no source for position, duration or playback state and defaulted to "playing".
+- Presence links no longer point to unrelated videos in the queue, recommendations or sidebar. Unscoped selectors in `getPlayerBarWatchUrl` (`a[href*="/watch?v="]` and `a[href*="music.youtube.com/watch?v="]`) could select unrelated links. Anchor lookup is now limited to `<ytmusic-player-bar>`, and per-track artwork takes priority when choosing the URL because it reliably identifies the current track.
+- Track URL detection now checks the address bar. As of 2026-08, YouTube Music exposes neither player-bar anchors nor `canonical`, while `og:url` points to `/app_shell` without a video ID. Artwork was the only working source. Candidates are now checked in this order: artwork, player bar, address bar, canonical. Identical branches for `video` and default mode were merged.
+- Both extension ZIPs and the bundle ZIP now use forward slashes as path separators. Windows PowerShell 5.1's `Compress-Archive` wrote backslashes, causing ZIP-compliant store extractors, including the Chrome Web Store and addons.mozilla.org, to treat paths such as `_locales\en\messages.json` as single file names. This prevented manifest `__MSG_*__` placeholders from resolving.
+- `verify-release.ps1` now rejects archive entries containing backslashes and lists them in the error. Previously, it normalized those paths before checking, hiding the packaging defect.
 
 ## [1.1.0] - 2026-08-05
 
@@ -125,26 +125,26 @@ All notable changes to YTMPresence are documented in this file.
 
 - Version consistency check across app, assembly metadata, extension and release changelog; CI and release packaging abort on any mismatch.
 - Settings recovery preserves corrupt JSON files as `settings.corrupt-<timestamp>.json` and then creates valid defaults.
-- Update security components in `YTMPresence.Core.Updates` (URL validation, checksum parser, size limits, temporary working directories, download service, launch verification) with extensive tests for checksum, download, redirect and process-start cases.
-- Settings flag `AllowLoopbackUpdateSource` (default: off) as an explicit test configuration for the local QA update server; `scripts/test-update-flow.ps1` sets it automatically and restores the original settings afterwards.
+- Update security components in `YTMPresence.Core.Updates` for URL validation, checksum parsing, size limits, temporary working directories, downloads and launch verification, with tests for checksum, download, redirect and process-start cases.
+- Settings flag `AllowLoopbackUpdateSource` (default: off) for testing with the local QA update server. `scripts/test-update-flow.ps1` enables it automatically and restores the original settings afterwards.
 
 ### Changed
 
-- Settings are written through a temporary file and an atomic file replace.
+- Settings are saved to a temporary file, then written with an atomic file replacement.
 - Firefox packages declare the local transfer of browsing activity and website content through Mozilla's consent metadata, without raising the existing minimum version of 126.
-- **Updates only run after a successful SHA256 verification.** A missing `SHA256SUMS.txt`, missing, duplicate or conflicting setup lines, and invalid or mismatching hashes all block the installation; the previous "without checksum comparison" path is gone.
-- Update sources are restricted to HTTPS on `api.github.com`, `github.com`, `release-assets.githubusercontent.com` and `objects.githubusercontent.com`; metadata and asset redirects are validated individually (max. 5, with loop detection), downloads have size limits (setup 300 MB, checksums 64 KB, metadata 4 MB) as well as connect, stall and overall timeouts. Custom `UpdateApiUrl` values outside this policy are rejected with a clear error message.
-- Every update attempt uses a unique temporary directory with a `.part` file and an atomic rename after verification; errors and cancellations clean up, and orphaned directories are removed by age at app start.
-- Immediately before the setup is launched, existence, name, size and SHA256 are checked again and the file is locked against modification during the launch; YTMPresence only exits once the setup has actually started and stays usable if the launch fails.
-- The Inno Setup installer no longer terminates processes by file name via `taskkill`: it asks the installed instance to shut down cleanly through a shutdown event bound to the target path with a collision-resistant SHA256, and otherwise uses the Windows Restart Manager (`CloseApplications=force`), which only closes processes holding files in the installation folder. Portable copies and unrelated processes with the same name are left alone.
-- `verify-release.ps1` only verifies `SHA256SUMS.txt` (existence, exactly one valid line per artifact, correct hashes, no stale, duplicate or unknown lines) instead of rewriting it; the list is produced solely in `package-release.ps1`, once all artifacts are final. The release workflow builds and tests the solution before packaging.
+- Updates require successful SHA256 verification. Installation is blocked if `SHA256SUMS.txt` is missing, its setup entry is missing, duplicated or conflicting, or the hash is invalid or does not match. Updates can no longer skip checksum verification.
+- Update sources are restricted to HTTPS on `api.github.com`, `github.com`, `release-assets.githubusercontent.com` and `objects.githubusercontent.com`. Metadata and asset redirects are checked individually (max. 5, with loop detection). Downloads have size limits (setup 300 MB, checksums 64 KB, metadata 4 MB) and connection, stall and overall timeouts. Custom `UpdateApiUrl` values outside this policy are rejected with a clear error message.
+- Each update attempt uses a separate temporary directory. Downloads use a `.part` file that is renamed atomically after verification. Errors and cancellations trigger cleanup; orphaned directories are removed by age when the app starts.
+- Setup files are checked again for existence, name, size and SHA256 immediately before launch, and locked against modification during launch. YTMPresence exits only after setup starts and stays usable if launch fails.
+- The Inno Setup installer asks the installed instance to shut down cleanly through a shutdown event bound to the target path with a collision-resistant SHA256. If that fails, Windows Restart Manager (`CloseApplications=force`) closes only processes holding files in the installation folder. It no longer uses `taskkill` to terminate processes by file name. Portable copies and unrelated processes with the same name are left alone.
+- `verify-release.ps1` checks that `SHA256SUMS.txt` exists and has exactly one valid line per artifact, correct hashes, and no stale, duplicate or unknown lines. It does not rewrite the file. Only `package-release.ps1` creates the list, after all artifacts are final. The release workflow builds and tests the solution before packaging.
 
 ### Fixed
 
 - WebSocket text messages stay intact when a UTF-8 character is fragmented across several frames; binary and oversized messages are still discarded.
-- Server start, stop and presence updates are serialised; idle tasks and Discord resources are fully torn down on restarts.
+- Server start, stop and presence updates are serialized. Restarts shut down idle tasks and release Discord resources.
 - A backwards-compatible keepalive over the existing connection test keeps the Manifest V3 WebSocket connection alive while playback is paused, without resetting the pause or idle timeouts.
-- The final release checksum list now also contains the Firefox ZIP and — if built — the setup EXE.
+- The final release checksum list now also contains the Firefox ZIP and, if built, the setup EXE.
 
 ## [1.0.0] - 2026-06-20
 
@@ -157,25 +157,25 @@ All notable changes to YTMPresence are documented in this file.
 
 ### Changed
 
-- The tray windows (getting started, settings, mini player, update) now consistently use the central `UiText` strings and are therefore DE/EN.
-- When Discord is not running, the Discord IPC client no longer tries every pipe on every message but enters a short cooldown and reconnects automatically.
+- The tray windows (getting started, settings, mini player, update) now use the central `UiText` strings for German and English text.
+- When Discord is not running, the IPC client waits briefly between connection attempts and reconnects automatically. Previously, it tried every pipe for each message.
 - Release verification checks the new extension files (`i18n.js`, `_locales`) and both extension ZIPs (Chromium + Firefox).
 
 ### Removed
 
-- Dead legacy project `YTMPresence.Tray` (not part of the solution) removed.
+- Removed the unused `YTMPresence.Tray` project, which was not part of the solution.
 
 ## [0.8.11] - 2026-06-01
 
 ### Fixed
 
-- The Inno Setup update now only terminates YTMPresence itself and no longer the setup launched from it.
+- The Inno Setup update now terminates only YTMPresence, leaving the setup launched from it running.
 
 ## [0.8.10] - 2026-05-15
 
 ### Changed
 
-- The release script builds the installer solely through Inno Setup, which makes it easier to maintain.
+- The release script now uses only Inno Setup for installer builds, simplifying maintenance.
 
 ### Fixed
 
@@ -196,19 +196,19 @@ All notable changes to YTMPresence are documented in this file.
 
 ### Changed
 
-- The release script prefers Inno Setup and falls back to the previous legacy installer locally when `ISCC.exe` is missing.
+- The release script prefers Inno Setup. Local builds fall back to the legacy installer when `ISCC.exe` is missing.
 
 ## [0.8.8] - 2026-05-15
 
 ### Added
 
-- The diagnostics window can now produce a diagnostics report as a ZIP containing status, environment, redacted settings and logs.
+- The diagnostics window can now export a ZIP report containing status, environment, redacted settings and logs.
 
 ## [0.8.7] - 2026-05-15
 
 ### Fixed
 
-- The update installer now launches the setup with an explicit working directory and no longer exits the app before the installer is visibly running.
+- The update installer now launches setup with an explicit working directory. The app stays open until the installer is visibly running.
 
 ## [0.8.6] - 2026-05-15
 
@@ -240,7 +240,7 @@ All notable changes to YTMPresence are documented in this file.
 
 ### Fixed
 
-- The installer now waits until the setup EXE is readable after IExpress has produced it, before SHA256 checksums are computed.
+- The installer waits for the setup EXE produced by IExpress to become readable before computing SHA256 checksums.
 - The mini player tooltip uses the correct umlaut in `Track öffnen` again.
 
 ## [0.8.3] - 2026-05-15
@@ -257,7 +257,7 @@ All notable changes to YTMPresence are documented in this file.
 ### Fixed
 
 - Installation aborts earlier with a clear error message when `YTMPresence.exe` is missing after extraction.
-- Uninstallation removes the Windows uninstall entry and cleans up the temporary cleanup script itself.
+- Uninstallation removes the Windows uninstall entry and the temporary cleanup script.
 
 ## [0.8.2] - 2026-05-15
 
@@ -303,12 +303,12 @@ All notable changes to YTMPresence are documented in this file.
 
 - Extension version and app version aligned at `0.8.0`.
 - Default mini player width adjusted to the new controls.
-- Release packaging checks after the build that app, extension and ZIP contents are complete.
+- After building, the release script checks that the app, extension and ZIP contents are complete.
 
 ### Fixed
 
 - The release bundle now copies the app files into the `app` folder correctly.
-- Incomplete releases are prevented by an automatic ZIP structure check.
+- An automatic ZIP structure check prevents incomplete releases.
 
 ## [0.7.0] - 2026-05-14
 
@@ -321,7 +321,7 @@ All notable changes to YTMPresence are documented in this file.
 
 ### Changed
 
-- More robust injection guards for the content and page script.
+- Improved injection guards for the content and page scripts.
 - Extension README notes on the popup and badge added.
 
 ## Before 0.7.0

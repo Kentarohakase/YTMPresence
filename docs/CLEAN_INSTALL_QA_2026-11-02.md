@@ -26,15 +26,15 @@ Scope: the self-contained setup from pull request #2 on a Windows installation w
 | App folder, start menu entry and uninstall entry removed | Pass | Pass |
 | Settings left in `%APPDATA%` after uninstall | Kept (by design) | Kept (by design) |
 
-All 24 checks passed; three further lines are informational. The framework-dependent 1.4.0 did not start in the same sandbox, which reproduces the original problem.
+All 24 checks passed; three additional output lines are informational. The framework-dependent 1.4.0 build failed to start in the same sandbox, reproducing the original problem.
 
 ## Observations
 
 - The app log shows `Shutdown was requested by the installer` before each uninstall: the installer reached the app through its path-bound shutdown event, not through the Restart Manager fallback.
-- Without network the update check fails as expected (`api.github.com` unknown) and the app keeps running.
+- Without network access, the update check fails as expected (`api.github.com` unknown) and the app keeps running.
 - Two kinds of German text remain: the logger's first line (`Logger initialisiert`) and the update-check error messages in `UpdateChecker.cs`, which also reach the interface.
 
 ## Not covered
 
-- The getting-started window and its content, the extension connection and Discord. These need the manual checks in [release QA](RELEASE_QA.md).
-- The in-app update download. The update round runs the new setup over the old installation silently, which is what the updater does after its download and checksum check.
+- The getting-started window and its content, the extension connection and Discord require the manual checks in [release QA](RELEASE_QA.md).
+- The in-app update download was not tested. The update test runs the new setup silently over the old installation, as the updater does after downloading and checking the checksum.

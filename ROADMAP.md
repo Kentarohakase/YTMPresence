@@ -2,7 +2,7 @@
 
 Reviewed **2026-11-02**. Baseline: **1.4.0**, released 2026-08-10 on GitHub and in the Chrome Web Store (`main` at `da60499`).
 
-This roadmap replaces the draft of 2026-10-12. Release numbers are proposals for ordering the work, not promised dates.
+This roadmap replaces the draft of 2026-10-12. Release numbers indicate the proposed order of work; they do not promise delivery dates.
 
 ## Where things stand
 
@@ -10,11 +10,11 @@ This roadmap replaces the draft of 2026-10-12. Release numbers are proposals for
 
 **Finished but not released:** the branch `codex/extension-tab-selection`, merged into `main` with [pull request #1](https://github.com/Kentarohakase/YTMPresence/pull/1).
 
-- Within one browser profile, one YouTube Music tab owns the presence. Player commands go only to that tab, with a defined fallback on pause, close, reload, navigation, discard and background-worker restart.
-- Progress is track-relative during autoplay; the previous track's elapsed time no longer leaks into the mini player and Discord.
-- The green badge requires an accepted token on the current socket. Popup and options share the same actionable states.
-- Four-step guided setup with store link, *Save and check*, and version/install-type display. The last German-only onboarding strings are localized.
-- An extension test suite (92 tests, Node's built-in runner) runs in CI and the release workflow, next to 208 Core tests.
+- Within one browser profile, one YouTube Music tab supplies the presence and receives player commands. Selection follows defined rules on pause, close, reload, navigation, discard and background-worker restart.
+- Autoplay progress is relative to the current track; the mini player and Discord no longer include the previous track's elapsed time.
+- The green badge requires an accepted token on the current socket. Popup and options use the same status messages and next steps.
+- Four-step setup guide with a store link, *Save and check*, and version and installation-type information. The remaining German-only onboarding strings are localized.
+- The extension suite (92 tests, Node's built-in runner) runs alongside 208 Core tests in CI and the release workflow.
 - Live checks in Edge passed; see the [live QA](docs/LIVE_QA_2026-10-12.md) and [setup QA](docs/SETUP_QA_2026-10-12.md) records.
 
 **Open problems, checked against the code on 2026-11-02:**
@@ -33,25 +33,25 @@ This roadmap replaces the draft of 2026-10-12. Release numbers are proposals for
 
 - Ship finished work before starting new work: one release at a time, each with its QA record.
 - A working first start and reliable behavior come before features.
-- Keep the small local model: no accounts, no cloud, no listening history.
+- Keep the app local, without accounts, cloud services or listening history.
 - Every change that crosses components gets an automated test and a matching live check in [release QA](docs/RELEASE_QA.md).
 
 ## Now (no release needed)
 
 - [x] Push `codex/extension-tab-selection` to GitHub and open [pull request #1](https://github.com/Kentarohakase/YTMPresence/pull/1) into `main`.
-- [x] Name both runtimes with a download link in the README's installation section, until the self-contained setup from 1.5.0 is out.
+- [x] List both runtimes and their download link in the README's installation section until the self-contained 1.5.0 setup is released.
 - [x] Merge pull request #1 once CI passes.
 
 ## 1.5.0: ship what is done, and make it start on any PC
 
-Goal: store and GitHub users get the branch work, and a new user's first start works.
+Goal: release the completed branch work to store and GitHub users, and let new users start the app without installing runtimes separately.
 
-- [ ] Finish the cheap open checks from the setup QA: German extension with English companion, a fresh browser profile, and one Chrome smoke run covering tab selection and setup.
+- [ ] Complete the remaining setup QA checks: German extension with English companion, a fresh browser profile, and one Chrome smoke run covering tab selection and setup.
 - [x] Build the release setup self-contained (`package-release.ps1 -SelfContained` in the release workflow and CI). Measured on 2026-11-02: setup 61.8 MB instead of 2.2 MB, ZIP 88.7 MB, about 200 MB installed; well within the updater's 300 MB limit and 30-minute download timeout.
 - [x] Test on a clean Windows VM without .NET: fresh install, update from 1.4.0 keeping settings and token, uninstall. Passed in Windows Sandbox with `scripts/test-clean-install.ps1`; see the [clean install QA](docs/CLEAN_INSTALL_QA_2026-11-02.md).
-- [x] Translate the remaining German update-check messages in `UpdateChecker.cs` and the logger's first line; the sandbox log showed both. The download, checksum and setup-start messages are English now too, and the tray no longer shows the update prefix twice.
+- [x] Translate the remaining German messages found in the sandbox log: update-check errors in `UpdateChecker.cs` and the logger's first line. Download, checksum and setup-start messages are also now English, and tray errors no longer repeat the update prefix.
 - [x] Translate the exception messages in `DiscordIpcClient.cs` (`Discord IPC nicht erreichbar`, `Discord IPC nicht verbunden`). The hard-coded German status texts in the settings, diagnostics and mini-player windows go through `UiText` now as well.
-- [ ] Optional, to shrink the setup later: replace the ASP.NET Core WebSocket server with `HttpListener`, so the app no longer depends on `Microsoft.AspNetCore.App`.
+- [ ] Optional later change to reduce setup size: replace the ASP.NET Core WebSocket server with `HttpListener` to remove the dependency on `Microsoft.AspNetCore.App`.
 - [x] Add the archive check and `web-ext lint` to the release workflow; move both workflows to a supported Node LTS.
 - [x] Raise the Firefox `strict_min_version` to 140, which removes the desktop lint warning, and state the supported browser minimums in the README (Chrome/Edge 116+ for the WebSocket keepalive, Firefox 140+).
 - [x] Bump to 1.5.0 and finish the changelog.
@@ -68,7 +68,7 @@ Goal: what the mini player and diagnostics show matches what actually happens in
 - [x] Select one source across companion connections, using the same rule as inside a browser: the connection with the playing track keeps ownership, otherwise the one that played most recently. Send commands to that connection only. Each extension connection already carries one selected tab, so the selection works per connection without a protocol change, also for older extensions.
 - [x] Match Discord replies to the request nonce. Record *accepted*, *rejected* (with Discord's code and message) and *no reply* after a timeout, and show the result in diagnostics instead of assuming success. The client also waits for Discord's READY before sending; checked against the real Discord on 2026-11-02 (reply after READY in about 5 ms, none before it). Shipped early as 1.5.1, because the READY fix affects every 1.5.0 user.
 - [x] Show the selected source (browser, extension version), the last received track and the last Discord result in diagnostics. Exported diagnostics stay free of tokens. The source is named after the browser in the User-Agent; the extension reports its version with the connection test.
-- [x] Give actionable companion messages for an occupied port and for Discord not running.
+- [x] Explain how to resolve an occupied port and what happens when Discord is not running.
 - [ ] Live checks: Chrome and Edge at the same time; Discord restart; companion restart without reloading the tab; Windows sleep/resume; background-worker restart and tab discard.
 
 **Done when:** with two browsers, one click affects one source and the displayed track matches it; a rejected activity shows as rejected; every listed recovery scenario restores the presence without reloading YouTube Music.
@@ -88,7 +88,7 @@ Goal: what the mini player and diagnostics show matches what actually happens in
 | Code-signed setup and publisher check in the updater | A signing certificate and its renewal are affordable. Keep the existing checksum verification. |
 | Pairing without copying the token | Feedback after 1.5.0 still shows the token step as the main obstacle. Evaluate a short-lived local pairing code that keeps authentication. |
 | Presence presets, a quick privacy toggle, hotkeys | Concrete user requests show which one is worth building. |
-| ARM64 or other operating systems | There is real demand and a test machine; other operating systems need more than repackaging the WPF app. |
+| ARM64 or other operating systems | Users request support and a test machine is available; other operating systems require changes beyond repackaging the WPF app. |
 
 Not planned: cloud accounts, listening statistics, an interface rewrite.
 

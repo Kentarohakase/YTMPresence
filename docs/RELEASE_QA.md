@@ -1,13 +1,13 @@
 # Release QA
 
-This checklist is meant for every release tag, before the release is shared widely.
+Complete this checklist for each release tag before sharing the release widely.
 
 ## Before tagging
 
-- `Directory.Build.props` and `YTMPresence/extension/manifest.json` carry the same version.
+- `Directory.Build.props` and `YTMPresence/extension/manifest.json` specify the same version.
 - `CHANGELOG.md` contains an entry for this version.
 - `dotnet build YTMPresence.slnx --configuration Release` completes without errors.
-- `dotnet test YTMPresence.Core.Tests/YTMPresence.Core.Tests.csproj` is green.
+- `dotnet test YTMPresence.Core.Tests/YTMPresence.Core.Tests.csproj` passes.
 - `node --test` passes the extension behavior suite (Node.js 20 or later; no npm install required).
 - `.\scripts\package-release.ps1` produces the app, bundle ZIP, extension ZIP (Chromium), extension ZIP (Firefox), Inno Setup EXE and then `SHA256SUMS.txt` (only once all artifacts are final).
 - `.\scripts\verify-release.ps1 -RequireSetup` reports the expected version and runtime target and verifies `SHA256SUMS.txt` against the artifacts without rewriting the list.
@@ -37,9 +37,9 @@ This checklist is meant for every release tag, before the release is shared wide
 - `Download only` shows progress, target path and a confirmed SHA256 check, without exiting the app.
 - `Install` launches the setup only after a successful SHA256 check; **YTMPresence then exits by itself** (the installer no longer terminates the app by process name).
 - The setup window stays visible after YTMPresence has exited.
-- **The app exits by itself within a few seconds, rather than through the Restart Manager dialog.** This is the only visible evidence that `MakeInstanceKey` in the installer and `InstallerCoordination.GetInstanceKey` in the app compute the same key. Both sides are second implementations of the same logic; the unit test only pins the C# side. If the Restart Manager dialog appears instead, or shutting down takes until the timeout, the keys have drifted apart — the update still looks successful.
+- **The app exits by itself within a few seconds, without a Restart Manager dialog.** This checks that `MakeInstanceKey` in the installer and `InstallerCoordination.GetInstanceKey` in the app produce the same key. The logic is implemented separately, and the unit test covers only the C# implementation. A Restart Manager dialog or shutdown timeout indicates a key mismatch, even if the update completes.
 - Cancelling during the download removes the temporary files under `%TEMP%\YTMPresence\updates`.
-- Closing the update window and shutting down the app abort running downloads and remove the respective working directory as best they can.
+- Closing the update window or shutting down the app aborts running downloads and attempts to remove their working directories.
 - A tampered or missing `SHA256SUMS.txt` blocks the installation with an error message; the app stays usable.
 - A portable YTMPresence copy running in parallel from another folder in a different user session is left untouched by the installation.
 - After installation the app reports the new version.
@@ -49,7 +49,7 @@ This checklist is meant for every release tag, before the release is shared wide
 - Build a release candidate with `.\scripts\package-release.ps1`.
 - Install an older published version.
 - Run `.\scripts\test-update-flow.ps1 -SetupPath .\artifacts\release\YTMPresence-<version>-win-x64-setup.exe`.
-- Carry out the manual in-app update test it describes, in full.
+- Complete the manual in-app update test described by the script.
 - End the script with Enter and check that the original `settings.json` was restored.
 
 ## Silent installation test
@@ -64,37 +64,37 @@ This checklist is meant for every release tag, before the release is shared wide
 
 - Install on a fresh Windows profile or in a VM.
 - Use a machine without any .NET runtime or SDK (`dotnet --list-runtimes` is not found or lists nothing). The self-contained setup starts the app there without further downloads.
-- `.\scripts\test-clean-install.ps1 -SetupPath <new setup> -PreviousSetupPath <previous setup>` runs install, start, update with kept settings and token, and uninstall in Windows Sandbox, which has no .NET and no network. It needs the Windows feature "Windows Sandbox". The checks below stay manual.
+- `.\scripts\test-clean-install.ps1 -SetupPath <new setup> -PreviousSetupPath <previous setup>` tests installation, startup, update with settings and token preserved, and uninstallation in Windows Sandbox without .NET or network access. It requires the "Windows Sandbox" feature. Perform the remaining checks manually.
 - The getting-started window appears on first start.
-- The guide shows its companion version and four steps: install extension, copy token, save and check, open YouTube Music. The Chrome/Edge store link, Firefox instructions and separate developer section are reachable.
-- Token and custom companion URL can be copied. “Later” closes without completing setup; “Done” can complete it manually. Copy/save/open-link failures give localized next steps.
+- The guide shows the companion version and four steps: install extension, copy token, save and check, open YouTube Music. The Chrome/Edge store link, Firefox instructions and separate developer section are accessible.
+- The token and custom companion URL can be copied. “Later” closes without completing setup; “Done” can complete it manually. If copying, saving or opening a link fails, the message explains the next step in the selected language.
 - The extension connects only after the saved token has been accepted on its background socket; merely opening a socket never gives a green badge.
 - The Chromium extension (Chrome/Edge) and the Firefox extension (`about:debugging`) both connect.
-- With an English browser and Windows language, the extension popup, the options and the tray windows appear in English; with German, in German.
+- With the browser and Windows set to English, the extension popup, options and tray windows appear in English. With both set to German, they appear in German.
 - The app starts reliably without Discord running; diagnostics report Discord as unreachable and connect automatically once Discord is running.
-- The diagnostics window shows server, extension and Discord sensibly.
+- The diagnostics window shows the status of the server, extension and Discord.
 - The diagnostics report ZIP can be created and contains no raw `SecurityToken` line.
 
 ## Guided setup acceptance
 
-Recorded implementation and results: [2026-10-12 setup QA](SETUP_QA_2026-10-12.md). Distinguish automated fixtures, direct observations and user-assisted checks; leave unperformed rows open.
+See [2026-10-12 setup QA](SETUP_QA_2026-10-12.md) for the tested implementation and results. Record automated tests, direct observations and user-assisted checks separately; leave unperformed checks open.
 
-- Use a fresh local Edge extension or dedicated test profile. Only one YTMPresence installation is enabled. Confirm “Local/unpacked” and the loaded source directory; an unreleased build can carry the same manifest version as the published one.
+- Use a fresh local Edge extension or dedicated test profile with only one YTMPresence installation enabled. Confirm “Local/unpacked” and the loaded source directory; an unreleased build can carry the same manifest version as the published one.
 - With no token, both popup and options direct the user to copy it. Leave the default URL unchanged, and verify that custom URL controls are under Advanced settings.
 - Enter a wrong token and choose **Save and check**. Expect **Saved – token rejected**, a non-green badge and instructions to copy the current token. Then use the real token without pasting it into the QA report.
 - With no received track, confirm the companion connection and the instruction to open/reload YouTube Music. Do not accept this as evidence of visible Discord presence.
 - Edit the options without saving. The unsaved notice must explain that status describes the saved connection. Popup **Test connection** must still check saved settings.
 - After saving the correct token, reload an existing YouTube Music tab and start a track. Confirm that popup, mini player and visible Discord presence agree.
 - Stop the companion: popup/options must leave the connected state and provide a next action. Restart it without reloading YouTube Music; the selected playing track must return automatically. Repeat with a paused track and verify the existing pause/idle-clear policy still applies.
-- Check extension version/install type in popup and options and companion version in onboarding. An older companion without the optional version field must remain connected and show **Not reported**. A packaged install must be called **Package installation**, without inferring a store origin.
-- Repeat the workflow in German and English. Navigate options using Tab/Shift+Tab and Enter, expand Advanced settings with the keyboard, and check visible focus. In onboarding, check scroll access at reduced window height, button focus, Later and manual Done. Do not change the user's system language just for this check; use a suitable test profile/environment.
+- Check the extension version and installation type in the popup and options, and the companion version in the setup guide. An older companion without the optional version field must remain connected and show **Not reported**. A packaged install must be called **Package installation**, without inferring a store origin.
+- Repeat the workflow in German and English. Navigate options using Tab/Shift+Tab and Enter, expand Advanced settings with the keyboard, and check visible focus. In the setup guide, check scrolling at reduced window height, button focus, Later and manual Done. Use a suitable test profile or environment; do not change the user's system language for this check.
 - Record storage failure, unreachable companion, timeout, token switch during checking and late-socket responses in automated regressions. Keep browser/OS live behavior separate from mock results.
 
 ## Multiple tabs in one browser profile
 
-Run this smoke check in Chrome, Edge and the packaged Firefox variant; record the tested versions and results. The automated fixtures do not establish live YouTube Music or Discord compatibility.
+Run these checks in Chrome, Edge and the packaged Firefox variant, recording versions and results. Automated fixtures alone cannot confirm compatibility with live YouTube Music or Discord.
 
-Recorded run: [2026-10-12 Edge / Discord QA](LIVE_QA_2026-10-12.md). The corrected local extension passed the Edge retest for single-tab commands, source switching, pause clearing, autoplay timing, reload, navigation and closure. The report separates the initial Web Store run from that retest and lists the remaining scenarios and browsers; it is not a complete release sign-off.
+In the [2026-10-12 Edge / Discord QA](LIVE_QA_2026-10-12.md), the corrected local extension passed the Edge retest for single-tab commands, source switching, pause clearing, autoplay timing, reload, navigation and closure. The report distinguishes the initial Web Store run from the retest and lists untested scenarios and browsers. It is not a complete release sign-off.
 
 For unpacked-extension testing, confirm the loaded directory is the repository's `YTMPresence/extension`, reload the extension after source changes, and reload the test tabs so their page/content scripts also update. Keep only one YTMPresence extension active in the test profile. The manifest version alone cannot distinguish an unreleased checkout from the published extension.
 
@@ -106,11 +106,11 @@ For unpacked-extension testing, confirm the loaded directory is the repository's
 - Close, reload, navigate away from and discard the selected tab in separate checks. A valid fallback is selected; commands are not sent to a removed document. A normal in-page YouTube Music track change still updates the selected source.
 - Restart the extension background worker with both tabs paused. After state recovery, Play targets exactly one tab and the popup identifies that tab's track.
 - Close all YouTube Music tabs. The popup clears the track, commands affect no tab, and Discord clears after the configured idle timeout. Changing the token must not replay the closed track.
-- This slice covers one browser profile. Coordination between separate browser/extension connections remains an open roadmap item.
+- These checks cover one browser profile. Coordination between separate browser/extension connections remains an open roadmap item.
 
 ## After pushing
 
-- The GitHub Actions release workflow is green.
+- The GitHub Actions release workflow passes.
 - The GitHub release is not marked as draft or prerelease.
 - The release notes match the changelog entry.
 - The assets are present in the release and downloadable.
