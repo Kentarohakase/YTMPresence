@@ -1,14 +1,16 @@
 # Chrome Web Store
 
-**Published:** https://chromewebstore.google.com/detail/ytm-discord-presence-brid/obdinnbalnbmpkcaopnhnkdgdkcgligi
+**Store listing:** https://chromewebstore.google.com/detail/ytm-discord-presence-brid/obdinnbalnbmpkcaopnhnkdgdkcgligi
 
 Version 1.3.1 was the first approved submission. The extension ID is fixed at `obdinnbalnbmpkcaopnhnkdgdkcgligi`. The companion's existing `chrome-extension:` origin check accepts it without configuration changes.
 
-These submitted texts can also be used for Microsoft Edge Add-ons and addons.mozilla.org, both of which are free. For Firefox, upload `YTMPresence-extension-firefox.zip` instead of the Chromium ZIP.
+The texts below include local data-flow corrections from 2026-11-07 and are no longer a verbatim record of earlier submissions. Editing this file does not update the published listing. See the dated [release status](STORE_SUBMISSION_CHECKLIST.md#release-status) for confirmed publication and recorded submissions.
+
+These texts can also be used for Microsoft Edge Add-ons and addons.mozilla.org, both of which are free. For Firefox, upload `YTMPresence-extension-firefox.zip` instead of the Chromium ZIP.
 
 For each new version, upload the package through the store dashboard. A GitHub release alone does not reach store users.
 
-> **Note on listing language.** The listing was first submitted in German, while the manifest declares `default_locale: "en"`. An English listing was added with the 1.5.0 upload on 2026-11-02, using the English texts below.
+> **Note on listing language.** The listing was first submitted in German, while the manifest declares `default_locale: "en"`. The 2026-11-02 record says an English listing was added to the 1.5.0 submission. This records a submission, not confirmation that it has been published.
 
 ## Store name
 
@@ -29,7 +31,9 @@ Edit the short description in `appDescription` in `_locales/<language>/messages.
 
 https://github.com/Kentarohakase/YTMPresence/releases
 
-How the two work together: the extension reads the playback state on YouTube Music and sends it over a local, token-protected WebSocket to the companion app on the same machine. The app turns that into Discord Rich Presence and can show the current track in a mini player. The data does not leave the device.
+The extension reads the current track's title, artist, album, cover URL, playback state, timing, links and advertisement status on YouTube Music. It sends these over a local, token-protected WebSocket to the companion app, which can show the track in a mini player.
+
+The companion passes track details, playback status, timing and links to the local Discord desktop app for Rich Presence. Discord processes this information outside the device and may display it to other users according to your Discord activity-sharing settings. The mini player can also load cover images from the supplied image URL. YTMPresence sends no data to developer-operated collection servers.
 
 Features:
 
@@ -40,13 +44,17 @@ Features:
 - Mini player controls through the local companion
 - No external analytics, tracking or advertising services
 
-### German (as submitted)
+<a id="german-as-submitted"></a>
+
+### German
 
 **Diese Extension benötigt zusätzlich die kostenlose YTMPresence-Companion-App für Windows.** Ohne sie funktioniert die Extension nicht — Discord Rich Presence lässt sich aus dem Browser heraus technisch nicht setzen. Die App gibt es hier:
 
 https://github.com/Kentarohakase/YTMPresence/releases
 
-So arbeiten beide zusammen: Die Extension liest den Playback-Status auf YouTube Music aus und sendet ihn über einen lokalen, tokengeschützten WebSocket an die Companion-App auf demselben Rechner. Die App aktualisiert daraus Discord Rich Presence und kann den aktuellen Track in einem Mini-Player anzeigen. Die Daten verlassen das Gerät nicht.
+Die Erweiterung liest auf YouTube Music Titel, Interpret, Album, Cover-URL, Wiedergabestatus, Zeitangaben, Links und Werbestatus des aktuellen Tracks. Sie sendet diese Daten über einen lokalen, tokengeschützten WebSocket an die Companion-App, die den Track in einem Mini-Player anzeigen kann.
+
+Für Rich Presence übergibt der Companion Track-Details, Wiedergabestatus, Zeitangaben und Links an die lokale Discord-Desktop-App. Discord verarbeitet diese Informationen außerhalb des Geräts und kann sie anderen Nutzern entsprechend deinen Discord-Aktivitätseinstellungen anzeigen. Der Mini-Player kann außerdem Cover von der übermittelten Bild-URL laden. YTMPresence sendet keine Daten an Server des Entwicklers.
 
 Funktionen:
 
@@ -59,7 +67,9 @@ Funktionen:
 
 ## Privacy statement for the store
 
-The extension reads YouTube Music playback data for Discord Rich Presence and sends it only to the local YTMPresence companion on `localhost` or `127.0.0.1`. It sends no data to developer-operated servers and uses no tracking or advertising services.
+The extension sends YouTube Music metadata and playback state only to the local YTMPresence companion on `localhost` or `127.0.0.1`. The companion passes title, artist, album, playback state, timing and links to the Discord desktop app. Discord receives this information outside the device and may show it to other users according to your activity-sharing settings. The companion token is not part of the Rich Presence activity.
+
+The mini player can fetch cover images from the supplied URL, and companion update checks and downloads contact GitHub. YTMPresence has no analytics, tracking or advertising integration and sends no data to developer-operated collection servers.
 
 Full privacy notice:
 
@@ -76,9 +86,11 @@ https://github.com/Kentarohakase/YTMPresence/blob/main/docs/EXTENSION_PRIVACY.md
 `http://127.0.0.1/*` and `http://localhost/*`
 : Allows the connection to the locally running companion app.
 
-### Submitted wording
+<a id="submitted-wording"></a>
 
-The dashboard has a separate field for each permission group, limited to 1,000 characters without Markdown. The submitted wording below can also be used for Edge Add-ons and AMO.
+### Submission wording
+
+The dashboard has a separate field for each permission group, limited to 1,000 characters without Markdown. The revised wording below can also be used for Edge Add-ons and AMO.
 
 **Field "Justification for storage"**
 
@@ -86,7 +98,7 @@ The dashboard has a separate field for each permission group, limited to 1,000 c
 >
 > Ohne chrome.storage müsste er Token und URL nach jedem Neustart des Browsers erneut eintragen, da die Verbindung sonst nicht hergestellt werden kann.
 >
-> Es werden keine Wiedergabedaten, keine Verlaufsdaten und keine personenbezogenen Daten gespeichert.
+> Wiedergabedaten und Verlauf werden nicht dauerhaft im Browserprofil gespeichert.
 
 English equivalent, for an English listing or for AMO:
 
@@ -94,31 +106,31 @@ English equivalent, for an English listing or for AMO:
 >
 > Without chrome.storage they would have to re-enter token and URL after every browser restart, as the connection cannot be established otherwise.
 >
-> No playback data, no browsing history and no personal data are stored.
+> Playback data and browsing history are not written to browser storage.
 
 **Field "Justification for host permission"**
 
 > https://music.youtube.com/*
 >
-> Das Content-Script liest auf dieser Seite den Wiedergabestatus aus: Titel, Interpret, Album, Position und Dauer. Das ist die einzige Datenquelle der Erweiterung. Über dieselbe Berechtigung findet sie offene YouTube-Music-Tabs, um Play/Pause- und Skip-Befehle aus dem Mini-Player der Companion-App an den richtigen Tab weiterzuleiten.
+> Das Content-Script liest Titel, Interpret, Album, Cover-URL, Track-Link, Wiedergabestatus, Position, Dauer und Werbestatus. Die Berechtigung dient auch dazu, YouTube-Music-Tabs für Play/Pause- und Skip-Befehle aus dem Mini-Player zu finden.
 >
 > http://127.0.0.1/* und http://localhost/*
 >
-> Die Erweiterung verbindet sich per WebSocket mit der YTMPresence-Companion-App, die auf demselben Gerät läuft (Standardport 17373). Nur diese App kann Discord Rich Presence setzen; aus dem Browser heraus ist das technisch nicht möglich. Die Verbindung ist durch ein 256-Bit-Token geschützt.
+> Die Erweiterung sendet diese Daten per WebSocket nur an den lokalen Companion (Standardport 17373), geschützt durch ein 256-Bit-Token. Der Companion übergibt Titel, Interpret, Album, Wiedergabestatus, Zeitangaben und Links über die lokale Discord-Desktop-App an Discord.
 >
-> Die Daten verlassen das Gerät nicht. Es gibt keine Verbindung zu Servern des Entwicklers und keine Analyse- oder Werbedienste.
+> Discord verarbeitet diese Daten außerhalb des Geräts und kann sie anderen Nutzern gemäß den Aktivitätseinstellungen anzeigen. YTMPresence sendet keine Daten an Entwickler-Server und enthält keine Analyse-, Tracking- oder Werbedienste.
 
 English equivalent:
 
 > https://music.youtube.com/*
 >
-> On this page the content script reads the playback state: title, artist, album, position and duration. This is the extension's only data source. Through the same permission it finds open YouTube Music tabs in order to forward play/pause and skip commands from the companion app's mini player to the correct tab.
+> The content script reads title, artist, album, cover URL, track link, playback state, position, duration and advertisement status. This permission also lets it find YouTube Music tabs for play/pause and skip commands from the mini player.
 >
 > http://127.0.0.1/* and http://localhost/*
 >
-> The extension connects over WebSocket to the YTMPresence companion app running on the same device (default port 17373). Only that app can set Discord Rich Presence; it is not technically possible from a browser. The connection is protected by a 256-bit token.
+> The extension sends this data only to the local companion over WebSocket (default port 17373), protected by a 256-bit token. The companion passes title, artist, album, playback state, timing and links through the local Discord desktop app to Discord.
 >
-> The data does not leave the device. There is no connection to any server operated by the developer, and no analytics or advertising services.
+> Discord processes this information outside the device and may show it to other users according to activity-sharing settings. YTMPresence sends no data to developer-operated servers and has no analytics, tracking or advertising integration.
 
 Host permissions always trigger a more thorough review at Google; the corresponding warning in the dashboard is not an error.
 
@@ -136,6 +148,7 @@ The extension does not request `tabs`. The host permission for `https://music.yo
 
 ## Still open
 
-- Add an English listing alongside the German one.
+- Verify publication of the English listing recorded with the 1.5.0 submission; do not treat submission as publication.
+- Apply the corrected English and German data-flow wording and review the privacy declarations in a separately authorized store update.
 - Optionally create a dedicated promotional image for the store page.
 - Submit to Microsoft Edge Add-ons and addons.mozilla.org; both are free and can reuse the screenshots, icon and justifications.

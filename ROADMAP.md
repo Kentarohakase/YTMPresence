@@ -1,14 +1,16 @@
 # YTMPresence Roadmap
 
-Reviewed **2026-11-02**. Baseline: **1.4.0**, released 2026-08-10 on GitHub and in the Chrome Web Store (`main` at `da60499`).
+Planning reviewed **2026-11-02**; release status checked **2026-11-07**. Planning baseline: **1.4.0** (`main` at `da60499`), published on GitHub on 2026-08-10 and recorded as published in the Chrome Web Store dashboard on 2026-11-02.
 
 This roadmap replaces the draft of 2026-10-12. Release numbers indicate the proposed order of work; they do not promise delivery dates.
 
 ## Where things stand
 
+**Published on GitHub:** [1.5.0](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.5.0) and [1.5.1](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.5.1), both on 2026-11-02. The store record from that date lists 1.5.0 as submitted and in review. Its current review and publication status could not be verified; see the [store checklist](docs/STORE_SUBMISSION_CHECKLIST.md#release-status) for the evidence and its limits.
+
 **Released in 1.4.0:** tray companion with mini player, diagnostics and verified updates; Chrome/Edge extension in the store; Firefox package for temporary loading; German and English interfaces and Discord text.
 
-**Finished but not released:** the branch `codex/extension-tab-selection`, merged into `main` with [pull request #1](https://github.com/Kentarohakase/YTMPresence/pull/1).
+**Published on GitHub in 1.5.0:** the branch `codex/extension-tab-selection`, merged into `main` with [pull request #1](https://github.com/Kentarohakase/YTMPresence/pull/1).
 
 - Within one browser profile, one YouTube Music tab supplies the presence and receives player commands. Selection follows defined rules on pause, close, reload, navigation, discard and background-worker restart.
 - Autoplay progress is relative to the current track; the mini player and Discord no longer include the previous track's elapsed time.
@@ -17,17 +19,17 @@ This roadmap replaces the draft of 2026-10-12. Release numbers indicate the prop
 - The extension suite (92 tests, Node's built-in runner) runs alongside 208 Core tests in CI and the release workflow.
 - Live checks in Edge passed; see the [live QA](docs/LIVE_QA_2026-10-12.md) and [setup QA](docs/SETUP_QA_2026-10-12.md) records.
 
-**Open problems, checked against the code on 2026-11-02:**
+**Problems identified on 2026-11-02 and their release status:**
 
 | # | Problem | User impact | Priority |
 | --- | --- | --- | --- |
-| 1 | The published setup (2.2 MB) is framework-dependent and checks no prerequisites. The app needs the .NET 10 Desktop Runtime **and** the ASP.NET Core Runtime (`Microsoft.AspNetCore.App` in [Core](YTMPresence.Core/YTMPresence.Core.csproj)). The README names both since pull request #1. **For 1.5.0 the setup and the ZIP are self-contained and passed a clean install test without .NET.** | Users who arrive through the store listing and skip the README install a companion that does not start until they install the missing runtimes themselves. | P0 |
-| 2 | The finished work above is not released. | Store and GitHub users don't get the fixes. | P0 |
-| 3 | `CompanionServer.SendPlayerCommandAsync` sends every command to all authenticated connections. **Fixed in `main` for 1.6.0.** | With two browsers or profiles, one mini-player click controls both. | P1 |
-| 4 | Discord `ERROR` replies are only logged ([DiscordIpcClient](YTMPresence.Core/DiscordIpcClient.cs)). Replies are not matched to the request nonce, and success is assumed once the frame is written. **Fixed in `main` for 1.6.0;** this also showed that Discord drops commands sent before READY, which cost the first presence after every connect. | Diagnostics can report success while Discord shows nothing. | P1 |
-| 5 | The release workflow runs both test suites but not the extension archive check or `web-ext lint`; those run only in CI. The branch pins Node 20 in both workflows, which reached end of life in April 2026. **Fixed for 1.5.0.** | A tag can publish an archive that CI would have rejected. | P2 |
-| 6 | The Firefox package declares `strict_min_version` 126 but uses `data_collection_permissions`, which needs Firefox 140, so `web-ext lint` warns. Firefox has no persistent install path. **Minimum raised to 140 for 1.5.0.** One lint warning remains for Firefox for Android, which only supports the key from 142; the package does not target Android, and 142 as the minimum would exclude Firefox ESR 140. | Firefox remains a developer option. | P2 |
-| 7 | The Chrome Web Store listing exists only in German, although the extension defaults to English. English texts are already prepared in [CHROME_WEB_STORE.md](docs/CHROME_WEB_STORE.md). **English listing added with the 1.5.0 upload.** | English-speaking users see a German listing. | P2 |
+| 1 | The 1.4.0 setup (2.2 MB) is framework-dependent and checks no prerequisites. It needs the .NET 10 Desktop Runtime **and** the ASP.NET Core Runtime (`Microsoft.AspNetCore.App` in [Core](YTMPresence.Core/YTMPresence.Core.csproj)). The README names both since pull request #1. **Published in 1.5.0: self-contained setup and ZIP, with a clean install test passed without .NET.** | Users installing 1.4.0 still need both runtimes; 1.5.0 and later include them. | P0 |
+| 2 | The finished work above is published on GitHub in 1.5.0. Store submission and review were recorded on 2026-11-02; current store publication is unverified. | GitHub users can get the fixes. Store users may still have an older extension. | P0 |
+| 3 | In 1.5.1, `CompanionServer.SendPlayerCommandAsync` sends every command to all authenticated connections. **Fixed in `main` for 1.6.0; not yet published.** | With two browsers or profiles on 1.5.1, one mini-player click controls both. | P1 |
+| 4 | In 1.5.0, Discord `ERROR` replies were only logged ([DiscordIpcClient](YTMPresence.Core/DiscordIpcClient.cs)). Replies were not matched to the request nonce, and success was assumed once the frame was written. **Published in 1.5.1:** reply matching and waiting for READY before sending, which fixes the lost first presence after each connection. | Older companions can report success while Discord shows nothing. | P1 |
+| 5 | During 1.5.0 preparation, the release workflow ran both test suites but omitted the extension archive check and `web-ext lint`, which ran only in CI. Both workflows pinned Node 20, which reached end of life in April 2026. **Fixed and published in 1.5.0.** | Earlier release workflows could publish an archive that CI would have rejected. | P2 |
+| 6 | Before 1.5.0, the Firefox package declared `strict_min_version` 126 but used `data_collection_permissions`, which needs Firefox 140, so `web-ext lint` warned. **Minimum raised to 140 and published in 1.5.0.** One lint warning remains for Firefox for Android, which only supports the key from 142; the package does not target Android, and 142 as the minimum would exclude Firefox ESR 140. Firefox still has no persistent install path. | Firefox remains a developer option. | P2 |
+| 7 | The store listing was originally submitted only in German, although the extension defaults to English. **The 2026-11-02 record says an English listing was added to the 1.5.0 submission.** See [CHROME_WEB_STORE.md](docs/CHROME_WEB_STORE.md); current publication of that submission is unverified. | Confirm that the submitted English listing is available to store users. | P2 |
 
 ## Principles
 
@@ -57,7 +59,7 @@ Goal: release the completed branch work to store and GitHub users, and let new u
 - [x] Bump to 1.5.0 and finish the changelog.
 - [x] Tag `v1.5.0`; the release workflow published the GitHub release on 2026-11-02. All four artifacts match `SHA256SUMS.txt`; the setup has 61.7 MB.
 - [x] Upload the extension to the Chrome Web Store and add the English listing. Submitted on 2026-11-02; GitHub and store status are recorded separately in the [store checklist](docs/STORE_SUBMISSION_CHECKLIST.md).
-- [ ] Store review approves 1.5.0; update the status table.
+- [ ] Verify store approval and publication of 1.5.0; update the status table. The last recorded review status is from 2026-11-02.
 
 **Done when:** 1.5.0 is live on GitHub and in the store; a clean VM reaches onboarding with the setup alone; updating from 1.4.0 keeps settings and token; `main` contains the branch work.
 

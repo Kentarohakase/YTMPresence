@@ -10,6 +10,8 @@ The extension is available in the Chrome Web Store:
 
 The extension requires the Windows companion app from the [releases](https://github.com/Kentarohakase/YTMPresence/releases), since a browser cannot set Discord Rich Presence.
 
+GitHub releases and Chrome Web Store updates are published separately. See the dated [release status](docs/STORE_SUBMISSION_CHECKLIST.md#release-status) for confirmed releases, recorded submissions and unverified store status.
+
 ## Installation
 
 ### Requirements
@@ -41,6 +43,8 @@ Open **Getting started** from the companion tray menu. The guide shows the compa
 2. **Copy the token** in the guide or through the tray menu.
 3. **Save and check in the extension options.** Paste the token, then choose **Save and check**. The extension saves the settings and waits for the companion to accept the token on the active connection. The default URL is `ws://127.0.0.1:17373/ws`, with `localhost` as a fallback when no custom URL is saved. If you changed the companion's address, enter its displayed URL in the extension's **Advanced settings**.
 4. **Open YouTube Music.** After switching extensions, reload existing [YouTube Music tabs](https://music.youtube.com/), then start a track and check the visible presence in Discord.
+
+These setup controls apply to extension 1.5.0 and later. Version 1.4.0 has separate **Save** and **Test connection** buttons on its options page; its popup also uses **Test connection**.
 
 **Each browser profile and each store/local installation has its own settings.** Copy the token into the options of the installation you actually use. Enable only one YTMPresence extension per profile. A version number alone cannot distinguish an unreleased checkout from the published extension.
 
@@ -82,6 +86,8 @@ Within one browser profile, the extension selects one tab for both the displayed
 If the selected tab closes, reloads, navigates away or is discarded, another available tab takes over. After a background-worker restart, the extension retrieves the latest state from open tabs and prefers a playing tab. When no source remains, the popup clears its track and the companion clears Discord presence after the idle timeout (120 seconds by default).
 
 ### Several browsers or profiles
+
+The behavior below is implemented in `main` but is not included in the published 1.5.1 release.
 
 The same selection rule applies across browsers and profiles. A playing source stays selected; if it pauses, another playing source takes over. If it closes, an available source takes over immediately. Only the selected source receives mini-player commands. The diagnostics window identifies it, for example "Edge 155 #3".
 
@@ -209,7 +215,7 @@ If Windows reports that a .NET framework is missing, update to 1.5.0 or later, o
 
 - Check the token in the extension.
 - The companion URL is normally `ws://127.0.0.1:17373/ws`.
-- Use `Test connection` in the extension options.
+- In the extension options, choose **Save and check** to save your inputs and test the connection. To test the saved settings, use **Test connection** in the popup.
 - Reload the YouTube Music tab after changing the token.
 
 ### Invalid token
@@ -219,7 +225,7 @@ If the tray menu or diagnostics window reports invalid tokens:
 1. `Copy token`
 2. Open the extension options
 3. Replace the token
-4. Save
+4. Choose **Save and check**
 5. Reload YouTube Music
 
 ### Port in use

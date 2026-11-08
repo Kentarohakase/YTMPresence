@@ -16,7 +16,7 @@ This checklist covers the Chrome Web Store, Microsoft Edge Add-ons and compatibl
 - Name and short description are read from `_locales/<language>/messages.json` (`appName`, `appDescription`). They cannot be edited in the dashboard; changes require a new package.
 - State **in the first paragraph** that the extension requires the companion app, so users see the requirement before installing.
 - Category: Music or Productivity
-- Language: German, optionally English as a second listing
+- Languages: German and English; the English listing was added to the recorded 1.5.0 submission on 2026-11-02.
 - Privacy policy: `docs/EXTENSION_PRIVACY.md` as a GitHub URL
 - Support URL: `https://github.com/Kentarohakase/YTMPresence/issues`
 - Homepage: `https://github.com/Kentarohakase/YTMPresence`
@@ -30,11 +30,15 @@ This checklist covers the Chrome Web Store, Microsoft Edge Add-ons and compatibl
 
 ## Data collection in the dashboard
 
-Use answers consistent with the Firefox metadata (`browsingActivity`, `websiteContent` in `browser_specific_settings.gecko.data_collection_permissions`):
+Describe the full data flow, including the companion's transfer to Discord. Keep the answers consistent with the privacy notice and Firefox metadata (`browsingActivity`, `websiteContent` in `browser_specific_settings.gecko.data_collection_permissions`):
 
 - Collected: website activity and website content (track metadata, the current YouTube Music URL).
-- Transferred locally only, to `127.0.0.1`/`localhost`; no sharing with third parties, no sale, no creditworthiness or lending purposes.
-- No analytics, tracking or advertising services.
+- The extension sends playback data only to the local companion at `127.0.0.1`/`localhost`, authenticated with the companion token.
+- The companion passes Rich Presence information to the local Discord desktop app. Discord receives track title, artist, album, playback state, timing and links, depending on settings and available metadata, and may display them to other users according to Discord's activity-sharing settings. This is a transfer to a third party outside the device.
+- The mini player can fetch cover images from the supplied image URL; the companion also contacts GitHub for update checks and downloads. See [the privacy notice](EXTENSION_PRIVACY.md#data-sharing).
+- No sale of data or use for creditworthiness or lending purposes. YTMPresence has no analytics, tracking or advertising integration and sends no data to developer-operated collection servers.
+
+Review the dashboard declarations against this flow before submitting. The public listing retrieved during the 2026-11-07 check said that the developer does not collect or use data; that snapshot does not verify the current dashboard answers. Google's [user-data FAQ](https://developer.chrome.com/docs/webstore/program-policies/user-data-faq) requires disclosure even for local data processing. Do not use a blanket "no sharing with third parties" statement for the complete extension-and-companion workflow.
 
 ## Store icon and screenshots
 
@@ -68,11 +72,15 @@ Store updates require a separate upload; a GitHub release alone only reaches use
 
 ## Release status
 
-GitHub and the store are published separately; record both.
+Checked on 2026-11-07 against the [GitHub releases API](https://api.github.com/repos/Kentarohakase/YTMPresence/releases?per_page=100) and the available [public store listing](https://chromewebstore.google.com/detail/ytm-discord-presence-brid/obdinnbalnbmpkcaopnhnkdgdkcgligi). GitHub confirms 1.5.1 as the latest published release; 1.5.0 and 1.5.1 are neither drafts nor prereleases.
 
-| Version | GitHub release | Chrome Web Store | Notes |
-| --- | --- | --- | --- |
-| 1.5.1 | published 2026-11-02 | not uploaded | Companion fix only; the extension is unchanged apart from its version number. Uploading it now would mean withdrawing the pending 1.5.0 review. |
-| 1.5.0 | published 2026-11-02 | submitted 2026-11-02, in review | No permission changes since 1.4.0. The English listing was added with this upload. |
-| 1.4.0 | published 2026-08-10 | published | Confirmed in the dashboard on 2026-11-02. |
-| 1.3.1 | published 2026-08-09 | approved | First store submission. |
+The retrieved store page reports 1.4.0, updated 2026-08-10, but comes from a cached crawl. A live store check was unavailable, and the developer dashboard was not inspected. The submission and review entries below preserve the repository's 2026-11-02 record; they are not a fresh confirmation of today's status.
+
+"Submitted" means sent for review, "in review" records a pending review, and "published" means available to store users. Approval alone does not establish publication. GitHub publication is independent of all three store states.
+
+| Version | GitHub release | Store submission | Store review | Store publication | Notes |
+| --- | --- | --- | --- | --- | --- |
+| 1.5.1 | [Published 2026-11-02](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.5.1) | Not uploaded in the 2026-11-02 record; current status unverified | Not recorded | Unverified | Companion fix only; the extension differs only in version number. The 2026-11-02 note warned that uploading it would withdraw the pending 1.5.0 review. |
+| 1.5.0 | [Published 2026-11-02](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.5.0) | Submitted 2026-11-02, per repository record | In review on 2026-11-02; current status unverified | Unverified | No permission changes since 1.4.0. The English listing was added to this submission. |
+| 1.4.0 | [Published 2026-08-10](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.4.0) | Date not recorded | Not separately recorded | Recorded as published in the dashboard on 2026-11-02; also shown by the cached public page | The cached listing does not establish the current latest store version. |
+| 1.3.1 | [Published 2026-08-09](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.3.1) | First submission; date not recorded | Approved, per historical record | Not independently verified | First approved store submission. |

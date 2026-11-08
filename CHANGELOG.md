@@ -2,6 +2,8 @@
 
 All notable changes to YTMPresence are documented in this file.
 
+Dates for published GitHub releases use Europe/Vienna time. The [GitHub release list](https://github.com/Kentarohakase/YTMPresence/releases), checked on 2026-11-07, contains no releases for 0.7.0, 0.8.11 or 1.0.0; their existing entries and dates are retained as project history.
+
 ## [Unreleased]
 
 ### Fixed
@@ -28,7 +30,7 @@ All notable changes to YTMPresence are documented in this file.
 
 ### Notes
 
-- The browser extension is unchanged apart from its version number, which follows the companion's. The Chrome Web Store stays at 1.5.0.
+- The browser extension is unchanged apart from its version number, which follows the companion's. The store record from 2026-11-02 lists 1.5.0 as submitted and in review, with no 1.5.1 upload. This does not confirm store publication; see the dated [release status](docs/STORE_SUBMISSION_CHECKLIST.md#release-status).
 
 ## [1.5.0] - 2026-11-02
 
@@ -59,7 +61,7 @@ All notable changes to YTMPresence are documented in this file.
 
 - With several browsers or browser profiles connected at the same time, the companion still sends mini-player commands to all of them. Selecting one source across connections is planned for 1.6.0. The companion protocol and the idle-clear behavior are unchanged.
 
-## [1.4.0] - 2026-08-09
+## [1.4.0] - 2026-08-10
 
 ### Changed
 
@@ -94,7 +96,7 @@ All notable changes to YTMPresence are documented in this file.
 
 - Diagnostics now show the last successful update check and flag checks older than two weeks or disabled startup checks. The timestamp is saved in settings and included in the diagnostics report. Failed startup checks still appear only in the log, avoiding notifications when the machine starts offline.
 
-## [1.2.0] - 2026-08-05
+## [1.2.0] - 2026-08-09
 
 ### Added
 
