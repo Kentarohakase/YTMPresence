@@ -1,5 +1,7 @@
 # YTMPresence
 
+[![Latest release](https://img.shields.io/github/v/release/Kentarohakase/YTMPresence)](https://github.com/Kentarohakase/YTMPresence/releases/latest) [![Downloads](https://img.shields.io/github/downloads/Kentarohakase/YTMPresence/total)](https://github.com/Kentarohakase/YTMPresence/releases) [![CI](https://img.shields.io/github/actions/workflow/status/Kentarohakase/YTMPresence/ci.yml?branch=main&label=CI)](https://github.com/Kentarohakase/YTMPresence/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/github/license/Kentarohakase/YTMPresence)](https://github.com/Kentarohakase/YTMPresence/blob/main/LICENSE) ![Platform: Windows](https://img.shields.io/badge/platform-Windows-0078D6)
+
 YTMPresence shows the current YouTube Music track as Discord Rich Presence. The project consists of two parts:
 
 - a local companion app in the tray that talks to Discord
