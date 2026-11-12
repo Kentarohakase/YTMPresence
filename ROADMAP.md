@@ -1,12 +1,12 @@
 # YTMPresence Roadmap
 
-Planning reviewed **2026-11-02**; release status checked **2026-11-07**. Planning baseline: **1.4.0** (`main` at `da60499`), published on GitHub on 2026-08-10 and recorded as published in the Chrome Web Store dashboard on 2026-11-02.
+Planning reviewed **2026-11-02**; release status checked **2026-11-12**. Planning baseline: **1.4.0** (`main` at `da60499`), published on GitHub on 2026-08-10 and recorded as published in the Chrome Web Store dashboard on 2026-11-02.
 
 This roadmap replaces the draft of 2026-10-12. Release numbers indicate the proposed order of work; they do not promise delivery dates.
 
 ## Where things stand
 
-**Published on GitHub:** [1.5.0](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.5.0) and [1.5.1](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.5.1), both on 2026-11-02. The store record from that date lists 1.5.0 as submitted and in review. Its current review and publication status could not be verified; see the [store checklist](docs/STORE_SUBMISSION_CHECKLIST.md#release-status) for the evidence and its limits.
+**Published on GitHub:** [1.5.0](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.5.0) and [1.5.1](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.5.1), both on 2026-11-02. The maintainer confirmed on 2026-11-12 that 1.5.0 is live in the Chrome Web Store. Version 1.5.1 changes only the companion. See the [store checklist](docs/STORE_SUBMISSION_CHECKLIST.md#release-status) for the evidence and its limits.
 
 **Released in 1.4.0:** tray companion with mini player, diagnostics and verified updates; Chrome/Edge extension in the store; Firefox package for temporary loading; German and English interfaces and Discord text.
 
@@ -24,7 +24,7 @@ This roadmap replaces the draft of 2026-10-12. Release numbers indicate the prop
 | # | Problem | User impact | Priority |
 | --- | --- | --- | --- |
 | 1 | The 1.4.0 setup (2.2 MB) is framework-dependent and checks no prerequisites. It needs the .NET 10 Desktop Runtime **and** the ASP.NET Core Runtime (`Microsoft.AspNetCore.App` in [Core](YTMPresence.Core/YTMPresence.Core.csproj)). The README names both since pull request #1. **Published in 1.5.0: self-contained setup and ZIP, with a clean install test passed without .NET.** | Users installing 1.4.0 still need both runtimes; 1.5.0 and later include them. | P0 |
-| 2 | The finished work above is published on GitHub in 1.5.0. Store submission and review were recorded on 2026-11-02; current store publication is unverified. | GitHub users can get the fixes. Store users may still have an older extension. | P0 |
+| 2 | The finished work above is published on GitHub in 1.5.0. **The maintainer confirmed on 2026-11-12 that 1.5.0 is live in the Chrome Web Store.** | GitHub and store users can get the fixes. | P0 |
 | 3 | In 1.5.1, `CompanionServer.SendPlayerCommandAsync` sends every command to all authenticated connections. **Fixed in `main` for 1.6.0; not yet published.** | With two browsers or profiles on 1.5.1, one mini-player click controls both. | P1 |
 | 4 | In 1.5.0, Discord `ERROR` replies were only logged ([DiscordIpcClient](YTMPresence.Core/DiscordIpcClient.cs)). Replies were not matched to the request nonce, and success was assumed once the frame was written. **Published in 1.5.1:** reply matching and waiting for READY before sending, which fixes the lost first presence after each connection. | Older companions can report success while Discord shows nothing. | P1 |
 | 5 | During 1.5.0 preparation, the release workflow ran both test suites but omitted the extension archive check and `web-ext lint`, which ran only in CI. Both workflows pinned Node 20, which reached end of life in April 2026. **Fixed and published in 1.5.0.** | Earlier release workflows could publish an archive that CI would have rejected. | P2 |
@@ -48,7 +48,7 @@ This roadmap replaces the draft of 2026-10-12. Release numbers indicate the prop
 
 Goal: release the completed branch work to store and GitHub users, and let new users start the app without installing runtimes separately.
 
-- [ ] Complete the remaining setup QA checks: German extension with English companion, a fresh browser profile, and one Chrome smoke run covering tab selection and setup.
+- [x] Complete the remaining setup QA checks: German extension with English companion, a fresh browser profile, and one Chrome smoke run covering tab selection and setup. Passed on 2026-11-12 as reported by the maintainer; see the [live QA](docs/LIVE_QA_2026-11-12.md).
 - [x] Build the release setup self-contained (`package-release.ps1 -SelfContained` in the release workflow and CI). Measured on 2026-11-02: setup 61.8 MB instead of 2.2 MB, ZIP 88.7 MB, about 200 MB installed; well within the updater's 300 MB limit and 30-minute download timeout.
 - [x] Test on a clean Windows VM without .NET: fresh install, update from 1.4.0 keeping settings and token, uninstall. Passed in Windows Sandbox with `scripts/test-clean-install.ps1`; see the [clean install QA](docs/CLEAN_INSTALL_QA_2026-11-02.md).
 - [x] Translate the remaining German messages found in the sandbox log: update-check errors in `UpdateChecker.cs` and the logger's first line. Download, checksum and setup-start messages are also now English, and tray errors no longer repeat the update prefix.
@@ -59,7 +59,7 @@ Goal: release the completed branch work to store and GitHub users, and let new u
 - [x] Bump to 1.5.0 and finish the changelog.
 - [x] Tag `v1.5.0`; the release workflow published the GitHub release on 2026-11-02. All four artifacts match `SHA256SUMS.txt`; the setup has 61.7 MB.
 - [x] Upload the extension to the Chrome Web Store and add the English listing. Submitted on 2026-11-02; GitHub and store status are recorded separately in the [store checklist](docs/STORE_SUBMISSION_CHECKLIST.md).
-- [ ] Verify store approval and publication of 1.5.0; update the status table. The last recorded review status is from 2026-11-02.
+- [x] Verify store approval and publication of 1.5.0; update the status table. The maintainer confirmed publication on 2026-11-12. The English listing is not yet confirmed separately.
 
 **Done when:** 1.5.0 is live on GitHub and in the store; a clean VM reaches onboarding with the setup alone; updating from 1.4.0 keeps settings and token; `main` contains the branch work.
 
@@ -71,7 +71,7 @@ Goal: what the mini player and diagnostics show matches what actually happens in
 - [x] Match Discord replies to the request nonce. Record *accepted*, *rejected* (with Discord's code and message) and *no reply* after a timeout, and show the result in diagnostics instead of assuming success. The client also waits for Discord's READY before sending; checked against the real Discord on 2026-11-02 (reply after READY in about 5 ms, none before it). Shipped early as 1.5.1, because the READY fix affects every 1.5.0 user.
 - [x] Show the selected source (browser, extension version), the last received track and the last Discord result in diagnostics. Exported diagnostics stay free of tokens. The source is named after the browser in the User-Agent; the extension reports its version with the connection test.
 - [x] Explain how to resolve an occupied port and what happens when Discord is not running.
-- [ ] Live checks: Chrome and Edge at the same time; Discord restart; companion restart without reloading the tab; Windows sleep/resume; background-worker restart and tab discard.
+- [x] Live checks: Chrome and Edge at the same time; Discord restart; companion restart without reloading the tab; Windows sleep/resume; background-worker restart and tab discard. Passed on 2026-11-12 with a companion built from `main`, as reported by the maintainer; see the [live QA](docs/LIVE_QA_2026-11-12.md).
 
 **Done when:** with two browsers, one click affects one source and the displayed track matches it; a rejected activity shows as rejected; every listed recovery scenario restores the presence without reloading YouTube Music.
 

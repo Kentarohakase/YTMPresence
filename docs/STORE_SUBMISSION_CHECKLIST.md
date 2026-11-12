@@ -74,13 +74,13 @@ Store updates require a separate upload; a GitHub release alone only reaches use
 
 Checked on 2026-11-07 against the [GitHub releases API](https://api.github.com/repos/Kentarohakase/YTMPresence/releases?per_page=100) and the available [public store listing](https://chromewebstore.google.com/detail/ytm-discord-presence-brid/obdinnbalnbmpkcaopnhnkdgdkcgligi). GitHub confirms 1.5.1 as the latest published release; 1.5.0 and 1.5.1 are neither drafts nor prereleases.
 
-The retrieved store page reports 1.4.0, updated 2026-08-10, but comes from a cached crawl. A live store check was unavailable, and the developer dashboard was not inspected. The submission and review entries below preserve the repository's 2026-11-02 record; they are not a fresh confirmation of today's status.
+The retrieved store page reports 1.4.0, updated 2026-08-10, but comes from a cached crawl. A live store check was unavailable, and the developer dashboard was not inspected. The submission and review entries below preserve the repository's 2026-11-02 record; they are not a fresh confirmation of today's status. On 2026-11-12 the maintainer reported that 1.5.0 is live in the store; that is the maintainer's statement, not an independent check.
 
 "Submitted" means sent for review, "in review" records a pending review, and "published" means available to store users. Approval alone does not establish publication. GitHub publication is independent of all three store states.
 
 | Version | GitHub release | Store submission | Store review | Store publication | Notes |
 | --- | --- | --- | --- | --- | --- |
 | 1.5.1 | [Published 2026-11-02](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.5.1) | Not uploaded in the 2026-11-02 record; current status unverified | Not recorded | Unverified | Companion fix only; the extension differs only in version number. The 2026-11-02 note warned that uploading it would withdraw the pending 1.5.0 review. |
-| 1.5.0 | [Published 2026-11-02](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.5.0) | Submitted 2026-11-02, per repository record | In review on 2026-11-02; current status unverified | Unverified | No permission changes since 1.4.0. The English listing was added to this submission. |
+| 1.5.0 | [Published 2026-11-02](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.5.0) | Submitted 2026-11-02, per repository record | In review on 2026-11-02; outcome not recorded | Live, reported by the maintainer on 2026-11-12 | No permission changes since 1.4.0. The English listing was added to this submission. |
 | 1.4.0 | [Published 2026-08-10](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.4.0) | Date not recorded | Not separately recorded | Recorded as published in the dashboard on 2026-11-02; also shown by the cached public page | The cached listing does not establish the current latest store version. |
 | 1.3.1 | [Published 2026-08-09](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.3.1) | First submission; date not recorded | Approved, per historical record | Not independently verified | First approved store submission. |
