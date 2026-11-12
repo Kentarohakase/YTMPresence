@@ -10,7 +10,7 @@ This roadmap replaces the draft of 2026-10-12. Release numbers indicate the prop
 
 **Released in 1.4.0:** tray companion with mini player, diagnostics and verified updates; Chrome/Edge extension in the store; Firefox package for temporary loading; German and English interfaces and Discord text.
 
-**Published on GitHub in 1.5.0:** the branch `codex/extension-tab-selection`, merged into `main` with [pull request #1](https://github.com/Kentarohakase/YTMPresence/pull/1).
+**Published on GitHub in 1.5.0:** the tab-selection branch, merged into `main` with [pull request #1](https://github.com/Kentarohakase/YTMPresence/pull/1).
 
 - Within one browser profile, one YouTube Music tab supplies the presence and receives player commands. Selection follows defined rules on pause, close, reload, navigation, discard and background-worker restart.
 - Autoplay progress is relative to the current track; the mini player and Discord no longer include the previous track's elapsed time.
@@ -40,7 +40,7 @@ This roadmap replaces the draft of 2026-10-12. Release numbers indicate the prop
 
 ## Now (no release needed)
 
-- [x] Push `codex/extension-tab-selection` to GitHub and open [pull request #1](https://github.com/Kentarohakase/YTMPresence/pull/1) into `main`.
+- [x] Push the tab-selection branch to GitHub and open [pull request #1](https://github.com/Kentarohakase/YTMPresence/pull/1) into `main`.
 - [x] List both runtimes and their download link in the README's installation section until the self-contained 1.5.0 setup is released.
 - [x] Merge pull request #1 once CI passes.
 

@@ -44,7 +44,7 @@ Open **Getting started** from the companion tray menu. The guide shows the compa
 3. **Save and check in the extension options.** Paste the token, then choose **Save and check**. The extension saves the settings and waits for the companion to accept the token on the active connection. The default URL is `ws://127.0.0.1:17373/ws`, with `localhost` as a fallback when no custom URL is saved. If you changed the companion's address, enter its displayed URL in the extension's **Advanced settings**.
 4. **Open YouTube Music.** After switching extensions, reload existing [YouTube Music tabs](https://music.youtube.com/), then start a track and check the visible presence in Discord.
 
-These setup controls apply to extension 1.5.0 and later. Version 1.4.0 has separate **Save** and **Test connection** buttons on its options page; its popup also uses **Test connection**.
+These setup controls apply to extension 1.5.0 and later. Version 1.4.0 has separate **Save** and **Test connection** buttons on its options page. The popup keeps **Test connection** in all versions.
 
 **Each browser profile and each store/local installation has its own settings.** Copy the token into the options of the installation you actually use. Enable only one YTMPresence extension per profile. A version number alone cannot distinguish an unreleased checkout from the published extension.
 
