@@ -173,6 +173,11 @@
         header { align-items: flex-start; flex-direction: column; }
         .subtitle { line-height: 1.5; }
         .track-meta { white-space: normal; }
+        .actions .wide { grid-column: 1 / -1; }
+        .notice { margin-top: 12px; padding: 8px 10px; border: 1px solid #854d0e; border-radius: 7px; background: rgba(251, 191, 36, 0.1); color: #fde68a; font-size: 12px; line-height: 1.5; }
+        .notice[hidden], #diagnosticsText[hidden] { display: none; }
+        .notice a { color: inherit; font-weight: 650; }
+        #diagnosticsText { width: 100%; min-height: 110px; margin-top: 10px; border: 1px solid var(--line); border-radius: 7px; background: #0d0d0d; color: var(--text); font: 11px/1.4 ui-monospace, Consolas, monospace; }
     </style>
 </head>
 <body>
@@ -185,6 +190,11 @@
     </header>
 
     <main>
+        <div id="compatNotice" class="notice" role="status" hidden>
+            <span id="compatText"></span>
+            <a id="compatLink" href="https://github.com/Kentarohakase/YTMPresence/releases/latest" target="_blank" rel="noopener noreferrer" data-i18n="linkReleases">GitHub releases</a>
+        </div>
+
         <section class="track">
             <div id="trackTitle" class="track-title" data-i18n="trackNone">Kein Track empfangen</div>
             <div id="trackMeta" class="track-meta" data-i18n="trackNoneHint">YouTube Music öffnen und einen Track starten</div>
@@ -214,9 +224,11 @@
             <button id="optionsButton" data-i18n="btnOptions">Optionen</button>
             <button id="ytmButton" data-i18n="btnYtm">YT Music</button>
             <button id="refreshButton" data-i18n="btnRefresh">Aktualisieren</button>
+            <button id="diagnosticsButton" class="wide" data-i18n="btnDiagnostics">Diagnose kopieren</button>
         </div>
 
         <div id="message" class="message" role="status"></div>
+        <textarea id="diagnosticsText" readonly rows="8" hidden spellcheck="false"></textarea>
         <div class="metadata">
             <div><span data-i18n="labelExtensionVersion"></span>: <span id="extensionVersion">-</span></div>
             <div><span data-i18n="labelInstallation"></span>: <span id="installationType">-</span></div>

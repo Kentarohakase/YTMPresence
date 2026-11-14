@@ -4,6 +4,18 @@ All notable changes to YTMPresence are documented in this file.
 
 Dates for published GitHub releases use Europe/Vienna time. The [GitHub release list](https://github.com/Kentarohakase/YTMPresence/releases), checked on 2026-11-07, contains no releases for 0.7.0, 0.8.11 or 1.0.0; their existing entries and dates are retained as project history.
 
+## [Unreleased]
+
+### Added
+
+- The extension popup has a **Copy diagnostics** button. It copies a plain-text report with the extension and companion versions, installation type, browser, connection state and the time of the last track update, without the token, track titles or artists. If the browser blocks the clipboard, the popup shows the text for copying by hand.
+- Popup and options show a notice with a link to the GitHub releases when the connected companion is older than 1.5.1 or does not report its version.
+- After a fresh install without a saved token, the extension opens its options page with a short welcome and the four setup steps. Updates and installations that already have a token are left alone.
+
+### Notes
+
+- The extension requests no new permissions.
+
 ## [1.6.0] - 2026-11-15
 
 ### Added

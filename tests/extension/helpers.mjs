@@ -62,6 +62,7 @@ export async function background({ token = "test-token", storageReady, initialTa
     const time = clock();
     const sockets = [];
     const deliveries = [];
+    const created = [];
     const tabs = new Map(initialTabs);
     const stored = { securityToken: token, companionUrl: "" };
     const storageChanged = event();
@@ -84,9 +85,13 @@ export async function background({ token = "test-token", storageReady, initialTa
             } },
             onChanged: storageChanged
         },
-        runtime: { onMessage: event(), getManifest: () => manifest() },
+        runtime: {
+            onMessage: event(), onInstalled: event(), getManifest: () => manifest(),
+            getURL: (path) => `chrome-extension://test/${path}`
+        },
         tabs: {
             onRemoved: event(), onUpdated: event(), onReplaced: event(),
+            create: async (properties) => { created.push(clone(properties)); return { id: 99 }; },
             query: async () => [...tabs.keys()].map((id) => ({ id })),
             sendMessage: async (id, message, options) => {
                 if (message.type === "YTM_GET_STATE") {
@@ -117,7 +122,7 @@ export async function background({ token = "test-token", storageReady, initialTa
     }, { filename: "background.js" });
     await settle();
     return {
-        chrome, sockets, deliveries, tabs, time, stored,
+        chrome, sockets, deliveries, created, tabs, time, stored,
         async request(message) {
             return new Promise((resolve) => chrome.runtime.onMessage.emit(message, {}, (value) => resolve(clone(value))));
         },

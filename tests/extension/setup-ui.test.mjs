@@ -3,17 +3,24 @@ import test from "node:test";
 import vm from "node:vm";
 import { extensionScript, settle, clone } from "./helpers.mjs";
 
-async function surface(name, { language = "en", installType = "development", metadataError = false, requestError = false,
+async function surface(name, { language = "en", installType = "development", metadataError = false, requestError = false, clipboardError = false, welcome = false,
     status = { tokenConfigured: true, connectionState: "connected" }, result = { saved: true, ok: true, message: "Saved" } } = {}) {
     const html = extensionScript(`${name}.html`);
     const messages = JSON.parse(extensionScript(`_locales/${language}/messages.json`));
     const elements = [...html.matchAll(/<[^>]+\bid="([^"]+)"[^>]*>/g)].map(([tag, id]) => ({
-        id, value: "", textContent: "", className: "", disabled: false, listeners: {},
+        id, value: "", textContent: "", className: "", disabled: false, hidden: /\shidden(?=[\s>=])/.test(tag), listeners: {},
         addEventListener(type, callback) { this.listeners[type] = callback; }
     }));
     const dom = Object.fromEntries(elements.map((e) => [e.id, e]));
     const calls = [];
+    const clipboard = [];
+    const state = { clipboardError };
     const context = vm.createContext({
+        URLSearchParams, location: { search: welcome ? "?welcome=1" : "" },
+        navigator: { userAgent: "TestBrowser/1.0", clipboard: { writeText: async (text) => {
+            if (state.clipboardError) throw new Error("Denied");
+            clipboard.push(text);
+        } } },
         document: { getElementById: (id) => dom[id] || null, visibilityState: "visible" },
         t: (key) => { assert.ok(messages[key], `Missing ${language} translation: ${key}`); return messages[key].message; },
         localizeDom() {}, setInterval() {}, Date,
@@ -34,7 +41,7 @@ async function surface(name, { language = "en", installType = "development", met
     vm.runInContext(extensionScript("connection-ui.js"), context);
     vm.runInContext(extensionScript(`${name}.js`), context);
     await settle();
-    return { dom, calls, messages, render: (value) => context.renderStatus(value),
+    return { dom, calls, clipboard, state, messages, render: (value) => context.renderStatus(value),
         submit: () => dom.setupForm.listeners.submit({ preventDefault() {} }) };
 }
 
@@ -121,4 +128,119 @@ test("every declared DOM translation exists in both languages; no new permission
     }
     const manifest = JSON.parse(extensionScript("manifest.json"));
     assert.deepEqual(manifest.permissions, ["storage"]);
+});
+
+for (const surfaceName of ["popup", "options"]) {
+    for (const language of ["de", "en"]) {
+        const cases = [
+            ["a companion older than the tested version", { connectionState: "connected", companionVersion: "1.4.0" }, "compatOutdated"],
+            ["an older patch release", { connectionState: "connected", companionVersion: "1.5.0+abc123" }, "compatOutdated"],
+            ["a companion that reports no version", { connectionState: "connected" }, "compatOutdatedUnknown"],
+            ["the tested version with build metadata", { connectionState: "connected", companionVersion: "1.5.1+deadbeef" }, ""],
+            ["a newer minor version", { connectionState: "connected", companionVersion: "1.6.0" }, ""],
+            ["a newer major version", { connectionState: "connected", companionVersion: "2.0.0" }, ""],
+            ["an unparseable version", { connectionState: "connected", companionVersion: "dev" }, ""],
+            ["an old companion that is not connected", { connectionState: "disconnected", companionVersion: "1.4.0" }, ""],
+            ["an old companion that rejected the token", { connectionState: "rejected" }, ""]
+        ];
+        for (const [label, extra, key] of cases) {
+            test(`${surfaceName}/${language}: update hint for ${label}`, async () => {
+                const ui = await surface(surfaceName, { language, status: { tokenConfigured: true, ...extra } });
+                assert.equal(ui.dom.compatNotice.hidden, key === "");
+                assert.equal(ui.dom.compatText.textContent, key ? ui.messages[key].message : "");
+            });
+        }
+        test(`${surfaceName}/${language}: no token means no update hint`, async () => {
+            const ui = await surface(surfaceName, { language, status: { tokenConfigured: false, connectionState: "connected" } });
+            assert.equal(ui.dom.compatNotice.hidden, true);
+        });
+    }
+}
+
+test("the update hint appears and disappears with the status", async () => {
+    const ui = await surface("popup", { status: { tokenConfigured: true, connectionState: "connected", companionVersion: "1.4.0" } });
+    assert.equal(ui.dom.compatNotice.hidden, false);
+    ui.render({ tokenConfigured: true, connectionState: "connected", companionVersion: "1.5.1" });
+    assert.equal(ui.dom.compatNotice.hidden, true);
+});
+
+test("diagnostics copy versions and state but never the token, track title or artist", async () => {
+    const status = {
+        tokenConfigured: true, connectionState: "connected", companionVersion: "1.5.1+abc",
+        activeCompanionUrl: "ws://127.0.0.1:17373/ws", lastError: "", lastConnectedAt: 1_700_000_000_000,
+        selectedTabId: 7, securityToken: "SECRET-TOKEN-VALUE",
+        lastState: { title: "Private Song", artist: "Private Artist", album: "Private Album", isPlaying: true }
+    };
+    const ui = await surface("popup", { status });
+    await ui.dom.diagnosticsButton.listeners.click();
+    assert.equal(ui.clipboard.length, 1);
+    const report = ui.clipboard[0];
+    for (const line of [
+        "YTMPresence extension diagnostics", "Extension version: 1.4.0", "Installation type: development",
+        "Browser: TestBrowser/1.0", "Connection: connected", "Token configured: yes",
+        "Companion version: 1.5.1+abc", "Companion URL: ws://127.0.0.1:17373/ws",
+        "Last connected: 2023-11-14T22:13:20.000Z", "Track state: playing", "Tab selected: yes"
+    ]) assert.ok(report.includes(line), line);
+    for (const secret of ["SECRET-TOKEN-VALUE", "Private Song", "Private Artist", "Private Album"]) {
+        assert.ok(!report.includes(secret), secret);
+    }
+    assert.equal(ui.dom.message.textContent, ui.messages.msgDiagnosticsCopied.message);
+    assert.equal(ui.dom.message.className, "message ok");
+    assert.equal(ui.dom.diagnosticsText.hidden, true);
+    assert.equal(ui.dom.diagnosticsButton.disabled, false);
+});
+
+test("diagnostics describe an unconfigured, disconnected extension without inventing values", async () => {
+    const ui = await surface("popup", { installType: "normal", status: { tokenConfigured: false, connectionState: "idle", lastError: "Companion unreachable" } });
+    await ui.dom.diagnosticsButton.listeners.click();
+    const report = ui.clipboard[0];
+    for (const line of ["Installation type: normal", "Token configured: no", "Companion version: not reported",
+        "Last error: Companion unreachable", "Last connected: -", "Track state: none", "Tab selected: no"]) {
+        assert.ok(report.includes(line), line);
+    }
+});
+
+test("a lookup failure for the installation type is reported as unknown, not as a failure", async () => {
+    const ui = await surface("popup", { metadataError: true });
+    await ui.dom.diagnosticsButton.listeners.click();
+    assert.ok(ui.clipboard[0].includes("Installation type: unknown"));
+});
+
+test("when the clipboard refuses, the report is shown for manual copying", async () => {
+    const ui = await surface("popup", { clipboardError: true });
+    await ui.dom.diagnosticsButton.listeners.click();
+    assert.equal(ui.clipboard.length, 0);
+    assert.equal(ui.dom.message.textContent, ui.messages.msgDiagnosticsCopyFailed.message);
+    assert.equal(ui.dom.message.className, "message err");
+    assert.equal(ui.dom.diagnosticsText.hidden, false);
+    assert.ok(ui.dom.diagnosticsText.value.startsWith("YTMPresence extension diagnostics"));
+    assert.equal(ui.dom.diagnosticsButton.disabled, false);
+});
+
+test("a copy after a failed copy hides the manual text again", async () => {
+    const ui = await surface("popup", { clipboardError: true });
+    await ui.dom.diagnosticsButton.listeners.click();
+    assert.equal(ui.dom.diagnosticsText.hidden, false);
+    ui.state.clipboardError = false;
+    await ui.dom.diagnosticsButton.listeners.click();
+    assert.equal(ui.dom.diagnosticsText.hidden, true);
+    assert.equal(ui.clipboard.length, 1);
+    assert.equal(ui.dom.message.className, "message ok");
+});
+
+test("the welcome card is hidden by default and shown only for the first-install page", async () => {
+    const plain = await surface("options");
+    assert.equal(plain.dom.welcomeCard.hidden, true);
+    const first = await surface("options", { welcome: true });
+    assert.equal(first.dom.welcomeCard.hidden, false);
+});
+
+test("the setup guide points to the releases page and every link is an https address", () => {
+    for (const name of ["popup", "options"]) {
+        const html = extensionScript(`${name}.html`);
+        for (const [, href] of html.matchAll(/<a\b[^>]*\bhref="([^"]+)"/g)) {
+            assert.match(href, /^https:\/\/github\.com\/Kentarohakase\/YTMPresence\/releases\/latest$/);
+        }
+        for (const [tag] of html.matchAll(/<a\b[^>]*>/g)) assert.match(tag, /rel="noopener noreferrer"/);
+    }
 });

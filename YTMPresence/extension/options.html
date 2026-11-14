@@ -217,6 +217,12 @@
                 flex-direction: column;
             }
         }
+        .notice { margin: 0 0 14px; padding: 10px 12px; border: 1px solid #854d0e; border-radius: 8px; background: rgba(217, 119, 6, 0.12); color: #fde68a; line-height: 1.5; }
+        .notice a { color: inherit; font-weight: 700; }
+        .welcome { margin-bottom: 18px; }
+        .welcome ol { margin: 10px 0 0; padding-left: 22px; line-height: 1.7; }
+        .welcome a { color: #93c5fd; }
+        .notice[hidden], .welcome[hidden] { display: none; }
     </style>
 </head>
 <body>
@@ -228,6 +234,17 @@
             </div>
             <div id="stateBadge" class="badge">...</div>
         </header>
+
+        <section id="welcomeCard" class="welcome" hidden>
+            <h2 data-i18n="welcomeTitle">Welcome to YTM Presence</h2>
+            <p data-i18n="welcomeIntro"></p>
+            <ol>
+                <li><a id="welcomeReleasesLink" href="https://github.com/Kentarohakase/YTMPresence/releases/latest" target="_blank" rel="noopener noreferrer" data-i18n="welcomeStepInstall"></a></li>
+                <li data-i18n="welcomeStepToken"></li>
+                <li data-i18n="welcomeStepSave"></li>
+                <li data-i18n="welcomeStepMusic"></li>
+            </ol>
+        </section>
 
         <div class="layout">
             <section>
@@ -260,6 +277,10 @@
 
             <section>
                 <h2 data-i18n="labelSavedStatus">Status der gespeicherten Verbindung</h2>
+                <div id="compatNotice" class="notice" role="status" hidden>
+                    <span id="compatText"></span>
+                    <a id="compatLink" href="https://github.com/Kentarohakase/YTMPresence/releases/latest" target="_blank" rel="noopener noreferrer" data-i18n="linkReleases">GitHub releases</a>
+                </div>
 
                 <div class="rows">
                     <div class="row">

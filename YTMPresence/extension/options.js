@@ -61,6 +61,10 @@ document.getElementById("refresh").addEventListener("click", refreshStatus);
 document.getElementById("openYtm").addEventListener("click", () => chrome.tabs.create({ url: "https://music.youtube.com/" }));
 
 localizeDom();
+// Opened by the first-install handler in the background script.
+if (typeof location !== "undefined" && new URLSearchParams(location.search).get("welcome") === "1") {
+    document.getElementById("welcomeCard").hidden = false;
+}
 renderInstallationMetadata();
 load().catch(() => show(t("msgSettingsLoadFailed"), "err"));
 setInterval(() => {

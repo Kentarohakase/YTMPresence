@@ -377,5 +377,41 @@
   },
   "msgSaveResultUnknown": {
     "message": "No save result received. Reopen options, review the settings, then save and check again."
+  },
+  "btnDiagnostics": {
+    "message": "Copy diagnostics"
+  },
+  "msgDiagnosticsCopied": {
+    "message": "Diagnostics copied. They contain no token and no track titles."
+  },
+  "msgDiagnosticsCopyFailed": {
+    "message": "Copying failed. Select the text below and copy it by hand."
+  },
+  "compatOutdated": {
+    "message": "This companion is older than the version this extension was tested with. Update it for the latest fixes."
+  },
+  "compatOutdatedUnknown": {
+    "message": "The companion does not report its version, so it is probably outdated. Update it for the latest fixes."
+  },
+  "linkReleases": {
+    "message": "Open GitHub releases"
+  },
+  "welcomeTitle": {
+    "message": "Welcome to YTM Presence"
+  },
+  "welcomeIntro": {
+    "message": "This extension needs the free Windows companion app, because a browser cannot set Discord Rich Presence. Setup takes four steps:"
+  },
+  "welcomeStepInstall": {
+    "message": "Install the companion app from the GitHub releases page."
+  },
+  "welcomeStepToken": {
+    "message": "Copy the token from the companion's tray menu."
+  },
+  "welcomeStepSave": {
+    "message": "Paste it below and choose “Save and check”."
+  },
+  "welcomeStepMusic": {
+    "message": "Open YouTube Music, start a track and check Discord."
   }
 }

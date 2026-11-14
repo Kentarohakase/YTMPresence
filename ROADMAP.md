@@ -80,9 +80,9 @@ Goal: store users get the 1.6.0 extension, and the store pages describe the curr
 
 Goal: when something goes wrong, users see which versions are involved and what to do next, and a bug report carries enough detail to act on without the token.
 
-- [ ] Show a notice in the popup and options when the connected companion is older than the version the extension was tested with, or reports no version, with a link to the GitHub releases. In progress.
-- [ ] Add **Copy diagnostics** to the extension popup: versions, installation type, browser, connection and track state, without the token or track titles. When the clipboard is unavailable, show the text for manual copying. In progress.
-- [ ] Open the setup guide on first install when no token is stored; updates leave existing installations alone. In progress.
+- [x] Show a notice in the popup and options when the connected companion is older than the version the extension was tested with, or reports no version, with a link to the GitHub releases. Done in `main`; not yet released.
+- [x] Add **Copy diagnostics** to the extension popup: versions, installation type, browser, connection and track state, without the token or track titles. When the clipboard is unavailable, show the text for manual copying. Done in `main`; not yet released.
+- [x] Open the setup guide on first install when no token is stored; updates leave existing installations alone. Done in `main`; not yet released.
 - [ ] Test and document compatibility across versions (an older store extension with a newer companion and the reverse), since the store and GitHub update separately. Include album art with an extension older than 1.6.0, which still shortens long cover URLs.
 - [x] Add a bug-report issue template asking for both versions, the browser, reproduction steps and an optional redacted diagnostics export.
 - [ ] Review keyboard navigation, focus order and high-DPI scaling in settings and the mini player; onboarding already passed its keyboard check.

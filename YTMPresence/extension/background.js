@@ -664,6 +664,19 @@ function testConnection() {
     return beginTest(socket);
 }
 
+// First install only: open the options page with the setup guide. Updates and
+// browsers that already hold a token are left alone.
+chrome.runtime.onInstalled.addListener(async (details) => {
+    if (details?.reason !== "install") return;
+    try {
+        await ensureConfigLoaded();
+        if (cachedToken) return;
+        await chrome.tabs.create({ url: chrome.runtime.getURL("options.html?welcome=1") });
+    } catch (error) {
+        console.warn(`[YTM Bridge] Could not open the setup page: ${error?.message || error}`);
+    }
+});
+
 ensureConfigLoaded().then(async () => {
     connect();
     await restoreTabStates();

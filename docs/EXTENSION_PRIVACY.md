@@ -1,6 +1,6 @@
 # YTMPresence Extension Privacy Notice
 
-Last updated: 2026-11-14
+Last updated: 2026-11-15
 
 The YTMPresence browser extension sends the current YouTube Music playback state to a local companion app. The companion displays it as Discord Rich Presence.
 
@@ -18,6 +18,8 @@ On `https://music.youtube.com/*` the extension reads the current track's metadat
 - whether an advertisement was detected
 
 Connection tests also send the extension's version number so the companion's diagnostics can show it. Playback messages and connection tests include the companion's security token for authentication.
+
+**Copy diagnostics** in the popup builds a text report from the extension's connection status, its version and installation type, and the browser's User-Agent and interface language, and puts it on the clipboard. The report contains no token, track titles or artists. The extension does not send it anywhere; sharing it is up to you.
 
 The extension also stores these settings locally in the browser:
 

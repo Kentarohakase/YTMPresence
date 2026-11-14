@@ -377,5 +377,41 @@
   },
   "msgSaveResultUnknown": {
     "message": "Keine Rückmeldung zum Speichern. Optionen erneut öffnen, Einstellungen kontrollieren und erneut speichern und prüfen."
+  },
+  "btnDiagnostics": {
+    "message": "Diagnose kopieren"
+  },
+  "msgDiagnosticsCopied": {
+    "message": "Diagnose kopiert. Sie enthält weder Token noch Tracktitel."
+  },
+  "msgDiagnosticsCopyFailed": {
+    "message": "Kopieren fehlgeschlagen. Markiere den Text darunter und kopiere ihn von Hand."
+  },
+  "compatOutdated": {
+    "message": "Dieser Companion ist älter als die Version, mit der diese Extension getestet wurde. Aktualisiere ihn für die neuesten Fehlerbehebungen."
+  },
+  "compatOutdatedUnknown": {
+    "message": "Der Companion meldet keine Version und ist daher vermutlich veraltet. Aktualisiere ihn für die neuesten Fehlerbehebungen."
+  },
+  "linkReleases": {
+    "message": "GitHub-Releases öffnen"
+  },
+  "welcomeTitle": {
+    "message": "Willkommen bei YTM Presence"
+  },
+  "welcomeIntro": {
+    "message": "Diese Extension braucht die kostenlose Companion-App für Windows, weil ein Browser Discord Rich Presence nicht setzen kann. Die Einrichtung hat vier Schritte:"
+  },
+  "welcomeStepInstall": {
+    "message": "Companion-App von der GitHub-Releases-Seite installieren."
+  },
+  "welcomeStepToken": {
+    "message": "Token im Tray-Menü des Companions kopieren."
+  },
+  "welcomeStepSave": {
+    "message": "Unten einfügen und „Speichern und prüfen“ wählen."
+  },
+  "welcomeStepMusic": {
+    "message": "YouTube Music öffnen, einen Titel starten und in Discord prüfen."
   }
 }

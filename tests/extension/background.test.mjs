@@ -263,3 +263,30 @@ test("live state takes precedence over an older restore response", async () => {
     await settle();
     assert.equal((await app.status()).lastState.title, "New");
 });
+
+test("a fresh install without a token opens the setup guide once", async () => {
+    const app = await background({ token: "" });
+    await Promise.all(app.chrome.runtime.onInstalled.emit({ reason: "install" }));
+    assert.deepEqual(app.created, [{ url: "chrome-extension://test/options.html?welcome=1" }]);
+});
+
+test("a fresh install that already holds a token does not open the setup guide", async () => {
+    const app = await background({ token: "existing-token" });
+    await Promise.all(app.chrome.runtime.onInstalled.emit({ reason: "install" }));
+    assert.deepEqual(app.created, []);
+});
+
+for (const reason of ["update", "chrome_update", "browser_update", "shared_module_update"]) {
+    test(`${reason} never opens the setup guide`, async () => {
+        const app = await background({ token: "" });
+        await Promise.all(app.chrome.runtime.onInstalled.emit({ reason }));
+        assert.deepEqual(app.created, []);
+    });
+}
+
+test("a failing tab creation during install is contained", async () => {
+    const app = await background({ token: "" });
+    app.chrome.tabs.create = async () => { throw new Error("No window"); };
+    await Promise.all(app.chrome.runtime.onInstalled.emit({ reason: "install" }));
+    assert.equal((await app.status()).tokenConfigured, false);
+});

@@ -35,6 +35,41 @@ testButton.addEventListener("click", async () => {
 document.getElementById("optionsButton").addEventListener("click", () => chrome.runtime.openOptionsPage());
 document.getElementById("ytmButton").addEventListener("click", () => chrome.tabs.create({ url: "https://music.youtube.com/" }));
 document.getElementById("refreshButton").addEventListener("click", refreshStatus);
+const diagnosticsButton = document.getElementById("diagnosticsButton");
+const diagnosticsText = document.getElementById("diagnosticsText");
+async function copyDiagnostics() {
+    diagnosticsButton.disabled = true;
+    diagnosticsText.hidden = true;
+    let report = "";
+    try {
+        const status = await chrome.runtime.sendMessage({ type: "YTM_GET_STATUS" });
+        let extensionVersion = "";
+        try { extensionVersion = chrome.runtime.getManifest().version; } catch { /* informational */ }
+        report = buildDiagnosticsReport(status, {
+            now: Date.now(),
+            extensionVersion,
+            installType: await readInstallType(),
+            userAgent: navigator.userAgent,
+            language: chrome.i18n?.getUILanguage?.()
+        });
+        await navigator.clipboard.writeText(report);
+        showMessage(t("msgDiagnosticsCopied"), "ok");
+    } catch {
+        if (report) {
+            // Clipboard refused: show the text so it can be copied by hand.
+            diagnosticsText.value = report;
+            diagnosticsText.hidden = false;
+            diagnosticsText.focus?.();
+            diagnosticsText.select?.();
+            showMessage(t("msgDiagnosticsCopyFailed"), "err");
+        } else {
+            showMessage(t("msgStatusLoadFailed"), "err");
+        }
+    } finally {
+        diagnosticsButton.disabled = false;
+    }
+}
+diagnosticsButton.addEventListener("click", copyDiagnostics);
 localizeDom();
 renderInstallationMetadata();
 refreshStatus();
