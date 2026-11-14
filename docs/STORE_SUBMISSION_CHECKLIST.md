@@ -80,6 +80,7 @@ The retrieved store page reports 1.4.0, updated 2026-08-10, but comes from a cac
 
 | Version | GitHub release | Store submission | Store review | Store publication | Notes |
 | --- | --- | --- | --- | --- | --- |
+| 1.6.0 | Prepared 2026-11-14; publication not yet recorded | Not uploaded | Not recorded | Not published | Extension changes: complete cover URLs and the version in the connection test. No permission changes. |
 | 1.5.1 | [Published 2026-11-02](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.5.1) | Not uploaded in the 2026-11-02 record; current status unverified | Not recorded | Unverified | Companion fix only; the extension differs only in version number. The 2026-11-02 note warned that uploading it would withdraw the pending 1.5.0 review. |
 | 1.5.0 | [Published 2026-11-02](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.5.0) | Submitted 2026-11-02, per repository record | In review on 2026-11-02; outcome not recorded | Live, reported by the maintainer on 2026-11-12 | No permission changes since 1.4.0. The English listing was added to this submission. |
 | 1.4.0 | [Published 2026-08-10](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.4.0) | Date not recorded | Not separately recorded | Recorded as published in the dashboard on 2026-11-02; also shown by the cached public page | The cached listing does not establish the current latest store version. |

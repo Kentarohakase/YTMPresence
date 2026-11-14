@@ -4,7 +4,7 @@ All notable changes to YTMPresence are documented in this file.
 
 Dates for published GitHub releases use Europe/Vienna time. The [GitHub release list](https://github.com/Kentarohakase/YTMPresence/releases), checked on 2026-11-07, contains no releases for 0.7.0, 0.8.11 or 1.0.0; their existing entries and dates are retained as project history.
 
-## [Unreleased]
+## [1.6.0] - 2026-11-14
 
 ### Added
 
@@ -12,9 +12,8 @@ Dates for published GitHub releases use Europe/Vienna time. The [GitHub release 
 
 ### Fixed
 
-- The extension no longer cuts cover URLs to 256 characters. A shortened URL pointed to no valid image; URLs over 2,048 characters are now omitted. Because older extensions still shorten them, the companion does not pass cover URLs of exactly 256 characters to Discord.
-
 - When several browsers or profiles are connected, Discord presence, the mini player and its controls now use one selected source. Paused sources cannot replace a playing one, and commands reach only that source. Selection follows the same rules as within one browser: keep the playing source; on pause, switch only if another is playing; on disconnect, choose an available source immediately. The extension protocol is unchanged, so older extensions also benefit.
+- The extension no longer cuts cover URLs to 256 characters. A shortened URL pointed to no valid image; URLs over 2,048 characters are now omitted. Because older extensions still shorten them, the companion does not pass cover URLs of exactly 256 characters to Discord.
 
 ### Changed
 
@@ -23,6 +22,10 @@ Dates for published GitHub releases use Europe/Vienna time. The [GitHub release 
 - If the companion's port is occupied, a notification explains how to resolve it and the tray menu shows "Server: port 17373 in use". Previously, the menu showed only "Server: stopped", with the reason available in the log.
 - When the Discord desktop app is closed, the tray menu shows "Discord: not running". Diagnostics explain that the companion will connect automatically when Discord starts, replacing the English IPC error message.
 - The extension includes its version in the connection test, and diagnostics show it next to the selected source. Older companions ignore the field; older extensions do not report a version.
+
+### Notes
+
+- The browser extension changes in this release (complete cover URLs, version in the connection test) reach store users only with a separate store upload; GitHub and the Chrome Web Store update independently. The extension requests no new permissions. Album art in Discord also works with older extensions, except for covers whose URL they shortened.
 
 ## [1.5.1] - 2026-11-02
 
