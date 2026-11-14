@@ -18,6 +18,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          # Später läuft npm-Code (web-ext); kein Schritt braucht Git-Zugangsdaten.
+          persist-credentials: false
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v5

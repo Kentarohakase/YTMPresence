@@ -7,19 +7,61 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
-  release:
-    name: Build and publish release
+  # web-ext und seine npm-Abhängigkeiten laufen auf einem eigenen Runner ohne
+  # Schreibrechte. Im Release-Job könnte ein kompromittiertes Paket Setup und
+  # SHA256SUMS.txt vor dem Veröffentlichen austauschen; der In-App-Updater
+  # vertraut genau diesen beiden Dateien.
+  lint-extension:
+    name: Lint packaged extension
     runs-on: windows-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Package extension archives
+        shell: pwsh
+        run: ./scripts/package-release.ps1 -SelfContained -SkipInstaller
+
+      - name: Verify extension archives
+        shell: pwsh
+        run: ./scripts/verify-extension-archives.ps1
+
+      - name: Lint packaged extension (web-ext)
+        shell: pwsh
+        run: npx --yes web-ext lint --source-dir artifacts/release/archive-check/YTMPresence-extension-firefox
+
+  release:
+    name: Build and publish release
+    needs: lint-extension
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          # Kein Schritt pusht; das Token soll nicht in .git/config liegen.
+          persist-credentials: false
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
@@ -66,12 +108,18 @@ jobs:
           "value=$($manifest.version)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           "tag=v$($manifest.version)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
+      # Werte aus Tag und Manifest kommen über env statt ${{ }} ins Skript:
+      # Ein Tagname wie "v1.0.0$(...)" würde sonst in einem PowerShell-String
+      # in doppelten Anführungszeichen ausgeführt.
       - name: Check tag matches manifest
         if: startsWith(github.ref, 'refs/tags/')
         shell: pwsh
+        env:
+          EXPECTED_TAG: ${{ steps.version.outputs.tag }}
+          ACTUAL_TAG: ${{ github.ref_name }}
         run: |
-          $expected = "${{ steps.version.outputs.tag }}"
-          $actual = "${{ github.ref_name }}"
+          $expected = $env:EXPECTED_TAG
+          $actual = $env:ACTUAL_TAG
           if ($actual -ne $expected) {
             throw "Tag '$actual' does not match manifest version '$expected'."
           }
@@ -93,19 +141,18 @@ jobs:
         run: ./scripts/package-release.ps1 -SelfContained -InnoSetupCompiler "$env:INNO_SETUP_COMPILER"
 
       # Dieselben Prüfungen wie in CI: Ein Tag darf kein Archiv
-      # veröffentlichen, das CI abgelehnt hätte.
+      # veröffentlichen, das CI abgelehnt hätte. Der web-ext-Lint läuft im
+      # Job lint-extension, von dem dieser Job abhängt.
       - name: Verify extension archives
         shell: pwsh
         run: ./scripts/verify-extension-archives.ps1
 
-      - name: Lint packaged extension (web-ext)
-        shell: pwsh
-        run: npx --yes web-ext lint --source-dir artifacts/release/archive-check/YTMPresence-extension-firefox
-
       - name: Prepare release notes
         shell: pwsh
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.value }}
         run: |
-          $version = "${{ steps.version.outputs.value }}"
+          $version = $env:RELEASE_VERSION
           $notesPath = "artifacts/release/GITHUB_RELEASE_NOTES.md"
           $changelog = Get-Content -LiteralPath "CHANGELOG.md" -Raw
           $pattern = "(?s)## \[$([regex]::Escape($version))\].*?(?=\r?\n## \[|\z)"
@@ -135,10 +182,14 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_REPO: ${{ github.repository }}
+          RELEASE_VERSION: ${{ steps.version.outputs.value }}
+          RELEASE_SHA: ${{ github.sha }}
         run: |
-          $tag = "${{ github.ref_name }}"
-          $repo = "${{ github.repository }}"
-          $version = "${{ steps.version.outputs.value }}"
+          $tag = $env:RELEASE_TAG
+          $repo = $env:RELEASE_REPO
+          $version = $env:RELEASE_VERSION
           $bundle = "artifacts/release/YTMPresence-$version-win-x64.zip"
           $setup = "artifacts/release/YTMPresence-$version-win-x64-setup.exe"
           $extension = "artifacts/release/YTMPresence-extension.zip"
@@ -151,5 +202,5 @@ jobs:
             gh release upload $tag $bundle $setup $extension $extensionFirefox $checksums --repo $repo --clobber
             gh release edit $tag --repo $repo --title "YTMPresence $version" --notes-file $notes
           } else {
-            gh release create $tag $bundle $setup $extension $extensionFirefox $checksums --repo $repo --target "${{ github.sha }}" --title "YTMPresence $version" --notes-file $notes
+            gh release create $tag $bundle $setup $extension $extensionFirefox $checksums --repo $repo --target $env:RELEASE_SHA --title "YTMPresence $version" --notes-file $notes
           }
