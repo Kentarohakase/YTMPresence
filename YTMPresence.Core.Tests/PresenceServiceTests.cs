@@ -208,6 +208,210 @@ public class PresenceServiceTests
     Assert.All(buttons!, b => Assert.True(PresenceService.IsValidButtonUrl(b.Url)));
   }
 
+  private const string CoverUrl = "https://lh3.googleusercontent.com/abcDEF123-xyz=w544-h544-l90-rj";
+
+  [Fact]
+  public async Task AlbumArt_IsUsedAsLargeImage()
+  {
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings());
+
+    await service.HandleAsync(Playing() with { AlbumArtUrl = CoverUrl }, CancellationToken.None);
+
+    Assert.Equal(CoverUrl, discord.LastActivity?.Assets?.LargeImage);
+  }
+
+  [Theory]
+  [InlineData(true)]
+  [InlineData(false)]
+  public async Task AlbumArt_HasNoPlayPauseIconOnTop(bool isPlaying)
+  {
+    // Das Symbol würde einen Teil des Covers verdecken. Der Status steht im
+    // Statustext.
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings());
+
+    await service.HandleAsync(Playing(isPlaying: isPlaying) with { AlbumArtUrl = CoverUrl }, CancellationToken.None);
+
+    Assert.Null(discord.LastActivity?.Assets?.SmallImage);
+    Assert.Null(discord.LastActivity?.Assets?.SmallText);
+  }
+
+  [Theory]
+  [InlineData(true, "play")]
+  [InlineData(false, "pause")]
+  public async Task DefaultImage_KeepsPlayPauseIcon(bool isPlaying, string expectedIcon)
+  {
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings());
+
+    await service.HandleAsync(Playing(isPlaying: isPlaying), CancellationToken.None);
+
+    Assert.Equal("ytm_large", discord.LastActivity?.Assets?.LargeImage);
+    Assert.Equal(expectedIcon, discord.LastActivity?.Assets?.SmallImage);
+  }
+
+  [Fact]
+  public async Task MusicVideoThumbnail_IsSentWithoutLetterbox()
+  {
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings());
+
+    var state = Playing() with
+    {
+      AlbumArtUrl = "https://i.ytimg.com/vi/abcdefghijk/sddefault.jpg?sqp=-oaymwEWCJADEOEBIAQqCghqEJQEGHgg6AJIWg&rs=AMzJL3k"
+    };
+    await service.HandleAsync(state, CancellationToken.None);
+
+    Assert.Equal("https://i.ytimg.com/vi/abcdefghijk/mqdefault.jpg", discord.LastActivity?.Assets?.LargeImage);
+  }
+
+  [Theory]
+  [InlineData("https://i.ytimg.com/vi/abcdefghijk/default.jpg")]
+  [InlineData("https://i.ytimg.com/vi/abcdefghijk/hqdefault.jpg")]
+  [InlineData("https://i.ytimg.com/vi/abcdefghijk/sddefault.jpg?sqp=abc&rs=def")]
+  [InlineData("https://i.ytimg.com/vi_webp/abcdefghijk/hqdefault.webp")]
+  [InlineData("https://I.YTIMG.COM/vi/abcdefghijk/hqdefault.jpg")]
+  public void LetterboxedThumbnails_UseTheWidescreenVariant(string url)
+  {
+    Assert.Equal(
+        "https://i.ytimg.com/vi/abcdefghijk/mqdefault.jpg",
+        PresenceService.PreferThumbnailWithoutLetterbox(url));
+  }
+
+  [Theory]
+  // Album-Cover sind bereits quadratisch.
+  [InlineData(CoverUrl)]
+  // Schon 16:9 ohne Balken.
+  [InlineData("https://i.ytimg.com/vi/abcdefghijk/mqdefault.jpg")]
+  [InlineData("https://i.ytimg.com/vi/abcdefghijk/maxresdefault.jpg")]
+  [InlineData("https://i.ytimg.com/vi/abcdefghijk/hq720.jpg?sqp=abc")]
+  // Andere Hosts tragen eigene Signaturen; ein Umschreiben könnte sie brechen.
+  [InlineData("https://i9.ytimg.com/vi/abcdefghijk/hqdefault.jpg?sqp=abc")]
+  // Keine gültige Video-ID oder unbekannter Pfad.
+  [InlineData("https://i.ytimg.com/vi/short/hqdefault.jpg")]
+  [InlineData("https://i.ytimg.com/vi/abc%2Fdefghij/hqdefault.jpg")]
+  [InlineData("https://i.ytimg.com/an_webp/abcdefghijk/mqdefault_6s.webp")]
+  public void OtherImages_AreLeftUnchanged(string url)
+  {
+    Assert.Equal(url, PresenceService.PreferThumbnailWithoutLetterbox(url));
+  }
+
+  [Fact]
+  public async Task AlbumArt_Disabled_UsesDefaultImage()
+  {
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings { ShowAlbumArtInDiscord = false });
+
+    await service.HandleAsync(Playing() with { AlbumArtUrl = CoverUrl }, CancellationToken.None);
+
+    Assert.Equal("ytm_large", discord.LastActivity?.Assets?.LargeImage);
+    Assert.Equal("play", discord.LastActivity?.Assets?.SmallImage);
+  }
+
+  [Fact]
+  public async Task AlbumArt_Missing_UsesDefaultImage()
+  {
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings());
+
+    await service.HandleAsync(Playing(), CancellationToken.None);
+
+    Assert.Equal("ytm_large", discord.LastActivity?.Assets?.LargeImage);
+  }
+
+  [Fact]
+  public async Task AlbumArt_Unusable_FallsBackWithoutLosingThePresence()
+  {
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings());
+
+    await service.HandleAsync(
+        Playing() with { AlbumArtUrl = "https://example.com/cover.jpg" },
+        CancellationToken.None);
+
+    Assert.Equal(1, discord.SetCount);
+    Assert.Equal("ytm_large", discord.LastActivity?.Assets?.LargeImage);
+  }
+
+  [Fact]
+  public async Task AlbumArt_ArrivingLater_UpdatesThePresence()
+  {
+    // YouTube Music kann das Artwork nach dem Titel setzen. Ohne das Bild im
+    // Presence-Key bliebe das Logo bis zum nächsten Fortschrittsschritt stehen.
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings { MinDiscordUpdateSeconds = 0 });
+
+    await service.HandleAsync(Playing(), CancellationToken.None);
+    await service.HandleAsync(Playing() with { AlbumArtUrl = CoverUrl }, CancellationToken.None);
+
+    Assert.Equal(2, discord.SetCount);
+    Assert.Equal(CoverUrl, discord.LastActivity?.Assets?.LargeImage);
+  }
+
+  [Fact]
+  public async Task Ad_KeepsDefaultImageEvenWithAlbumArt()
+  {
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings { AdBehavior = AdBehavior.ShowAdvertisement });
+
+    await service.HandleAsync(Playing(isAd: true) with { AlbumArtUrl = CoverUrl }, CancellationToken.None);
+
+    Assert.Equal("ytm_large", discord.LastActivity?.Assets?.LargeImage);
+  }
+
+  [Theory]
+  [InlineData(CoverUrl)]
+  [InlineData("https://lh6.googleusercontent.com/abc=w60-h60")]
+  [InlineData("https://yt3.googleusercontent.com/abc=s544")]
+  [InlineData("https://i.ytimg.com/vi/abcdefghijk/hqdefault.jpg")]
+  [InlineData("https://i9.ytimg.com/vi/abcdefghijk/sddefault.jpg?sqp=abc")]
+  [InlineData("https://yt3.ggpht.com/abc=s176")]
+  public void AlbumArtUrls_FromYouTubeImageHosts_AreAccepted(string url)
+  {
+    Assert.True(PresenceService.IsDiscordAlbumArtUrl(url));
+  }
+
+  [Theory]
+  [InlineData("")]
+  [InlineData("http://lh3.googleusercontent.com/abc")]
+  [InlineData("https://example.com/cover.jpg")]
+  [InlineData("https://evilytimg.com/cover.jpg")]
+  [InlineData("https://ytimg.com.example.com/cover.jpg")]
+  // googleusercontent.com hostet auch beliebige Nutzerdateien.
+  [InlineData("https://doc-0s-docs.googleusercontent.com/file")]
+  [InlineData("https://lh3.googleusercontent.com:8443/abc")]
+  [InlineData("https://user@lh3.googleusercontent.com/abc")]
+  [InlineData("https://lh3.googleusercontent.com/a b")]
+  public void AlbumArtUrls_OutsideTheAllowlist_AreRejected(string url)
+  {
+    Assert.False(PresenceService.IsDiscordAlbumArtUrl(url));
+  }
+
+  [Theory]
+  // Über Discords Limit von 300 Zeichen.
+  [InlineData(301)]
+  // Ältere Erweiterungen kürzen URLs auf genau 256 Zeichen.
+  [InlineData(256)]
+  public void AlbumArtUrls_WithUnusableLength_AreRejected(int length)
+  {
+    const string prefix = "https://lh3.googleusercontent.com/";
+    var url = prefix + new string('a', length - prefix.Length);
+
+    Assert.False(PresenceService.IsDiscordAlbumArtUrl(url));
+  }
+
+  [Theory]
+  [InlineData(255)]
+  [InlineData(300)]
+  public void AlbumArtUrls_WithinTheLimit_AreAccepted(int length)
+  {
+    const string prefix = "https://lh3.googleusercontent.com/";
+    var url = prefix + new string('a', length - prefix.Length);
+
+    Assert.True(PresenceService.IsDiscordAlbumArtUrl(url));
+  }
+
   [Fact]
   public async Task IdenticalState_IsDeduped()
   {

@@ -19,6 +19,18 @@ public sealed class PresenceService
   // Verhindert, dass dieselbe abgelehnte Button-URL bei jedem Update erneut
   // protokolliert wird.
   private string? _lastRejectedButtonUrl;
+  private string? _lastRejectedAlbumArtUrl;
+
+  // Discord nimmt in large_image neben Asset-Keys auch externe HTTPS-URLs an
+  // und lädt das Bild über seinen Media-Proxy. Das Discord Social SDK
+  // begrenzt das Feld auf 300 Zeichen; längere Werte riskieren, dass Discord
+  // die gesamte Aktivität ablehnt.
+  private const int MaxLargeImageLength = 300;
+
+  // Erweiterungen bis einschließlich 1.5.1 schneiden die Cover-URL nach 256
+  // Zeichen ab. Eine URL mit genau dieser Länge ist deshalb vermutlich
+  // gekürzt und würde bei Discord ein kaputtes Bild ergeben.
+  private const int LegacyTruncatedUrlLength = 256;
 
   // Wie oft soll der "Zeit-Text" aktualisiert werden?
   // Beispiel: 10 => "01:20 / 03:45" wird nur alle 10 Sekunden neu gesetzt.
@@ -128,10 +140,13 @@ public sealed class PresenceService
     // (ohne Bucket wäre "changed=false" und Discord würde nie neu gesetzt werden)
     var progressBucket = GetProgressBucket(state);
 
-    var activity = BuildActivity(state, title, artist, trackUrl);
+    var largeImage = SelectLargeImage(state);
+    var activity = BuildActivity(state, title, artist, trackUrl, largeImage);
 
-    // Key enthält Bucket => Update alle ProgressTextStepSeconds Sekunden
-    var key = $"{state.IsPlaying}|{title}|{artist}|{trackUrl}|b{progressBucket}";
+    // Key enthält Bucket => Update alle ProgressTextStepSeconds Sekunden.
+    // Das Bild gehört dazu, damit ein nachgereichtes Cover die Presence
+    // aktualisiert, auch wenn Titel und Fortschritt gleich bleiben.
+    var key = $"{state.IsPlaying}|{title}|{artist}|{trackUrl}|{largeImage}|b{progressBucket}";
 
     await TryUpdateAsync(key, activity, force: criticalChange, ct);
   }
@@ -272,7 +287,7 @@ public sealed class PresenceService
     }
   }
 
-  private DiscordActivity BuildActivity(YtmState state, string title, string artist, string trackUrl)
+  private DiscordActivity BuildActivity(YtmState state, string title, string artist, string trackUrl, string largeImage)
   {
     // "Spotify-like": Balken ist Discord-seitig nicht garantiert.
     // Daher: Zeit als Text im State anzeigen.
@@ -282,13 +297,20 @@ public sealed class PresenceService
     // Timestamps nur beim Playing (optional – Discord kann dann trotzdem irgendwo Zeit anzeigen)
     var timestamps = state.IsPlaying ? TryBuildTimestamps(state) : null;
 
+    // Über dem Cover verdeckt das Play/Pause-Symbol einen Teil des Bildes.
+    // Der Wiedergabestatus steht ohnehin im Statustext; nur zum Logo bleibt
+    // das Symbol erhalten.
+    var showsAlbumArt = !string.Equals(largeImage, _settings.Assets.LargeImageKey, StringComparison.Ordinal);
+
     var assets = new DiscordAssets(
-        LargeImage: _settings.Assets.LargeImageKey,
+        LargeImage: largeImage,
         LargeText: string.IsNullOrWhiteSpace(album)
             ? _settings.Assets.LargeImageText
             : $"{album} · {_settings.Assets.LargeImageText}",
-        SmallImage: state.IsPlaying ? _settings.Assets.PlaySmallImageKey : _settings.Assets.PauseSmallImageKey,
-        SmallText: state.IsPlaying ? PresenceText.Playing : PresenceText.Paused
+        SmallImage: showsAlbumArt ? null
+            : state.IsPlaying ? _settings.Assets.PlaySmallImageKey : _settings.Assets.PauseSmallImageKey,
+        SmallText: showsAlbumArt ? null
+            : state.IsPlaying ? PresenceText.Playing : PresenceText.Paused
     );
 
     // Discord lehnt die *gesamte* Aktivität ab, wenn ein einzelner Button eine
@@ -332,6 +354,125 @@ public sealed class PresenceService
         Buttons: buttons.ToArray(),
         Type: DiscordActivityType.Listening
     );
+  }
+
+  /// <summary>
+  /// Cover des Tracks als großes Bild, sonst das YouTube-Music-Logo aus den
+  /// Discord-Assets. Ein unbrauchbares Cover kostet nur das Bild, nicht die
+  /// Presence.
+  /// </summary>
+  private string SelectLargeImage(YtmState state)
+  {
+    var fallback = _settings.Assets.LargeImageKey;
+    var url = state.AlbumArtUrl;
+
+    if (!_settings.ShowAlbumArtInDiscord || string.IsNullOrWhiteSpace(url))
+      return fallback;
+
+    if (IsDiscordAlbumArtUrl(url))
+      return PreferThumbnailWithoutLetterbox(url);
+
+    if (!string.Equals(url, _lastRejectedAlbumArtUrl, StringComparison.Ordinal))
+    {
+      _lastRejectedAlbumArtUrl = url;
+      var host = Uri.TryCreate(url, UriKind.Absolute, out var uri) ? uri.Host : "<invalid>";
+      Logger.Info($"Album art not used for Discord (host '{host}', length {url.Length}); using the default image.");
+    }
+
+    return fallback;
+  }
+
+  /// <summary>
+  /// Prüft, ob eine Cover-URL an Discord gehen darf: HTTPS, ohne Leer- oder
+  /// Steuerzeichen, innerhalb von Discords Längenlimit und von einem der
+  /// Bild-Hosts, die YouTube Music für Cover benutzt. Andere URLs aus der
+  /// Seite sollen Discord nicht zum Abruf beliebiger Adressen veranlassen.
+  /// </summary>
+  internal static bool IsDiscordAlbumArtUrl(string? url)
+  {
+    if (string.IsNullOrWhiteSpace(url) ||
+        url.Length > MaxLargeImageLength ||
+        url.Length == LegacyTruncatedUrlLength)
+    {
+      return false;
+    }
+
+    foreach (var c in url)
+    {
+      if (char.IsWhiteSpace(c) || char.IsControl(c))
+        return false;
+    }
+
+    if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) ||
+        !string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase) ||
+        !uri.IsDefaultPort ||
+        !string.IsNullOrEmpty(uri.UserInfo))
+    {
+      return false;
+    }
+
+    return IsAlbumArtHost(uri.Host);
+  }
+
+  /// <summary>
+  /// Bei Musikvideos liefert YouTube Music ein Video-Vorschaubild statt eines
+  /// Covers. Die 4:3-Varianten (default, hqdefault, sddefault) enthalten bei
+  /// 16:9-Videos schwarze Balken oben und unten, die in Discords quadratischem
+  /// Bildfeld auffallen. mqdefault zeigt dasselbe Bild in 16:9 ohne Balken und
+  /// existiert für jedes Video. Größere 16:9-Varianten wie maxresdefault
+  /// fehlen bei manchen Videos; Discord zeigt dann gar kein Bild.
+  /// </summary>
+  internal static string PreferThumbnailWithoutLetterbox(string url)
+  {
+    if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) ||
+        !string.Equals(uri.Host, "i.ytimg.com", StringComparison.OrdinalIgnoreCase))
+    {
+      return url;
+    }
+
+    // Erwartet /vi/<id>/<name>.jpg oder /vi_webp/<id>/<name>.webp. Die
+    // Query (sqp, rs) gehört zur jeweiligen Variante und entfällt.
+    var segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+    if (segments.Length != 3 || segments[0] is not ("vi" or "vi_webp"))
+      return url;
+
+    var videoId = segments[1];
+    var variant = Path.GetFileNameWithoutExtension(segments[2]);
+    if (!IsVideoId(videoId) || variant is not ("default" or "hqdefault" or "sddefault"))
+      return url;
+
+    return $"https://i.ytimg.com/vi/{videoId}/mqdefault.jpg";
+  }
+
+  private static bool IsVideoId(string value)
+      => value.Length == 11 && value.All(c => char.IsAsciiLetterOrDigit(c) || c is '-' or '_');
+
+  private static bool IsAlbumArtHost(string host)
+  {
+    // ytimg.com und ggpht.com liefern ausschließlich YouTube-Bilder.
+    if (host.EndsWith(".ytimg.com", StringComparison.OrdinalIgnoreCase) ||
+        host.EndsWith(".ggpht.com", StringComparison.OrdinalIgnoreCase))
+    {
+      return true;
+    }
+
+    // googleusercontent.com hostet auch beliebige Nutzerinhalte (etwa Drive).
+    // Cover liegen auf den nummerierten Bild-Hosts lhN und ytN.
+    const string googleUserContent = ".googleusercontent.com";
+    if (!host.EndsWith(googleUserContent, StringComparison.OrdinalIgnoreCase))
+      return false;
+
+    var label = host[..^googleUserContent.Length];
+    return IsNumberedLabel(label, "lh") || IsNumberedLabel(label, "yt");
+  }
+
+  private static bool IsNumberedLabel(string label, string prefix)
+  {
+    if (!label.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+      return false;
+
+    var number = label[prefix.Length..];
+    return number.Length is >= 1 and <= 2 && number.All(char.IsAsciiDigit);
   }
 
   private static bool TryGetTimes(YtmState state, out double pos, out double dur)

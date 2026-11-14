@@ -33,7 +33,7 @@ https://github.com/Kentarohakase/YTMPresence/releases
 
 The extension reads the current track's title, artist, album, cover URL, playback state, timing, links and advertisement status on YouTube Music. It sends these over a local, token-protected WebSocket to the companion app, which can show the track in a mini player.
 
-The companion passes track details, playback status, timing and links to the local Discord desktop app for Rich Presence. Discord processes this information outside the device and may display it to other users according to your Discord activity-sharing settings. The mini player can also load cover images from the supplied image URL. YTMPresence sends no data to developer-operated collection servers.
+The companion passes track details, the cover URL, playback status, timing and links to the local Discord desktop app for Rich Presence. Discord processes this information outside the device, loads the cover from its URL and may display it to other users according to your Discord activity-sharing settings. The cover can be turned off in the companion settings. The mini player can also load cover images from the supplied image URL. YTMPresence sends no data to developer-operated collection servers.
 
 Features:
 
@@ -54,7 +54,7 @@ https://github.com/Kentarohakase/YTMPresence/releases
 
 Die Erweiterung liest auf YouTube Music Titel, Interpret, Album, Cover-URL, Wiedergabestatus, Zeitangaben, Links und Werbestatus des aktuellen Tracks. Sie sendet diese Daten über einen lokalen, tokengeschützten WebSocket an die Companion-App, die den Track in einem Mini-Player anzeigen kann.
 
-Für Rich Presence übergibt der Companion Track-Details, Wiedergabestatus, Zeitangaben und Links an die lokale Discord-Desktop-App. Discord verarbeitet diese Informationen außerhalb des Geräts und kann sie anderen Nutzern entsprechend deinen Discord-Aktivitätseinstellungen anzeigen. Der Mini-Player kann außerdem Cover von der übermittelten Bild-URL laden. YTMPresence sendet keine Daten an Server des Entwicklers.
+Für Rich Presence übergibt der Companion Track-Details, Cover-URL, Wiedergabestatus, Zeitangaben und Links an die lokale Discord-Desktop-App. Discord verarbeitet diese Informationen außerhalb des Geräts, lädt das Cover von seiner URL und kann sie anderen Nutzern entsprechend deinen Discord-Aktivitätseinstellungen anzeigen. Das Cover lässt sich in den Companion-Einstellungen abschalten. Der Mini-Player kann außerdem Cover von der übermittelten Bild-URL laden. YTMPresence sendet keine Daten an Server des Entwicklers.
 
 Funktionen:
 
@@ -67,7 +67,7 @@ Funktionen:
 
 ## Privacy statement for the store
 
-The extension sends YouTube Music metadata and playback state only to the local YTMPresence companion on `localhost` or `127.0.0.1`. The companion passes title, artist, album, playback state, timing and links to the Discord desktop app. Discord receives this information outside the device and may show it to other users according to your activity-sharing settings. The companion token is not part of the Rich Presence activity.
+The extension sends YouTube Music metadata and playback state only to the local YTMPresence companion on `localhost` or `127.0.0.1`. The companion passes title, artist, album, cover URL, playback state, timing and links to the Discord desktop app. Discord receives this information outside the device and may show it to other users according to your activity-sharing settings. The companion token is not part of the Rich Presence activity.
 
 The mini player can fetch cover images from the supplied URL, and companion update checks and downloads contact GitHub. YTMPresence has no analytics, tracking or advertising integration and sends no data to developer-operated collection servers.
 

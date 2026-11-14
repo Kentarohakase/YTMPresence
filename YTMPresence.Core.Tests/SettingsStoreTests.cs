@@ -50,6 +50,28 @@ public class SettingsStoreTests : IDisposable
   }
 
   [Fact]
+  public void LoadOrCreateDefault_EnablesAlbumArtForSettingsWithoutTheOption()
+  {
+    // settings.json aus Versionen vor der Option kennt das Feld nicht.
+    File.WriteAllText(_path, """{ "SecurityToken": "fixed-token", "OnlyShowWhenPlaying": true }""");
+
+    var loaded = SettingsStore.LoadOrCreateDefault(_path);
+
+    Assert.True(loaded.ShowAlbumArtInDiscord);
+    Assert.True(loaded.OnlyShowWhenPlaying);
+  }
+
+  [Fact]
+  public void SaveThenLoad_KeepsDisabledAlbumArt()
+  {
+    SettingsStore.Save(_path, new AppSettings { ShowAlbumArtInDiscord = false });
+
+    var loaded = SettingsStore.LoadOrCreateDefault(_path);
+
+    Assert.False(loaded.ShowAlbumArtInDiscord);
+  }
+
+  [Fact]
   public void Normalize_ClampsPortAndIntervals()
   {
     var settings = new AppSettings

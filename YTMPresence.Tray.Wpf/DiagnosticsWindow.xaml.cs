@@ -259,6 +259,7 @@ public partial class DiagnosticsWindow : Window
     _settings.IdleClearSeconds,
     _settings.PausedClearSeconds,
     _settings.OnlyShowWhenPlaying,
+    _settings.ShowAlbumArtInDiscord,
     _settings.AdBehavior,
     _settings.Assets,
     _settings.PlayerWindow,

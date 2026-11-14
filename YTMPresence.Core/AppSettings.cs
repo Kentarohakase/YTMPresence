@@ -37,6 +37,13 @@ public sealed class AppSettings
   public int PausedClearSeconds { get; set; } = 120;
   public bool OnlyShowWhenPlaying { get; set; } = false;
 
+  /// <summary>
+  /// Zeigt das Cover des Tracks als großes Bild in Discord. Discord lädt das
+  /// Bild dann selbst von YouTube Musics Bild-Servern. Ohne Cover oder bei
+  /// false erscheint das YouTube-Music-Logo aus <see cref="Assets"/>.
+  /// </summary>
+  public bool ShowAlbumArtInDiscord { get; set; } = true;
+
   public AdBehavior AdBehavior { get; set; } = AdBehavior.ShowAdvertisement;
   public DiscordAssetKeys Assets { get; set; } = new();
   public PlayerWindowSettings PlayerWindow { get; set; } = new();

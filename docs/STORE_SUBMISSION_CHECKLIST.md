@@ -34,7 +34,7 @@ Describe the full data flow, including the companion's transfer to Discord. Keep
 
 - Collected: website activity and website content (track metadata, the current YouTube Music URL).
 - The extension sends playback data only to the local companion at `127.0.0.1`/`localhost`, authenticated with the companion token.
-- The companion passes Rich Presence information to the local Discord desktop app. Discord receives track title, artist, album, playback state, timing and links, depending on settings and available metadata, and may display them to other users according to Discord's activity-sharing settings. This is a transfer to a third party outside the device.
+- The companion passes Rich Presence information to the local Discord desktop app. Discord receives track title, artist, album, cover URL, playback state, timing and links, depending on settings and available metadata, and may display them to other users according to Discord's activity-sharing settings. This is a transfer to a third party outside the device.
 - The mini player can fetch cover images from the supplied image URL; the companion also contacts GitHub for update checks and downloads. See [the privacy notice](EXTENSION_PRIVACY.md#data-sharing).
 - No sale of data or use for creditworthiness or lending purposes. YTMPresence has no analytics, tracking or advertising integration and sends no data to developer-operated collection servers.
 

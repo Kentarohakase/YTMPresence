@@ -142,6 +142,22 @@ test("artwork identifies the current track ahead of stale page URLs", async () =
     assert.equal(app.state().shareUrl, "https://music.youtube.com/watch?v=abcdefghijk");
 });
 
+test("album art URLs longer than 256 characters are sent unshortened", async () => {
+    // Up to 1.5.1 the URL was cut to 256 characters like display text and
+    // then no longer pointed to a valid image.
+    const longArt = `https://lh3.googleusercontent.com/${"a".repeat(300)}=w544-h544-l90-rj`;
+    const app = page({ metadata: { title: "Track", artist: "Artist", artwork: [{ src: longArt, sizes: "544x544" }] } });
+    await app.time.advance(250);
+    assert.equal(app.state().albumArtUrl, longArt);
+});
+
+test("album art URLs beyond the companion limit are dropped instead of truncated", async () => {
+    const tooLong = `https://lh3.googleusercontent.com/${"a".repeat(2100)}`;
+    const app = page({ metadata: { title: "Track", artist: "Artist", artwork: [{ src: tooLong, sizes: "544x544" }] } });
+    await app.time.advance(250);
+    assert.equal(app.state().albumArtUrl, "");
+});
+
 test("player-bar URL is used before the address bar when artwork has no ID", async () => {
     const app = page({ url: "https://music.youtube.com/watch?v=old-location" });
     app.elements.set('ytmusic-player-bar a#song-title', [visible({ href: "/watch?v=current-link" })]);

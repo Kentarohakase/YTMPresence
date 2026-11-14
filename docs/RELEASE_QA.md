@@ -108,6 +108,16 @@ For unpacked-extension testing, confirm the loaded directory is the repository's
 - Close all YouTube Music tabs. The popup clears the track, commands affect no tab, and Discord clears after the configured idle timeout. Changing the token must not replay the closed track.
 - These checks cover one browser profile. Coordination between separate browser/extension connections remains an open roadmap item.
 
+## Discord album art
+
+Unit tests cover which URL the companion sends, not how Discord renders it. Check the visible activity in the Discord desktop app, ideally also from a second account.
+
+- Play an album track and a music video. The activity's large image shows each track's cover without a play/pause icon on top; the album hover text remains. For the music video, the image shows the video thumbnail without black bars at the top and bottom. Note how Discord fits the 16:9 image into its square frame.
+- Change tracks and confirm the cover follows within one update interval. Pause and resume; the cover stays and the state line shows the paused state.
+- Turn off **Show album art in Discord** and save. The YouTube Music logo with its play/pause icon returns within one update interval; turning the option on restores the cover.
+- During an advertisement with **Show as ad**, the logo appears instead of a cover.
+- If Discord rejects the activity, diagnostics show Discord's reason. Record the cover URL's host and length, not the full URL, when reporting it.
+
 ## After pushing
 
 - The GitHub Actions release workflow passes.

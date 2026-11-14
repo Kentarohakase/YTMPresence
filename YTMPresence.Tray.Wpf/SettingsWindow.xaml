@@ -98,6 +98,7 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="{x:Static tw:UiText.LabelDiscordUpdateInterval}" VerticalAlignment="Center" />
@@ -137,6 +138,14 @@
                               Grid.ColumnSpan="2"
                               Content="{x:Static tw:UiText.SettingsOnlyShowWhenPlaying}"
                               Margin="0,12,0,0" />
+
+                    <CheckBox x:Name="ShowAlbumArtInDiscordBox"
+                              Grid.Row="5"
+                              Grid.Column="0"
+                              Grid.ColumnSpan="2"
+                              Content="{x:Static tw:UiText.SettingsShowAlbumArtInDiscord}"
+                              ToolTip="{x:Static tw:UiText.SettingsShowAlbumArtInDiscordHint}"
+                              Margin="0,8,0,0" />
                 </Grid>
             </GroupBox>
 

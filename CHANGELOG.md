@@ -6,7 +6,13 @@ Dates for published GitHub releases use Europe/Vienna time. The [GitHub release 
 
 ## [Unreleased]
 
+### Added
+
+- Discord presence shows the current track's album art as its large image, as long as YouTube Music provides a cover. Without a cover, or if the URL is not from a YouTube Music image host or exceeds Discord's 300-character limit, the YouTube Music logo appears as before. The cover carries no play/pause icon, since the icon would hide part of it; the state line still says when playback is paused, and the icon stays with the logo. For music videos, YouTube Music provides a 4:3 video thumbnail with black bars instead of a cover; Discord receives the 16:9 version of the same thumbnail (`mqdefault`, 320×180) without those bars. It is less sharp than an album cover, but exists for every video. **Show album art in Discord** in the settings window turns the cover off; existing settings files start with it enabled. Discord loads the image itself from the cover URL, see the [privacy notice](docs/EXTENSION_PRIVACY.md#data-sharing).
+
 ### Fixed
+
+- The extension no longer cuts cover URLs to 256 characters. A shortened URL pointed to no valid image; URLs over 2,048 characters are now omitted. Because older extensions still shorten them, the companion does not pass cover URLs of exactly 256 characters to Discord.
 
 - When several browsers or profiles are connected, Discord presence, the mini player and its controls now use one selected source. Paused sources cannot replace a playing one, and commands reach only that source. Selection follows the same rules as within one browser: keep the playing source; on pause, switch only if another is playing; on disconnect, choose an available source immediately. The extension protocol is unchanged, so older extensions also benefit.
 

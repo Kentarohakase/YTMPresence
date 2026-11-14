@@ -1,6 +1,6 @@
 # YTMPresence Extension Privacy Notice
 
-Last updated: 2026-11-07
+Last updated: 2026-11-14
 
 The YTMPresence browser extension sends the current YouTube Music playback state to a local companion app. The companion displays it as Discord Rich Presence.
 
@@ -39,12 +39,12 @@ The companion sends a Rich Presence activity through Discord's local IPC connect
 - track title, artist and album;
 - playing or paused state, playback position and duration, and timestamps used to display elapsed or remaining time;
 - a track link, which may be a YouTube Music search link, and a link to YouTube Music;
-- configured activity images and their labels;
+- the track's cover URL as the large activity image, or configured activity images if no suitable cover is available or the option is turned off, and the image labels;
 - an advertisement status when that option is enabled.
 
 Discord receives and processes this information outside the device. Other Discord users may see the track details, playback status, timing, images and links on your activity or profile, depending on Discord's [activity-sharing settings](https://support.discord.com/hc/en-us/articles/7931156448919-Activity-Sharing-on-Discord-FAQ). Discord's processing is governed by its [privacy policy](https://discord.com/privacy).
 
-The companion token, companion WebSocket URL and extension version are not included in the Rich Presence activity. The track's cover URL is used by the mini player; the Discord activity uses configured images rather than that cover URL. The implemented activity fields are defined in [PresenceService.cs](../YTMPresence.Core/PresenceService.cs) and sent by [DiscordIpcClient.cs](../YTMPresence.Core/DiscordIpcClient.cs).
+The companion token, companion WebSocket URL and extension version are not included in the Rich Presence activity. By default, the activity passes the track's cover URL to Discord when it points to a YouTube Music image host (`*.ytimg.com`, `*.ggpht.com`, or the `lhN`/`ytN` hosts under `googleusercontent.com`). For music videos, it passes the 16:9 version of the same YouTube thumbnail instead. Discord then loads the image from that URL. The companion setting **Show album art in Discord** turns this off; the activity then uses the configured images. The implemented activity fields are defined in [PresenceService.cs](../YTMPresence.Core/PresenceService.cs) and sent by [DiscordIpcClient.cs](../YTMPresence.Core/DiscordIpcClient.cs).
 
 When displaying a cover, the mini player can request the image from the supplied URL. The companion also contacts GitHub for update checks and downloads. These requests are separate from the extension's local WebSocket connection.
 

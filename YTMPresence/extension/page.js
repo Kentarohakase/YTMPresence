@@ -5,6 +5,9 @@
     window.__ytmPresencePageBridgeLoaded = true;
 
     const MAX_TEXT_LENGTH = 256;
+    // Entspricht dem URL-Limit des Companions. URLs werden nie gekürzt, weil
+    // eine abgeschnittene URL auf ein anderes oder kein Bild zeigt.
+    const MAX_URL_LENGTH = 2048;
     const EMPTY_METADATA_GRACE_MS = 5000;
     const SEND_POSITION_BUCKET_SECONDS = 5;
 
@@ -310,7 +313,8 @@
             .filter((item) => item.src);
 
         candidates.sort((a, b) => b.size - a.size);
-        return clampText(candidates[0]?.src || "");
+        const url = (candidates[0]?.src || "").trim();
+        return url.length <= MAX_URL_LENGTH ? url : "";
     }
 
     /**
