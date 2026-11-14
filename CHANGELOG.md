@@ -4,7 +4,7 @@ All notable changes to YTMPresence are documented in this file.
 
 Dates for published GitHub releases use Europe/Vienna time. The [GitHub release list](https://github.com/Kentarohakase/YTMPresence/releases), checked on 2026-11-07, contains no releases for 0.7.0, 0.8.11 or 1.0.0; their existing entries and dates are retained as project history.
 
-## [1.6.0] - 2026-11-14
+## [1.6.0] - 2026-11-15
 
 ### Added
 

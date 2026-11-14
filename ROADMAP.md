@@ -1,12 +1,12 @@
 # YTMPresence Roadmap
 
-Planning reviewed **2026-11-02**; release status checked **2026-11-12**. Planning baseline: **1.4.0** (`main` at `da60499`), published on GitHub on 2026-08-10 and recorded as published in the Chrome Web Store dashboard on 2026-11-02.
+Planning reviewed **2026-11-02**; release status checked **2026-11-15**. Planning baseline: **1.4.0** (`main` at `da60499`), published on GitHub on 2026-08-10 and recorded as published in the Chrome Web Store dashboard on 2026-11-02.
 
 This roadmap replaces the draft of 2026-10-12. Release numbers indicate the proposed order of work; they do not promise delivery dates.
 
 ## Where things stand
 
-**Published on GitHub:** [1.5.0](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.5.0) and [1.5.1](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.5.1), both on 2026-11-02. The maintainer confirmed on 2026-11-12 that 1.5.0 is live in the Chrome Web Store. Version 1.5.1 changes only the companion. See the [store checklist](docs/STORE_SUBMISSION_CHECKLIST.md#release-status) for the evidence and its limits.
+**Published on GitHub:** [1.5.0](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.5.0) and [1.5.1](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.5.1), both on 2026-11-02, and [1.6.0](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.6.0) on 2026-11-15. The maintainer confirmed on 2026-11-12 that 1.5.0 is live in the Chrome Web Store. Version 1.5.1 changes only the companion; the 1.6.0 extension has not been uploaded to the store yet. See the [store checklist](docs/STORE_SUBMISSION_CHECKLIST.md#release-status) for the evidence and its limits.
 
 **Released in 1.4.0:** tray companion with mini player, diagnostics and verified updates; Chrome/Edge extension in the store; Firefox package for temporary loading; German and English interfaces and Discord text.
 
@@ -25,7 +25,7 @@ This roadmap replaces the draft of 2026-10-12. Release numbers indicate the prop
 | --- | --- | --- | --- |
 | 1 | The 1.4.0 setup (2.2 MB) is framework-dependent and checks no prerequisites. It needs the .NET 10 Desktop Runtime **and** the ASP.NET Core Runtime (`Microsoft.AspNetCore.App` in [Core](YTMPresence.Core/YTMPresence.Core.csproj)). The README names both since pull request #1. **Published in 1.5.0: self-contained setup and ZIP, with a clean install test passed without .NET.** | Users installing 1.4.0 still need both runtimes; 1.5.0 and later include them. | P0 |
 | 2 | The finished work above is published on GitHub in 1.5.0. **The maintainer confirmed on 2026-11-12 that 1.5.0 is live in the Chrome Web Store.** | GitHub and store users can get the fixes. | P0 |
-| 3 | In 1.5.1, `CompanionServer.SendPlayerCommandAsync` sends every command to all authenticated connections. **Fixed in `main` for 1.6.0; not yet published.** | With two browsers or profiles on 1.5.1, one mini-player click controls both. | P1 |
+| 3 | In 1.5.1, `CompanionServer.SendPlayerCommandAsync` sends every command to all authenticated connections. **Fixed and published in 1.6.0.** | With two browsers or profiles on 1.5.1, one mini-player click controls both. | P1 |
 | 4 | In 1.5.0, Discord `ERROR` replies were only logged ([DiscordIpcClient](YTMPresence.Core/DiscordIpcClient.cs)). Replies were not matched to the request nonce, and success was assumed once the frame was written. **Published in 1.5.1:** reply matching and waiting for READY before sending, which fixes the lost first presence after each connection. | Older companions can report success while Discord shows nothing. | P1 |
 | 5 | During 1.5.0 preparation, the release workflow ran both test suites but omitted the extension archive check and `web-ext lint`, which ran only in CI. Both workflows pinned Node 20, which reached end of life in April 2026. **Fixed and published in 1.5.0.** | Earlier release workflows could publish an archive that CI would have rejected. | P2 |
 | 6 | Before 1.5.0, the Firefox package declared `strict_min_version` 126 but used `data_collection_permissions`, which needs Firefox 140, so `web-ext lint` warned. **Minimum raised to 140 and published in 1.5.0.** One lint warning remains for Firefox for Android, which only supports the key from 142; the package does not target Android, and 142 as the minimum would exclude Firefox ESR 140. Firefox still has no persistent install path. | Firefox remains a developer option. | P2 |
@@ -64,6 +64,8 @@ Goal: release the completed branch work to store and GitHub users, and let new u
 **Done when:** 1.5.0 is live on GitHub and in the store; a clean VM reaches onboarding with the setup alone; updating from 1.4.0 keeps settings and token; `main` contains the branch work.
 
 ## 1.6.0: one source across browsers, confirmed Discord status
+
+**Published on GitHub on 2026-11-15.** The extension is not yet uploaded to the Chrome Web Store.
 
 Goal: what the mini player and diagnostics show matches what actually happens in Discord, even with several browsers open.
 
