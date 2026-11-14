@@ -1,6 +1,6 @@
 # YTMPresence Roadmap
 
-Planning reviewed **2026-11-02**; release status checked **2026-11-15**. Planning baseline: **1.4.0** (`main` at `da60499`), published on GitHub on 2026-08-10 and recorded as published in the Chrome Web Store dashboard on 2026-11-02.
+Planning reviewed **2026-11-15**; release status checked **2026-11-15**. Planning baseline: **1.6.0** (`main` at `814028c`), published on GitHub on 2026-11-15. The previous review on 2026-11-02 started from 1.4.0.
 
 This roadmap replaces the draft of 2026-10-12. Release numbers indicate the proposed order of work; they do not promise delivery dates.
 
@@ -18,6 +18,8 @@ This roadmap replaces the draft of 2026-10-12. Release numbers indicate the prop
 - Four-step setup guide with a store link, *Save and check*, and version and installation-type information. The remaining German-only onboarding strings are localized.
 - The extension suite (92 tests, Node's built-in runner) runs alongside 208 Core tests in CI and the release workflow.
 - Live checks in Edge passed; see the [live QA](docs/LIVE_QA_2026-10-12.md) and [setup QA](docs/SETUP_QA_2026-10-12.md) records.
+
+**Published on GitHub in 1.6.0:** one source across browsers and profiles, with player commands sent only to that source; Discord's answer to each update, the selected source and the extension version in diagnostics; clear messages for an occupied port and a closed Discord; the track's cover as the Discord image. Discord reply matching and the READY fix shipped early in 1.5.1. Multi-browser and recovery checks passed on 2026-11-12 (see the [live QA](docs/LIVE_QA_2026-11-12.md)), album covers and music videos on 2026-11-14; the maintainer reported both results. Details are in the [changelog](CHANGELOG.md#160---2026-11-15).
 
 **Problems identified on 2026-11-02 and their release status:**
 
@@ -63,27 +65,30 @@ Goal: release the completed branch work to store and GitHub users, and let new u
 
 **Done when:** 1.5.0 is live on GitHub and in the store; a clean VM reaches onboarding with the setup alone; updating from 1.4.0 keeps settings and token; `main` contains the branch work.
 
-## 1.6.0: one source across browsers, confirmed Discord status
+## Next: finish the 1.6.0 rollout (no release needed)
 
-**Published on GitHub on 2026-11-15.** The extension is not yet uploaded to the Chrome Web Store.
+Goal: store users get the 1.6.0 extension, and the store pages describe the current data flow.
 
-Goal: what the mini player and diagnostics show matches what actually happens in Discord, even with several browsers open.
+- [ ] Upload the 1.6.0 extension to the Chrome Web Store. Use the English and German wording in [CHROME_WEB_STORE.md](docs/CHROME_WEB_STORE.md), which now names the cover URL passed to Discord, and review the dashboard's privacy declarations against it.
+- [ ] Confirm that the English store listing is visible to store users; this has been open since the 1.5.0 submission.
+- [ ] Optionally replace the Discord screenshot on the store page with one that shows album art.
+- [ ] Record browser, Discord, companion build and Windows versions at the next live check, as the [2026-11-12 live QA](docs/LIVE_QA_2026-11-12.md) asks.
 
-- [x] Select one source across companion connections, using the same rule as inside a browser: the connection with the playing track keeps ownership, otherwise the one that played most recently. Send commands to that connection only. Each extension connection already carries one selected tab, so the selection works per connection without a protocol change, also for older extensions.
-- [x] Match Discord replies to the request nonce. Record *accepted*, *rejected* (with Discord's code and message) and *no reply* after a timeout, and show the result in diagnostics instead of assuming success. The client also waits for Discord's READY before sending; checked against the real Discord on 2026-11-02 (reply after READY in about 5 ms, none before it). Shipped early as 1.5.1, because the READY fix affects every 1.5.0 user.
-- [x] Show the selected source (browser, extension version), the last received track and the last Discord result in diagnostics. Exported diagnostics stay free of tokens. The source is named after the browser in the User-Agent; the extension reports its version with the connection test.
-- [x] Explain how to resolve an occupied port and what happens when Discord is not running.
-- [x] Show the track's cover as the Discord image, with the 16:9 thumbnail for music videos and a setting to turn it off. Added during release preparation; on 2026-11-14 the maintainer reported that album covers and music videos display correctly in Discord.
-- [x] Live checks: Chrome and Edge at the same time; Discord restart; companion restart without reloading the tab; Windows sleep/resume; background-worker restart and tab discard. Passed on 2026-11-12 with a companion built from `main`, as reported by the maintainer; see the [live QA](docs/LIVE_QA_2026-11-12.md).
+**Done when:** the [release status table](docs/STORE_SUBMISSION_CHECKLIST.md#release-status) records 1.6.0 as published in the store, and the listing's data-flow text matches the [privacy notice](docs/EXTENSION_PRIVACY.md).
 
-**Done when:** with two browsers, one click affects one source and the displayed track matches it; a rejected activity shows as rejected; every listed recovery scenario restores the presence without reloading YouTube Music.
+## 1.7.0: support and compatibility
 
-## 1.7.0: support and polish
+Goal: when something goes wrong, users see which versions are involved and what to do next, and a bug report carries enough detail to act on without the token.
 
-- [ ] Test and document compatibility across versions (an older store extension with a newer companion and the reverse), since the store and GitHub update separately.
+- [ ] Show a notice in the popup and options when the connected companion is older than the version the extension was tested with, or reports no version, with a link to the GitHub releases. In progress.
+- [ ] Add **Copy diagnostics** to the extension popup: versions, installation type, browser, connection and track state, without the token or track titles. When the clipboard is unavailable, show the text for manual copying. In progress.
+- [ ] Open the setup guide on first install when no token is stored; updates leave existing installations alone. In progress.
+- [ ] Test and document compatibility across versions (an older store extension with a newer companion and the reverse), since the store and GitHub update separately. Include album art with an extension older than 1.6.0, which still shortens long cover URLs.
 - [x] Add a bug-report issue template asking for both versions, the browser, reproduction steps and an optional redacted diagnostics export.
 - [ ] Review keyboard navigation, focus order and high-DPI scaling in settings and the mini player; onboarding already passed its keyboard check.
-- [ ] Keep a short live QA matrix per release (Chrome, Edge, Firefox × track change, pause/clear, ads, source switch, restarts), recorded with versions under `docs/`.
+- [ ] Keep a short live QA matrix per release (Chrome, Edge, Firefox × track change, pause/clear, ads, source switch, restarts, album art), recorded with versions under `docs/`.
+
+**Done when:** the extension points out an outdated companion, the extension and companion diagnostics together are enough to triage a report, and the 1.7.0 live QA matrix is recorded with versions.
 
 ## Later, only with demand
 
@@ -93,6 +98,8 @@ Goal: what the mini player and diagnostics show matches what actually happens in
 | Code-signed setup and publisher check in the updater | A signing certificate and its renewal are affordable. Keep the existing checksum verification. |
 | Pairing without copying the token | Feedback after 1.5.0 still shows the token step as the main obstacle. Evaluate a short-lived local pairing code that keeps authentication. |
 | Presence presets, a quick privacy toggle, hotkeys | Concrete user requests show which one is worth building. |
+| Sharper images for music videos | Users find the 320×180 thumbnail too soft. Larger 16:9 thumbnails exist only for some videos, so this needs an availability check, preferably in the browser, which already loads YouTube images, rather than a new companion request. |
+| Microsoft Edge Add-ons listing | Edge users ask for it. Edge already installs the extension from the Chrome Web Store, and a second listing adds an upload and review per release. |
 | ARM64 or other operating systems | Users request support and a test machine is available; other operating systems require changes beyond repackaging the WPF app. |
 
 Not planned: cloud accounts, listening statistics, an interface rewrite.

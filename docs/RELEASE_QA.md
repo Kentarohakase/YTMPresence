@@ -106,7 +106,7 @@ For unpacked-extension testing, confirm the loaded directory is the repository's
 - Close, reload, navigate away from and discard the selected tab in separate checks. A valid fallback is selected; commands are not sent to a removed document. A normal in-page YouTube Music track change still updates the selected source.
 - Restart the extension background worker with both tabs paused. After state recovery, Play targets exactly one tab and the popup identifies that tab's track.
 - Close all YouTube Music tabs. The popup clears the track, commands affect no tab, and Discord clears after the configured idle timeout. Changing the token must not replay the closed track.
-- These checks cover one browser profile. Coordination between separate browser/extension connections remains an open roadmap item.
+- These checks cover one browser profile. Since 1.6.0 the companion also selects one source across browsers and profiles; the [2026-11-12 live QA](LIVE_QA_2026-11-12.md) records the Chrome and Edge check.
 
 ## Discord album art
 
