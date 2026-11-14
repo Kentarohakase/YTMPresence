@@ -6,7 +6,7 @@ This roadmap replaces the draft of 2026-10-12. Release numbers indicate the prop
 
 ## Where things stand
 
-**Published on GitHub:** [1.5.0](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.5.0) and [1.5.1](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.5.1), both on 2026-11-02, and [1.6.0](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.6.0) on 2026-11-15. The maintainer confirmed on 2026-11-12 that 1.5.0 is live in the Chrome Web Store. Version 1.5.1 changes only the companion; the 1.6.0 extension has not been uploaded to the store yet. See the [store checklist](docs/STORE_SUBMISSION_CHECKLIST.md#release-status) for the evidence and its limits.
+**Published on GitHub:** [1.5.0](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.5.0) and [1.5.1](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.5.1), both on 2026-11-02, and [1.6.0](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.6.0) on 2026-11-15. The maintainer confirmed on 2026-11-12 that 1.5.0 is live in the Chrome Web Store. Version 1.5.1 changes only the companion; the maintainer reported submitting the 1.6.0 extension for store review on 2026-11-15. See the [store checklist](docs/STORE_SUBMISSION_CHECKLIST.md#release-status) for the evidence and its limits.
 
 **Released in 1.4.0:** tray companion with mini player, diagnostics and verified updates; Chrome/Edge extension in the store; Firefox package for temporary loading; German and English interfaces and Discord text.
 
@@ -69,7 +69,9 @@ Goal: release the completed branch work to store and GitHub users, and let new u
 
 Goal: store users get the 1.6.0 extension, and the store pages describe the current data flow.
 
-- [ ] Upload the 1.6.0 extension to the Chrome Web Store. Use the English and German wording in [CHROME_WEB_STORE.md](docs/CHROME_WEB_STORE.md), which now names the cover URL passed to Discord, and review the dashboard's privacy declarations against it.
+- [x] Upload the 1.6.0 extension to the Chrome Web Store. Submitted for review on 2026-11-15, as reported by the maintainer.
+- [ ] Check that the dashboard's data-flow text and privacy declarations match the English and German wording in [CHROME_WEB_STORE.md](docs/CHROME_WEB_STORE.md), which now names the cover URL passed to Discord. Not recorded with the submission.
+- [ ] Confirm approval and publication of 1.6.0 and update the [release status table](docs/STORE_SUBMISSION_CHECKLIST.md#release-status).
 - [ ] Confirm that the English store listing is visible to store users; this has been open since the 1.5.0 submission.
 - [ ] Optionally replace the Discord screenshot on the store page with one that shows album art.
 - [ ] Record browser, Discord, companion build and Windows versions at the next live check, as the [2026-11-12 live QA](docs/LIVE_QA_2026-11-12.md) asks.
