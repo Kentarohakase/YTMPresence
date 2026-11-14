@@ -21,6 +21,8 @@ This roadmap replaces the draft of 2026-10-12. Release numbers indicate the prop
 
 **Published on GitHub in 1.6.0:** one source across browsers and profiles, with player commands sent only to that source; Discord's answer to each update, the selected source and the extension version in diagnostics; clear messages for an occupied port and a closed Discord; the track's cover as the Discord image. Discord reply matching and the READY fix shipped early in 1.5.1. Multi-browser and recovery checks passed on 2026-11-12 (see the [live QA](docs/LIVE_QA_2026-11-12.md)), album covers and music videos on 2026-11-14; the maintainer reported both results. Details are in the [changelog](CHANGELOG.md#160---2026-11-15).
 
+**Prepared as 1.6.1 on 2026-11-15:** the three finished extension items from the 1.7.0 plan below (companion version notice, **Copy diagnostics**, welcome page on first install), the shorter Discord status line and the cover host check in the mini player; see the [changelog](CHANGELOG.md#161---2026-11-15). GitHub publication is not yet recorded.
+
 **Problems identified on 2026-11-02 and their release status:**
 
 | # | Problem | User impact | Priority |
@@ -82,9 +84,9 @@ Goal: store users get the 1.6.0 extension, and the store pages describe the curr
 
 Goal: when something goes wrong, users see which versions are involved and what to do next, and a bug report carries enough detail to act on without the token.
 
-- [x] Show a notice in the popup and options when the connected companion is older than the version the extension was tested with, or reports no version, with a link to the GitHub releases. Done in `main`; not yet released.
-- [x] Add **Copy diagnostics** to the extension popup: versions, installation type, browser, connection and track state, without the token or track titles. When the clipboard is unavailable, show the text for manual copying. Done in `main`; not yet released.
-- [x] Open the setup guide on first install when no token is stored; updates leave existing installations alone. Done in `main`; not yet released.
+- [x] Show a notice in the popup and options when the connected companion is older than the version the extension was tested with, or reports no version, with a link to the GitHub releases. Done in `main`; part of 1.6.1.
+- [x] Add **Copy diagnostics** to the extension popup: versions, installation type, browser, connection and track state, without the token or track titles. When the clipboard is unavailable, show the text for manual copying. Done in `main`; part of 1.6.1.
+- [x] Open the setup guide on first install when no token is stored; updates leave existing installations alone. Done in `main`; part of 1.6.1.
 - [ ] Test and document compatibility across versions (an older store extension with a newer companion and the reverse), since the store and GitHub update separately. Include album art with an extension older than 1.6.0, which still shortens long cover URLs.
 - [x] Add a bug-report issue template asking for both versions, the browser, reproduction steps and an optional redacted diagnostics export.
 - [ ] Review keyboard navigation, focus order and high-DPI scaling in settings and the mini player; onboarding already passed its keyboard check.

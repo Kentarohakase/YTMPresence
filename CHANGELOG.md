@@ -4,7 +4,7 @@ All notable changes to YTMPresence are documented in this file.
 
 Dates for published GitHub releases use Europe/Vienna time. The [GitHub release list](https://github.com/Kentarohakase/YTMPresence/releases), checked on 2026-11-07, contains no releases for 0.7.0, 0.8.11 or 1.0.0; their existing entries and dates are retained as project history.
 
-## [Unreleased]
+## [1.6.1] - 2026-11-15
 
 ### Added
 
@@ -23,7 +23,7 @@ Dates for published GitHub releases use Europe/Vienna time. The [GitHub release 
 
 ### Notes
 
-- The extension requests no new permissions.
+- The extension changes in this release (**Copy diagnostics**, the companion version notice and the welcome page) reach store users only with a separate store upload; GitHub and the Chrome Web Store update independently. The extension requests no new permissions.
 
 ## [1.6.0] - 2026-11-15
 
