@@ -32,9 +32,16 @@ public sealed class PresenceService
   // gekürzt und würde bei Discord ein kaputtes Bild ergeben.
   private const int LegacyTruncatedUrlLength = 256;
 
-  // Wie oft soll der "Zeit-Text" aktualisiert werden?
-  // Beispiel: 10 => "01:20 / 03:45" wird nur alle 10 Sekunden neu gesetzt.
-  private const int ProgressTextStepSeconds = 10;
+  // Discord zeichnet den Fortschrittsbalken aus Start und Ende selbst. Die
+  // Position kommt in ganzen Sekunden und mit etwas Verzögerung an, deshalb
+  // schwankt der daraus errechnete Start um ein bis zwei Sekunden. Erst eine
+  // größere Abweichung gilt als Spulen oder Hänger und schickt neue
+  // Zeitstempel.
+  private const int SeekToleranceSeconds = 3;
+
+  // Zeitstempel der zuletzt gesendeten Aktivität, Bezug für die Erkennung
+  // von Spulen.
+  private DiscordTimestamps? _lastSentTimestamps;
 
   private bool _discordOk = true;
   private string? _lastDiscordError;
@@ -136,17 +143,16 @@ public sealed class PresenceService
 
     var trackUrl = GetBestTrackUrl(state);
 
-    // Progress-Bucket erzwingt Updates, damit die Zeit-Anzeige sich ändert
-    // (ohne Bucket wäre "changed=false" und Discord würde nie neu gesetzt werden)
-    var progressBucket = GetProgressBucket(state);
-
     var largeImage = SelectLargeImage(state);
-    var activity = BuildActivity(state, title, artist, trackUrl, largeImage);
+    var timestamps = StabilizeTimestamps(state.IsPlaying ? TryBuildTimestamps(state) : null);
+    var activity = BuildActivity(state, title, artist, trackUrl, largeImage, timestamps);
 
-    // Key enthält Bucket => Update alle ProgressTextStepSeconds Sekunden.
-    // Das Bild gehört dazu, damit ein nachgereichtes Cover die Presence
-    // aktualisiert, auch wenn Titel und Fortschritt gleich bleiben.
-    var key = $"{state.IsPlaying}|{title}|{artist}|{trackUrl}|{largeImage}|b{progressBucket}";
+    // Der Key enthält alles, was Discord anzeigt. Normales Abspielen ändert
+    // ihn nicht; ein Update folgt bei Track, Wiedergabestatus, Bild,
+    // Pausenposition oder Spulen. Das Bild gehört dazu, damit ein
+    // nachgereichtes Cover die Presence aktualisiert.
+    var key = $"{state.IsPlaying}|{title}|{artist}|{trackUrl}|{largeImage}|{activity.State}|" +
+        $"{timestamps?.StartUnixSeconds}-{timestamps?.EndUnixSeconds}";
 
     await TryUpdateAsync(key, activity, force: criticalChange, ct);
   }
@@ -212,6 +218,7 @@ public sealed class PresenceService
     _lastSongKey = null;
     _lastIsPlaying = null;
     _pausedSinceUtc = null;
+    _lastSentTimestamps = null;
   }
 
   private async Task HandleAdAsync(bool criticalChange, CancellationToken ct)
@@ -252,7 +259,11 @@ public sealed class PresenceService
     var now = DateTimeOffset.UtcNow;
     var minInterval = TimeSpan.FromSeconds(_settings.MinDiscordUpdateSeconds);
 
-    var changed = !string.Equals(key, _lastPresenceKey, StringComparison.Ordinal);
+    // Nach einem Verbindungsverlust, etwa bei einem Neustart von Discord, ist
+    // die Aktivität dort verschwunden, auch wenn der Key gleich geblieben
+    // ist. Bis 1.6.0 holte das der Zeittext nach, der alle paar Sekunden ein
+    // Update erzwang.
+    var changed = !string.Equals(key, _lastPresenceKey, StringComparison.Ordinal) || !_discord.IsReady;
 
     // Critical changes (Track oder Play/Pause) sofort zulassen
     var allowed = force || (now - _lastUpdateUtc) >= minInterval;
@@ -274,9 +285,9 @@ public sealed class PresenceService
 
       // Auch eine abgelehnte oder unbeantwortete Aktivität gilt als gesendet:
       // Dieselbe Aktivität erneut zu schicken, würde nur dasselbe Ergebnis
-      // bringen. Die nächste Änderung (spätestens der nächste Fortschritts-
-      // schritt) sendet ohnehin neu.
+      // bringen. Die nächste Änderung sendet ohnehin neu.
       _lastPresenceKey = key;
+      _lastSentTimestamps = activity.Timestamps;
       _lastUpdateUtc = now;
 
       RecordResult(result);
@@ -287,15 +298,15 @@ public sealed class PresenceService
     }
   }
 
-  private DiscordActivity BuildActivity(YtmState state, string title, string artist, string trackUrl, string largeImage)
+  private DiscordActivity BuildActivity(
+      YtmState state,
+      string title,
+      string artist,
+      string trackUrl,
+      string largeImage,
+      DiscordTimestamps? timestamps)
   {
-    // "Spotify-like": Balken ist Discord-seitig nicht garantiert.
-    // Daher: Zeit als Text im State anzeigen.
-    var hasTimes = TryGetTimes(state, out var pos, out var dur);
     var album = NormalizeAlbum(state.Album, title, artist);
-
-    // Timestamps nur beim Playing (optional – Discord kann dann trotzdem irgendwo Zeit anzeigen)
-    var timestamps = state.IsPlaying ? TryBuildTimestamps(state) : null;
 
     // Über dem Cover verdeckt das Play/Pause-Symbol einen Teil des Bildes.
     // Der Wiedergabestatus steht ohnehin im Statustext; nur zum Logo bleibt
@@ -330,18 +341,18 @@ public sealed class PresenceService
 
     buttons.Add(new DiscordButton("YouTube Music", "https://music.youtube.com/"));
 
-    // Zeit im Status: "Artist · 01:23 / 03:45" bei laufender Wiedergabe,
-    // sonst der übersetzte Pause-Text aus PresenceText.
+    // Beim Abspielen zeigt Discord aus den Zeitstempeln einen eigenen
+    // Fortschrittsbalken mit Zeiten. Eine Zeit im Text wäre doppelt und
+    // erzwang früher alle paar Sekunden ein Update. Bei Pause gibt es keinen
+    // Balken; dort bleibt die Position im Text.
     string stateLine;
     if (state.IsPlaying)
     {
-      stateLine = hasTimes
-          ? $"{artist} · {Fmt(pos)} / {Fmt(dur)}"
-          : AppendAlbum(artist, album);
+      stateLine = AppendAlbum(artist, album);
     }
     else
     {
-      stateLine = hasTimes
+      stateLine = TryGetTimes(state, out var pos, out _)
           ? PresenceText.PausedAt(Fmt(pos), artist)
           : PresenceText.PausedWithoutTime(AppendAlbum(artist, album));
     }
@@ -497,13 +508,26 @@ public sealed class PresenceService
     return true;
   }
 
-  private static int GetProgressBucket(YtmState state)
+  /// <summary>
+  /// Behält die zuletzt gesendeten Zeitstempel, solange die neuen nur im
+  /// Rahmen der Messungenauigkeit abweichen. So bleibt der Key bei normaler
+  /// Wiedergabe gleich; erst Spulen, ein Hänger oder ein neuer Track ergibt
+  /// neue Zeitstempel und damit ein Update.
+  /// </summary>
+  private DiscordTimestamps? StabilizeTimestamps(DiscordTimestamps? current)
   {
-    if (TryGetTimes(state, out var pos, out _))
-      return (int)(pos / ProgressTextStepSeconds);
+    var previous = _lastSentTimestamps;
+    if (current is null || previous is null)
+      return current;
 
-    return -1;
+    return IsWithinSeekTolerance(current.StartUnixSeconds, previous.StartUnixSeconds) &&
+           IsWithinSeekTolerance(current.EndUnixSeconds, previous.EndUnixSeconds)
+        ? previous
+        : current;
   }
+
+  private static bool IsWithinSeekTolerance(long? current, long? previous)
+      => current is long a && previous is long b && Math.Abs(a - b) <= SeekToleranceSeconds;
 
   private static string Fmt(double seconds)
   {

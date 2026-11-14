@@ -14,9 +14,13 @@ public class PresenceServiceTests
     // Was Discord auf den naechsten Befehl antwortet.
     public DiscordCommandResult NextResult = DiscordCommandResult.Accepted;
 
+    // Simuliert einen Verbindungsverlust, etwa einen Neustart von Discord.
+    public bool IsReady { get; set; } = true;
+
     public Task EnsureConnectedAsync(CancellationToken ct)
     {
       EnsureCount++;
+      IsReady = true;
       return Task.CompletedTask;
     }
 
@@ -40,6 +44,8 @@ public class PresenceServiceTests
     private int _maxConcurrentOperations;
 
     public int MaxConcurrentOperations => Volatile.Read(ref _maxConcurrentOperations);
+
+    public bool IsReady => true;
 
     public Task EnsureConnectedAsync(CancellationToken ct) => Task.CompletedTask;
 
@@ -412,6 +418,86 @@ public class PresenceServiceTests
     Assert.True(PresenceService.IsDiscordAlbumArtUrl(url));
   }
 
+  private static YtmState PlayingAt(double position, bool isPlaying = true)
+    => Playing(isPlaying: isPlaying) with { Album = "Album", PositionSeconds = position, DurationSeconds = 200 };
+
+  [Fact]
+  public async Task PlayingTrack_LeavesTheTimeToDiscordsProgressBar()
+  {
+    // Discord zeigt aus den Zeitstempeln einen eigenen Balken mit Zeiten. Der
+    // fruehere Text "Artist · 0:10 / 3:20" stand doppelt daneben.
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings());
+
+    await service.HandleAsync(PlayingAt(10), CancellationToken.None);
+
+    Assert.Equal("Artist · Album", discord.LastActivity?.State);
+    var timestamps = discord.LastActivity?.Timestamps;
+    Assert.NotNull(timestamps);
+    Assert.Equal(200, timestamps!.EndUnixSeconds - timestamps.StartUnixSeconds);
+  }
+
+  [Fact]
+  public async Task NormalProgress_DoesNotResend()
+  {
+    // Frueher erzwang der Zeittext etwa alle 15 Sekunden ein Update. Kleine
+    // Abweichungen der gemeldeten Position duerfen keins ausloesen.
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings { MinDiscordUpdateSeconds = 0 });
+
+    await service.HandleAsync(PlayingAt(10), CancellationToken.None);
+    await service.HandleAsync(PlayingAt(11), CancellationToken.None);
+    await service.HandleAsync(PlayingAt(9), CancellationToken.None);
+
+    Assert.Equal(1, discord.SetCount);
+  }
+
+  [Fact]
+  public async Task Seek_SendsNewTimestamps()
+  {
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings { MinDiscordUpdateSeconds = 0 });
+
+    await service.HandleAsync(PlayingAt(10), CancellationToken.None);
+    var before = discord.LastActivity!.Timestamps!.StartUnixSeconds!.Value;
+
+    await service.HandleAsync(PlayingAt(100), CancellationToken.None);
+    var after = discord.LastActivity!.Timestamps!.StartUnixSeconds!.Value;
+
+    Assert.Equal(2, discord.SetCount);
+    Assert.InRange(before - after, 89, 91);
+  }
+
+  [Fact]
+  public async Task SeekWhilePaused_UpdatesThePausedPosition()
+  {
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings { MinDiscordUpdateSeconds = 0 });
+
+    await service.HandleAsync(PlayingAt(10, isPlaying: false), CancellationToken.None);
+    await service.HandleAsync(PlayingAt(50, isPlaying: false), CancellationToken.None);
+
+    Assert.Equal(2, discord.SetCount);
+    Assert.Equal(PresenceText.PausedAt("0:50", "Artist"), discord.LastActivity?.State);
+    Assert.Null(discord.LastActivity?.Timestamps);
+  }
+
+  [Fact]
+  public async Task LostDiscordConnection_ResendsTheUnchangedPresence()
+  {
+    // Nach einem Neustart von Discord ist die Aktivitaet dort weg. Ohne den
+    // frueheren Zeittext aendert sich der Key nicht mehr von selbst.
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings { MinDiscordUpdateSeconds = 0 });
+
+    await service.HandleAsync(PlayingAt(10), CancellationToken.None);
+    discord.IsReady = false;
+    await service.HandleAsync(PlayingAt(10), CancellationToken.None);
+
+    Assert.Equal(2, discord.SetCount);
+    Assert.True(discord.IsReady);
+  }
+
   [Fact]
   public async Task IdenticalState_IsDeduped()
   {
@@ -632,6 +718,8 @@ public class PresenceServiceTests
   {
     public bool Running;
 
+    public bool IsReady => Running;
+
     public Task EnsureConnectedAsync(CancellationToken ct)
       => Running ? Task.CompletedTask : throw new DiscordUnavailableException("not running");
 
@@ -645,6 +733,8 @@ public class PresenceServiceTests
   private sealed class ThrowingDiscordClient(Exception? error = null) : IDiscordPresenceClient
   {
     private readonly Exception _error = error ?? new InvalidOperationException("not reachable");
+
+    public bool IsReady => false;
 
     public Task EnsureConnectedAsync(CancellationToken ct)
       => throw _error;

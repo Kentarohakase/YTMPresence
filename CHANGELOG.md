@@ -12,6 +12,11 @@ Dates for published GitHub releases use Europe/Vienna time. The [GitHub release 
 - Popup and options show a notice with a link to the GitHub releases when the connected companion is older than 1.5.1 or does not report its version.
 - After a fresh install without a saved token, the extension opens its options page with a short welcome and the four setup steps. Updates and installations that already have a token are left alone.
 
+### Changed
+
+- While a track plays, the Discord status line shows artist and album instead of "Artist · 1:23 / 3:45". Discord already draws a progress bar with both times from the activity's timestamps, so the text repeated them. Paused tracks keep "Paused at 1:23". The companion no longer resends the presence every 15 seconds just to refresh that text; it updates on track changes, play/pause, a new cover, and seeks or stalls of more than three seconds.
+- After Discord restarts or the connection drops, the companion sends the presence again with the next playback update from the extension. This used to happen as a side effect of the periodic time updates. A paused track still returns only after its state changes, as before.
+
 ### Notes
 
 - The extension requests no new permissions.

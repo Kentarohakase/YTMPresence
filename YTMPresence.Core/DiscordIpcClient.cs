@@ -67,6 +67,8 @@ public sealed class DiscordIpcClient : IDiscordPresenceClient, IAsyncDisposable
     _readyTimeout = readyTimeout;
   }
 
+  public bool IsReady => _isReady;
+
   public async Task EnsureConnectedAsync(CancellationToken ct)
   {
     if (_isReady) return;
