@@ -376,6 +376,7 @@ public class PresenceServiceTests
   public void AlbumArtUrls_FromYouTubeImageHosts_AreAccepted(string url)
   {
     Assert.True(PresenceService.IsDiscordAlbumArtUrl(url));
+    Assert.True(PresenceService.IsYouTubeImageUrl(url));
   }
 
   [Theory]
@@ -392,6 +393,19 @@ public class PresenceServiceTests
   public void AlbumArtUrls_OutsideTheAllowlist_AreRejected(string url)
   {
     Assert.False(PresenceService.IsDiscordAlbumArtUrl(url));
+    Assert.False(PresenceService.IsYouTubeImageUrl(url));
+  }
+
+  [Theory]
+  [InlineData(256)]
+  [InlineData(2048)]
+  public void YouTubeImageUrls_AreNotLimitedToDiscordsLength(int length)
+  {
+    // Der Mini-Player braucht Discords 300-Zeichen-Grenze nicht.
+    const string prefix = "https://lh3.googleusercontent.com/";
+    var url = prefix + new string('a', length - prefix.Length);
+
+    Assert.True(PresenceService.IsYouTubeImageUrl(url));
   }
 
   [Theory]

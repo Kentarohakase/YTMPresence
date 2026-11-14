@@ -365,6 +365,34 @@ public class CompanionServerTests
     Assert.Equal(120, snapshot.LastPositionSeconds);
   }
 
+  // Der Mini-Player lädt LastAlbumArtUrl selbst. Eine Cover-URL aus der Seite
+  // darf die App nicht zum Abruf beliebiger HTTPS-Hosts bringen.
+  [Theory]
+  [InlineData("https://attacker.example/cover.png", null)]
+  [InlineData("https://192.168.1.1/cover.png", null)]
+  [InlineData("https://doc-0s-docs.googleusercontent.com/file", null)]
+  [InlineData("https://lh3.googleusercontent.com/abc=w544-h544", "https://lh3.googleusercontent.com/abc=w544-h544")]
+  [InlineData("https://i.ytimg.com/vi/abcdefghijk/hqdefault.jpg", "https://i.ytimg.com/vi/abcdefghijk/hqdefault.jpg")]
+  public async Task AuthenticatedState_KeepsOnlyYouTubeImageHostsForTheMiniPlayer(string albumArtUrl, string? expected)
+  {
+    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+    var port = GetFreePort();
+    await using var server = new CompanionServer(ServerSettings(port));
+    await server.StartAsync();
+
+    using var client = await ConnectAsync(port, cts.Token);
+    var state = JsonSerializer.Deserialize<YtmState>(StateJson(Token))! with { AlbumArtUrl = albumArtUrl };
+
+    await SendAsync(client, JsonSerializer.Serialize(state), cts.Token);
+    await PollUntilAsync(
+      () => server.GetStatusSnapshot().LastMessageUtc is not null,
+      TimeSpan.FromSeconds(5));
+
+    var snapshot = server.GetStatusSnapshot();
+    Assert.NotNull(snapshot.LastMessageUtc);
+    Assert.Equal(expected, snapshot.LastAlbumArtUrl);
+  }
+
   [Fact]
   public async Task ConcurrentStartAndRestart_AreIdempotent()
   {

@@ -12,6 +12,10 @@ Dates for published GitHub releases use Europe/Vienna time. The [GitHub release 
 - Popup and options show a notice with a link to the GitHub releases when the connected companion is older than 1.5.1 or does not report its version.
 - After a fresh install without a saved token, the extension opens its options page with a short welcome and the four setup steps. Updates and installations that already have a token are left alone.
 
+### Fixed
+
+- The mini player loads a cover only from the YouTube Music image hosts that Discord presence already accepts (`*.ytimg.com`, `*.ggpht.com` and the `lhN`/`ytN` hosts under `googleusercontent.com`). It used to request any HTTPS address the page reported as the cover, so a script on the YouTube Music page could make the companion contact arbitrary servers, including hosts on the local network. For other URLs the mini player shows its placeholder instead.
+
 ### Changed
 
 - While a track plays, the Discord status line shows artist and album instead of "Artist · 1:23 / 3:45". Discord already draws a progress bar with both times from the activity's timestamps, so the text repeated them. Paused tracks keep "Paused at 1:23". The companion no longer resends the presence every 15 seconds just to refresh that text; it updates on track changes, play/pause, a new cover, and seeks or stalls of more than three seconds.

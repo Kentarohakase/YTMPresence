@@ -408,6 +408,19 @@ public sealed class PresenceService
       return false;
     }
 
+    return IsYouTubeImageUrl(url);
+  }
+
+  /// <summary>
+  /// Prüft eine Cover-URL ohne Discords Längenlimit: HTTPS auf Port 443, ohne
+  /// Userinfo, Leer- oder Steuerzeichen und von einem YouTube-Music-Bild-Host.
+  /// Gilt auch für den Mini-Player, der das Bild selbst lädt.
+  /// </summary>
+  internal static bool IsYouTubeImageUrl(string? url)
+  {
+    if (string.IsNullOrWhiteSpace(url))
+      return false;
+
     foreach (var c in url)
     {
       if (char.IsWhiteSpace(c) || char.IsControl(c))

@@ -360,7 +360,10 @@ public sealed class CompanionServer : IAsyncDisposable
       _lastTitle = state.Title;
       _lastArtist = state.Artist;
       _lastAlbum = state.Album;
-      _lastAlbumArtUrl = state.AlbumArtUrl;
+      // Der Mini-Player lädt das Cover selbst. Die URL stammt aus der Seite;
+      // ohne diese Prüfung würde die App beliebige HTTPS-Adressen abrufen
+      // (lokales Netz, Tracking-Server). Es gelten dieselben Hosts wie für Discord.
+      _lastAlbumArtUrl = PresenceService.IsYouTubeImageUrl(state.AlbumArtUrl) ? state.AlbumArtUrl : null;
       _lastTrackUrl = GetBestTrackUrl(state, fallbackUrl: state.Url);
       _lastIsPlaying = state.IsPlaying;
       _lastPositionSeconds = state.PositionSeconds;

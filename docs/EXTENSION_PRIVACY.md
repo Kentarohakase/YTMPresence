@@ -48,7 +48,7 @@ Discord receives and processes this information outside the device. Other Discor
 
 The companion token, companion WebSocket URL and extension version are not included in the Rich Presence activity. By default, the activity passes the track's cover URL to Discord when it points to a YouTube Music image host (`*.ytimg.com`, `*.ggpht.com`, or the `lhN`/`ytN` hosts under `googleusercontent.com`). For music videos, it passes the 16:9 version of the same YouTube thumbnail instead. Discord then loads the image from that URL. The companion setting **Show album art in Discord** turns this off; the activity then uses the configured images. The implemented activity fields are defined in [PresenceService.cs](../YTMPresence.Core/PresenceService.cs) and sent by [DiscordIpcClient.cs](../YTMPresence.Core/DiscordIpcClient.cs).
 
-When displaying a cover, the mini player can request the image from the supplied URL. The companion also contacts GitHub for update checks and downloads. These requests are separate from the extension's local WebSocket connection.
+When displaying a cover, the mini player can request the image from the supplied URL if it points to one of the YouTube Music image hosts listed above; it does not load other cover URLs. The companion also contacts GitHub for update checks and downloads. These requests are separate from the extension's local WebSocket connection.
 
 YTMPresence has no analytics, tracking or advertising integration and sends no data to developer-operated collection servers. This does not describe Discord's own data processing or mean that the complete workflow stays on the device.
 
