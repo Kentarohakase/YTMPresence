@@ -6,6 +6,7 @@ param(
 
 # Erzeugt alle Icons aus branding/ytmpresence-logo.svg:
 #   - branding/ytmpresence-logo-512.png und -1024.png (Discord App-Icon und Asset ytm_large)
+#   - branding/ytmpresence-play-1024.png und -pause-1024.png (Discord-Assets play und pause)
 #   - YTMPresence/extension/icons/icon16|32|48|128.png
 #   - YTMPresence.Tray.Wpf/Assets/app.ico (Tray, EXE und Installer)
 # Jede Größe wird direkt aus der Vektorvorlage gerastert statt aus einem großen
@@ -25,7 +26,14 @@ if (-not $SvgPath) {
 if (-not $SmallSvgPath) {
     $SmallSvgPath = Join-Path $repoRoot "branding\ytmpresence-logo-small.svg"
 }
-foreach ($path in $SvgPath, $SmallSvgPath) {
+# Kleine Statussymbole, die Discord rund zugeschnitten über das Logo legt.
+$statusIcons = @("play", "pause")
+$statusSvgPaths = @{}
+foreach ($name in $statusIcons) {
+    $statusSvgPaths[$name] = Join-Path $repoRoot "branding\ytmpresence-$name.svg"
+}
+
+foreach ($path in @($SvgPath, $SmallSvgPath) + $statusSvgPaths.Values) {
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
         throw "Logo SVG not found: $path"
     }
@@ -148,11 +156,17 @@ try {
         "<div style='position:absolute;left:${left}px;top:0;width:${size}px;height:${size}px'>$markup</div>"
         $left += $size + $gap
     }
+    $statusTiles = foreach ($name in $statusIcons) {
+        $positions[$name] = $left
+        $markup = Get-Content -LiteralPath $statusSvgPaths[$name] -Raw
+        "<div style='position:absolute;left:${left}px;top:0;width:1024px;height:1024px'>$markup</div>"
+        $left += 1024 + $gap
+    }
     $width = $left
     $height = ($sizes | Measure-Object -Maximum).Maximum
 
     $htmlPath = Join-Path $workDir "sheet.html"
-    $html = "<!doctype html><html><head><meta charset='utf-8'><style>html,body{margin:0;background:transparent;overflow:hidden}svg{display:block;width:100%;height:100%}</style></head><body>$($tiles -join '')</body></html>"
+    $html = "<!doctype html><html><head><meta charset='utf-8'><style>html,body{margin:0;background:transparent;overflow:hidden}svg{display:block;width:100%;height:100%}</style></head><body>$($tiles -join '')$($statusTiles -join '')</body></html>"
     Set-Content -LiteralPath $htmlPath -Value $html -Encoding utf8
 
     $screenshot = Join-Path $workDir "sheet.png"
@@ -176,10 +190,17 @@ try {
         $rect = [System.Drawing.Rectangle]::new($positions[$size], 0, $size, $size)
         $crops[$size] = $sheet.Clone($rect, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
     }
+    foreach ($name in $statusIcons) {
+        $rect = [System.Drawing.Rectangle]::new($positions[$name], 0, 1024, 1024)
+        $crops[$name] = $sheet.Clone($rect, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+    }
 
     $brandingDir = Join-Path $repoRoot "branding"
     $crops[512].Save((Join-Path $brandingDir "ytmpresence-logo-512.png"), [System.Drawing.Imaging.ImageFormat]::Png)
     $crops[1024].Save((Join-Path $brandingDir "ytmpresence-logo-1024.png"), [System.Drawing.Imaging.ImageFormat]::Png)
+    foreach ($name in $statusIcons) {
+        $crops[$name].Save((Join-Path $brandingDir "ytmpresence-$name-1024.png"), [System.Drawing.Imaging.ImageFormat]::Png)
+    }
 
     $iconDir = Join-Path $repoRoot "YTMPresence\extension\icons"
     foreach ($size in 16, 32, 48) {

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 100 100">
+  <title>YTM Presence: playing</title>
+  <circle cx="50" cy="50" r="50" fill="#2C2C2A"/>
+  <path d="M38 28 L74 50 L38 72 Z" fill="#D85A30" stroke="#D85A30" stroke-width="9" stroke-linejoin="round"/>
+</svg>
