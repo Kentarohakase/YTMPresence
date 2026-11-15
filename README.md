@@ -105,6 +105,7 @@ Store copy and privacy information:
 
 - [Chrome Web Store](docs/CHROME_WEB_STORE.md)
 - [Extension privacy notice](docs/EXTENSION_PRIVACY.md)
+- [Terms of use](docs/TERMS.md), also meant as the Discord application's Terms of Service link
 - [Store submission checklist](docs/STORE_SUBMISSION_CHECKLIST.md)
 
 ## Updates
