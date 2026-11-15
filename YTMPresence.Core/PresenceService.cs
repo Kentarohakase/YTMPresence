@@ -43,6 +43,10 @@ public sealed class PresenceService
   // von Spulen.
   private DiscordTimestamps? _lastSentTimestamps;
 
+  // Zuletzt gesendete Aktivität, damit sie nach einem Verbindungsverlust
+  // auch ohne neuen Status der Extension wiederhergestellt werden kann.
+  private DiscordActivity? _lastSentActivity;
+
   private bool _discordOk = true;
   private string? _lastDiscordError;
   private DateTimeOffset? _lastDiscordOkUtc;
@@ -154,7 +158,12 @@ public sealed class PresenceService
     var key = $"{state.IsPlaying}|{title}|{artist}|{trackUrl}|{largeImage}|{activity.State}|" +
         $"{activity.StatusDisplayType}|{timestamps?.StartUnixSeconds}-{timestamps?.EndUnixSeconds}";
 
-    await TryUpdateAsync(key, activity, force: criticalChange, ct);
+    // Neue Zeitstempel im selben Track heißen Spulen oder ein Hänger beim
+    // Abspielen (siehe StabilizeTimestamps). Discords Balken soll sofort
+    // folgen, nicht erst nach dem Mindestintervall.
+    var seeked = timestamps is not null && _lastSentTimestamps is not null && timestamps != _lastSentTimestamps;
+
+    await TryUpdateAsync(key, activity, force: criticalChange || seeked, ct);
   }
 
   public async Task ClearIfIdleAsync(CancellationToken ct)
@@ -190,10 +199,28 @@ public sealed class PresenceService
 
     var idleSeconds = (now - _lastIncomingUtc).TotalSeconds;
     if (idleSeconds < _settings.IdleClearSeconds)
+    {
+      await RestoreAfterConnectionLossAsync(ct);
       return;
+    }
 
     await ClearPresenceAsync(ct);
     ResetPresenceTracking();
+  }
+
+  /// <summary>
+  /// Nach einem Neustart von Discord ist die Aktivität dort verschwunden.
+  /// Beim Abspielen holt das der nächste Status der Extension nach. Bei
+  /// Pause kommt aber keiner, solange sich nichts ändert; die Presence fehlte
+  /// dann bis zum nächsten Play oder Trackwechsel. Die regelmäßige Prüfung
+  /// sendet deshalb die zuletzt gesetzte Aktivität erneut.
+  /// </summary>
+  private async Task RestoreAfterConnectionLossAsync(CancellationToken ct)
+  {
+    if (_discord.IsReady || _lastSentActivity is null || _lastPresenceKey is null)
+      return;
+
+    await TryUpdateAsync(_lastPresenceKey, _lastSentActivity, force: false, ct);
   }
 
   private async Task ClearPresenceAsync(CancellationToken ct)
@@ -219,6 +246,7 @@ public sealed class PresenceService
     _lastIsPlaying = null;
     _pausedSinceUtc = null;
     _lastSentTimestamps = null;
+    _lastSentActivity = null;
   }
 
   private async Task HandleAdAsync(bool criticalChange, CancellationToken ct)
@@ -288,6 +316,7 @@ public sealed class PresenceService
       // bringen. Die nächste Änderung sendet ohnehin neu.
       _lastPresenceKey = key;
       _lastSentTimestamps = activity.Timestamps;
+      _lastSentActivity = activity;
       _lastUpdateUtc = now;
 
       RecordResult(result);

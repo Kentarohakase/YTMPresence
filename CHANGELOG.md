@@ -4,6 +4,14 @@ All notable changes to YTMPresence are documented in this file.
 
 Dates for published GitHub releases use Europe/Vienna time. The [GitHub release list](https://github.com/Kentarohakase/YTMPresence/releases), checked on 2026-11-07, contains no releases for 0.7.0, 0.8.11 or 1.0.0; their existing entries and dates are retained as project history.
 
+## [Unreleased]
+
+### Fixed
+
+- After Discord restarts while a track is paused, the presence returns within about ten seconds. The extension sends no new state while paused, so the presence used to stay missing until playback resumed or the track changed. The companion's regular idle check now resends the last activity when the connection to Discord was lost.
+- Discord's progress bar follows a seek right away. Seeks used to wait for the minimum update interval of 15 seconds by default; they now count as a critical change like a track change. Jumps of up to three seconds still count as normal progress.
+- Test runs no longer write into the installed companion's log under `%APPDATA%\YTMPresence\logs`. Test servers and their clients had ended up there and in exported diagnostics, for example as "Unknown browser #1" on a random port.
+
 ## [1.6.3] - 2026-11-15
 
 ### Fixed

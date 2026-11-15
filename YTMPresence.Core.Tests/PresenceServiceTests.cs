@@ -483,6 +483,78 @@ public class PresenceServiceTests
   }
 
   [Fact]
+  public async Task Seek_IsSentWithoutWaitingForTheMinimumInterval()
+  {
+    // Mit dem Standard-Mindestintervall von 15 Sekunden sprang Discords
+    // Balken nach dem Spulen erst verspätet mit.
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings());
+
+    await service.HandleAsync(PlayingAt(10), CancellationToken.None);
+    await service.HandleAsync(PlayingAt(100), CancellationToken.None);
+
+    Assert.Equal(2, discord.SetCount);
+  }
+
+  [Fact]
+  public async Task NormalProgress_WithDefaultInterval_DoesNotCountAsSeek()
+  {
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings());
+
+    await service.HandleAsync(PlayingAt(10), CancellationToken.None);
+    await service.HandleAsync(PlayingAt(12), CancellationToken.None);
+
+    Assert.Equal(1, discord.SetCount);
+  }
+
+  [Fact]
+  public async Task PausedPresence_IsRestoredAfterConnectionLoss()
+  {
+    // Bei Pause schickt die Extension keinen neuen Status. Nach einem
+    // Neustart von Discord fehlte die Presence deshalb bis zum nächsten Play.
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings { MinDiscordUpdateSeconds = 0 });
+
+    await service.HandleAsync(PlayingAt(50, isPlaying: false), CancellationToken.None);
+    var sent = discord.LastActivity;
+    discord.IsReady = false;
+
+    await service.ClearIfIdleAsync(CancellationToken.None);
+
+    Assert.Equal(2, discord.SetCount);
+    Assert.Equal(sent, discord.LastActivity);
+    Assert.True(discord.IsReady);
+  }
+
+  [Fact]
+  public async Task IdleCheck_DoesNotResendWhileConnected()
+  {
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings { MinDiscordUpdateSeconds = 0 });
+
+    await service.HandleAsync(PlayingAt(50, isPlaying: false), CancellationToken.None);
+    await service.ClearIfIdleAsync(CancellationToken.None);
+
+    Assert.Equal(1, discord.SetCount);
+    Assert.Equal(0, discord.ClearCount);
+  }
+
+  [Fact]
+  public async Task IdleCheck_DoesNotRestoreAClearedPresence()
+  {
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings { OnlyShowWhenPlaying = true, MinDiscordUpdateSeconds = 0 });
+
+    await service.HandleAsync(PlayingAt(50), CancellationToken.None);
+    await service.HandleAsync(PlayingAt(50, isPlaying: false), CancellationToken.None);
+    discord.IsReady = false;
+    await service.ClearIfIdleAsync(CancellationToken.None);
+
+    Assert.Equal(1, discord.SetCount);
+  }
+
+  [Fact]
   public async Task SeekWhilePaused_UpdatesThePausedPosition()
   {
     var discord = new FakeDiscordClient();

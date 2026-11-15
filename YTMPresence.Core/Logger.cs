@@ -14,13 +14,22 @@ public static class Logger
   private static string _currentLogFilePath = string.Empty;
 
   public static void Initialize(string appName = "YTMPresence")
+    => InitializeAt(GetLogDirectory(appName));
+
+  /// <summary>
+  /// Schreibt in ein bestimmtes Verzeichnis. Die Tests leiten das Log so in
+  /// einen Temp-Ordner um; ohne das landeten Testserver und ihre Clients im
+  /// Log der installierten App und damit auch im Diagnosebericht. Wirkt nur
+  /// vor der ersten Logzeile.
+  /// </summary>
+  internal static void InitializeAt(string logDirectory)
   {
     lock (SyncRoot)
     {
       if (_initialized)
         return;
 
-      _logDirectory = GetLogDirectory(appName);
+      _logDirectory = logDirectory;
       Directory.CreateDirectory(_logDirectory);
 
       _currentLogFilePath = Path.Combine(_logDirectory, "app.log");
