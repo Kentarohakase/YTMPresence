@@ -6,7 +6,7 @@ This roadmap replaces the draft of 2026-10-12. Release numbers indicate the prop
 
 ## Where things stand
 
-**Published on GitHub:** [1.5.0](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.5.0) and [1.5.1](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.5.1), both on 2026-11-02, and [1.6.0](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.6.0) and [1.6.1](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.6.1), both on 2026-11-15. The maintainer confirmed on 2026-11-12 that 1.5.0 is live in the Chrome Web Store. Version 1.5.1 changes only the companion; the maintainer reported submitting the 1.6.0 extension for store review on 2026-11-15. The 1.6.1 extension has not been uploaded to the store. See the [store checklist](docs/STORE_SUBMISSION_CHECKLIST.md#release-status) for the evidence and its limits.
+**Published on GitHub:** [1.5.0](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.5.0) and [1.5.1](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.5.1), both on 2026-11-02, and [1.6.0](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.6.0), [1.6.1](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.6.1) and [1.6.2](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.6.2), all on 2026-11-15. The maintainer confirmed on 2026-11-12 that 1.5.0 is live in the Chrome Web Store. Version 1.5.1 changes only the companion; the maintainer reported submitting the 1.6.0 extension for store review on 2026-11-15. The 1.6.1 and 1.6.2 extensions have not been uploaded to the store. See the [store checklist](docs/STORE_SUBMISSION_CHECKLIST.md#release-status) for the evidence and its limits.
 
 **Released in 1.4.0:** tray companion with mini player, diagnostics and verified updates; Chrome/Edge extension in the store; Firefox package for temporary loading; German and English interfaces and Discord text.
 
@@ -23,7 +23,7 @@ This roadmap replaces the draft of 2026-10-12. Release numbers indicate the prop
 
 **Published on GitHub in 1.6.1 on 2026-11-15:** the three finished extension items from the 1.7.0 plan below (companion version notice, **Copy diagnostics**, welcome page on first install), the shorter Discord status line and the cover host check in the mini player; see the [changelog](CHANGELOG.md#161---2026-11-15). The live checks from [release QA](docs/RELEASE_QA.md) are not recorded for this release.
 
-**Prepared as 1.6.2 on 2026-11-15:** the song title in Discord's status line and the new logo for companion, extension and installer; see the [changelog](CHANGELOG.md#162---2026-11-15). On 2026-11-15 the maintainer reported that the member list shows the song title. GitHub publication is not yet recorded.
+**Published on GitHub in 1.6.2 on 2026-11-15:** the song title in Discord's status line and the new logo for companion, extension and installer; see the [changelog](CHANGELOG.md#162---2026-11-15). On 2026-11-15 the maintainer reported that the member list shows the song title. The new tray, setup and Discord icons have not been checked live; the Discord application icon and the `ytm_large` asset still have to be uploaded in the Developer Portal.
 
 **Problems identified on 2026-11-02 and their release status:**
 
