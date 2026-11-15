@@ -30,7 +30,8 @@ public sealed record DiscordActivity(
     [property: JsonPropertyName("assets")] DiscordAssets? Assets = null,
     [property: JsonPropertyName("buttons")] DiscordButton[]? Buttons = null,
     [property: JsonPropertyName("type")] DiscordActivityType Type = DiscordActivityType.Listening,
-    [property: JsonPropertyName("status_display_type")] DiscordStatusDisplayType? StatusDisplayType = null);
+    [property: JsonPropertyName("status_display_type")] DiscordStatusDisplayType? StatusDisplayType = null,
+    [property: JsonPropertyName("details_url")] string? DetailsUrl = null);
 
 public sealed record DiscordTimestamps(
     [property: JsonPropertyName("start")] long? StartUnixSeconds,

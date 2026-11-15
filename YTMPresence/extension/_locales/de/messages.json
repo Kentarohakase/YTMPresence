@@ -21,7 +21,7 @@
     "message": "Kein Track empfangen"
   },
   "trackNoneHint": {
-    "message": "YouTube Music öffnen oder den vorhandenen Tab neu laden und einen Titel starten."
+    "message": "Öffne YouTube Music oder lade den vorhandenen Tab neu und starte einen Titel."
   },
   "labelCompanion": {
     "message": "Companion"
@@ -153,16 +153,16 @@
     "message": "Teste Verbindung…"
   },
   "msgStatusLoadFailed": {
-    "message": "Status nicht verfügbar. Extension neu laden und Optionen erneut öffnen."
+    "message": "Status nicht verfügbar. Lade die Extension neu und öffne die Optionen erneut."
   },
   "msgTestFailed": {
-    "message": "Prüfung fehlgeschlagen. Optionen erneut öffnen und Verbindung prüfen."
+    "message": "Prüfung fehlgeschlagen. Öffne die Optionen erneut und prüfe die Verbindung."
   },
   "msgSaved": {
-    "message": "Gespeichert. YouTube Music Tab neu laden, falls er schon offen war."
+    "message": "Gespeichert. Lade den YouTube-Music-Tab neu, falls er schon offen war."
   },
   "msgSettingsLoadFailed": {
-    "message": "Einstellungen nicht verfügbar. Extension neu laden und Optionen erneut öffnen."
+    "message": "Einstellungen nicht verfügbar. Lade die Extension neu und öffne die Optionen erneut."
   },
   "errTokenMissingInput": {
     "message": "Token fehlt. Kopiere ihn aus dem Tray-Menü und füge ihn hier ein."
@@ -183,10 +183,10 @@
     "message": "Der Companion hat den Verbindungstest nicht erkannt."
   },
   "testOk": {
-    "message": "Companion-Verbindung bestätigt. Die Discord-Anzeige bitte in Discord prüfen."
+    "message": "Companion-Verbindung bestätigt. Prüfe die Anzeige in Discord."
   },
   "testBadToken": {
-    "message": "Token abgelehnt. Aktuellen Token aus dem Companion kopieren und in den Optionen speichern und prüfen."
+    "message": "Token abgelehnt. Kopiere den aktuellen Token aus dem Companion und wähle in den Optionen „Speichern und prüfen“."
   },
   "testUnreachable": {
     "message": "Companion nicht erreichbar. Starte die Tray-App oder prüfe die URL."
@@ -289,22 +289,22 @@
     "message": "Token abgelehnt"
   },
   "msgSaveFailed": {
-    "message": "Nicht gespeichert. Einstellungen erneut öffnen und noch einmal speichern."
+    "message": "Nicht gespeichert. Öffne die Einstellungen erneut und speichere noch einmal."
   },
   "msgSavedConnected": {
-    "message": "Gespeichert – Companion verbunden. YouTube Music öffnen oder den vorhandenen Tab neu laden."
+    "message": "Gespeichert – Companion verbunden. Öffne YouTube Music oder lade den vorhandenen Tab neu."
   },
   "msgSavedRejected": {
-    "message": "Gespeichert – Token abgelehnt. Aktuellen Token aus dem Companion kopieren und erneut speichern und prüfen."
+    "message": "Gespeichert – Token abgelehnt. Kopiere den aktuellen Token aus dem Companion und wähle erneut „Speichern und prüfen“."
   },
   "msgSavedUnreachable": {
-    "message": "Gespeichert – Companion nicht erreichbar. Companion starten und erneut prüfen; bei Bedarf die URL unter Erweiterte Einstellungen prüfen."
+    "message": "Gespeichert – Companion nicht erreichbar. Starte den Companion und prüfe erneut; kontrolliere bei Bedarf die URL unter „Erweiterte Einstellungen“."
   },
   "msgSavedChanged": {
-    "message": "Gespeichert – Einstellungen wurden inzwischen geändert. Aktuelle Einstellungen erneut prüfen."
+    "message": "Gespeichert – Einstellungen wurden inzwischen geändert. Prüfe die aktuellen Einstellungen erneut."
   },
   "msgConfigChanged": {
-    "message": "Einstellungen geändert. Aktuelle Einstellungen erneut prüfen."
+    "message": "Einstellungen geändert. Prüfe die aktuellen Einstellungen erneut."
   },
   "btnSaveAndTest": {
     "message": "Speichern und prüfen"
@@ -316,34 +316,34 @@
     "message": "Status der gespeicherten Verbindung"
   },
   "defaultUrlHint": {
-    "message": "Normalerweise ist keine Änderung nötig. Leer lassen für ws://127.0.0.1:17373/ws (mit localhost als Ausweichadresse)."
+    "message": "Normalerweise ist keine Änderung nötig. Lass das Feld leer für ws://127.0.0.1:17373/ws (mit localhost als Ausweichadresse)."
   },
   "optionsSetupHint": {
-    "message": "Companion starten, dort den Token kopieren und hier einfügen. Anschließend „Speichern und prüfen“ wählen."
+    "message": "Starte den Companion, kopiere dort den Token und füge ihn hier ein. Wähle anschließend „Speichern und prüfen“."
   },
   "installationScopeHint": {
-    "message": "Jedes Browserprofil und jede Store- oder lokale Installation hat eigene Einstellungen. Nur eine YTMPresence-Extension je Profil aktivieren. Nach einem Extension-Wechsel vorhandene YouTube-Music-Tabs neu laden."
+    "message": "Jedes Browserprofil und jede Store- oder lokale Installation hat eigene Einstellungen. Aktiviere nur eine YTMPresence-Extension je Profil. Lade nach einem Extension-Wechsel vorhandene YouTube-Music-Tabs neu."
   },
   "hintTokenMissing": {
-    "message": "Token im Companion kopieren und in den Optionen speichern und prüfen."
+    "message": "Kopiere den Token im Companion und wähle in den Optionen „Speichern und prüfen“."
   },
   "hintConnecting": {
-    "message": "Verbindung wird aufgebaut. Companion geöffnet lassen; die Prüfung dauert höchstens vier Sekunden."
+    "message": "Verbindung wird aufgebaut. Lass den Companion geöffnet; die Prüfung dauert höchstens vier Sekunden."
   },
   "hintAuthenticating": {
-    "message": "Der Companion prüft den gespeicherten Token. Bitte kurz warten."
+    "message": "Der Companion prüft den gespeicherten Token. Warte bitte kurz."
   },
   "hintConnected": {
-    "message": "Companion-Verbindung bestätigt. Die sichtbare Presence bitte in Discord prüfen."
+    "message": "Companion-Verbindung bestätigt. Prüfe die sichtbare Presence in Discord."
   },
   "hintNoTrack": {
-    "message": "Companion verbunden, noch keine Trackdaten. YouTube Music öffnen oder den vorhandenen Tab neu laden und einen Titel starten."
+    "message": "Companion verbunden, noch keine Trackdaten. Öffne YouTube Music oder lade den vorhandenen Tab neu und starte einen Titel."
   },
   "hintRejected": {
-    "message": "Token abgelehnt. Aktuellen Token im Companion kopieren und in den Optionen speichern und prüfen."
+    "message": "Token abgelehnt. Kopiere den aktuellen Token im Companion und wähle in den Optionen „Speichern und prüfen“."
   },
   "hintDisconnected": {
-    "message": "Verbindung unterbrochen. Companion starten und erneut prüfen. Bei Bedarf die URL unter Erweiterte Einstellungen prüfen."
+    "message": "Verbindung unterbrochen. Starte den Companion und prüfe erneut. Kontrolliere bei Bedarf die URL unter „Erweiterte Einstellungen“."
   },
   "labelExtensionVersion": {
     "message": "Extension-Version"
@@ -373,10 +373,10 @@
     "message": "Einstellungen werden gespeichert und die Verbindung wird geprüft …"
   },
   "msgUnsaved": {
-    "message": "Ungespeicherte Änderungen. Die Statusanzeige bezieht sich auf die gespeicherte Verbindung. „Speichern und prüfen“ wählen, um die Eingaben anzuwenden."
+    "message": "Ungespeicherte Änderungen. Die Statusanzeige bezieht sich auf die gespeicherte Verbindung. Wähle „Speichern und prüfen“, um die Eingaben anzuwenden."
   },
   "msgSaveResultUnknown": {
-    "message": "Keine Rückmeldung zum Speichern. Optionen erneut öffnen, Einstellungen kontrollieren und erneut speichern und prüfen."
+    "message": "Keine Rückmeldung zum Speichern. Öffne die Optionen erneut, kontrolliere die Einstellungen und wähle noch einmal „Speichern und prüfen“."
   },
   "btnDiagnostics": {
     "message": "Diagnose kopieren"
@@ -403,15 +403,15 @@
     "message": "Diese Extension braucht die kostenlose Companion-App für Windows, weil ein Browser Discord Rich Presence nicht setzen kann. Die Einrichtung hat vier Schritte:"
   },
   "welcomeStepInstall": {
-    "message": "Companion-App von der GitHub-Releases-Seite installieren."
+    "message": "Installiere die Companion-App von der GitHub-Releases-Seite."
   },
   "welcomeStepToken": {
-    "message": "Token im Tray-Menü des Companions kopieren."
+    "message": "Kopiere den Token im Tray-Menü des Companions."
   },
   "welcomeStepSave": {
-    "message": "Unten einfügen und „Speichern und prüfen“ wählen."
+    "message": "Füge ihn unten ein und wähle „Speichern und prüfen“."
   },
   "welcomeStepMusic": {
-    "message": "YouTube Music öffnen, einen Titel starten und in Discord prüfen."
+    "message": "Öffne YouTube Music, starte einen Titel und prüfe die Anzeige in Discord."
   }
 }

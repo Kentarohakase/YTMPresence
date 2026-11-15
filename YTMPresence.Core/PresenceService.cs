@@ -32,6 +32,11 @@ public sealed class PresenceService
   // gekürzt und würde bei Discord ein kaputtes Bild ergeben.
   private const int LegacyTruncatedUrlLength = 256;
 
+  private const string TrackUrlPrefix = "https://music.youtube.com/watch?v=";
+
+  // Obergrenze für details_url laut Discords Activity-Objekt.
+  private const int MaxTitleLinkLength = 256;
+
   // Discord zeichnet den Fortschrittsbalken aus Start und Ende selbst. Die
   // Position kommt in ganzen Sekunden und mit etwas Verzögerung an, deshalb
   // schwankt der daraus errechnete Start um ein bis zwei Sekunden. Erst eine
@@ -396,12 +401,37 @@ public sealed class PresenceService
         Assets: assets,
         Buttons: buttons.ToArray(),
         Type: DiscordActivityType.Listening,
-        StatusDisplayType: _settings.ShowTrackTitleInStatus ? DiscordStatusDisplayType.Details : null
+        StatusDisplayType: _settings.ShowTrackTitleInStatus ? DiscordStatusDisplayType.Details : null,
+        DetailsUrl: GetTitleLinkUrl(trackUrl)
     );
   }
 
   /// <summary>
-  /// Cover des Tracks als großes Bild, sonst das YouTube-Music-Logo aus den
+  /// Link hinter dem Songtitel (details_url). Nur ein Track hat einen
+  /// sinnvollen Link; eine Suchseite oder die Startseite bleibt ohne.
+  ///
+  /// Discord lehnt die ganze Aktivität ab, wenn die URL länger als 256 Zeichen
+  /// oder ungültig ist. Ein langer Freigabelink wird deshalb auf die Video-ID
+  /// gekürzt, statt die Presence zu kosten.
+  /// </summary>
+  internal static string? GetTitleLinkUrl(string trackUrl)
+  {
+    if (!TryExtractV(trackUrl, out var v))
+      return null;
+
+    if (trackUrl.StartsWith(TrackUrlPrefix, StringComparison.OrdinalIgnoreCase) &&
+        trackUrl.Length <= MaxTitleLinkLength &&
+        IsValidButtonUrl(trackUrl))
+    {
+      return trackUrl;
+    }
+
+    var shortUrl = TrackUrlPrefix + Uri.EscapeDataString(v);
+    return shortUrl.Length <= MaxTitleLinkLength && IsValidButtonUrl(shortUrl) ? shortUrl : null;
+  }
+
+  /// <summary>
+  /// Cover des Tracks als großes Bild, sonst das App-Logo aus den
   /// Discord-Assets. Ein unbrauchbares Cover kostet nur das Bild, nicht die
   /// Presence.
   /// </summary>
@@ -611,11 +641,11 @@ public sealed class PresenceService
         !string.IsNullOrWhiteSpace(state.Url) ? state.Url.Trim() :
         "";
 
-    if (candidate.StartsWith("https://music.youtube.com/watch?v=", StringComparison.OrdinalIgnoreCase))
+    if (candidate.StartsWith(TrackUrlPrefix, StringComparison.OrdinalIgnoreCase))
       return candidate;
 
     if (TryExtractV(candidate, out var v))
-      return $"https://music.youtube.com/watch?v={Uri.EscapeDataString(v)}";
+      return TrackUrlPrefix + Uri.EscapeDataString(v);
 
     if (TryNormalizeMusicUrl(candidate, out var musicUrl))
       return musicUrl;

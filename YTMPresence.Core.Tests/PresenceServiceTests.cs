@@ -214,7 +214,66 @@ public class PresenceServiceTests
     Assert.All(buttons!, b => Assert.True(PresenceService.IsValidButtonUrl(b.Url)));
   }
 
-  private const string CoverUrl = "https://lh3.googleusercontent.com/abcDEF123-xyz=w544-h544-l90-rj";
+  [Fact]
+  public async Task TrackTitle_LinksToTheTrack()
+  {
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings());
+
+    await service.HandleAsync(Playing(), CancellationToken.None);
+
+    Assert.Equal("https://music.youtube.com/watch?v=abc123", discord.LastActivity?.DetailsUrl);
+  }
+
+  [Fact]
+  public async Task TrackTitle_KeepsTheShareLink()
+  {
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings());
+
+    var state = Playing() with { ShareUrl = "https://music.youtube.com/watch?v=abc123&si=Share_1" };
+    await service.HandleAsync(state, CancellationToken.None);
+
+    Assert.Equal("https://music.youtube.com/watch?v=abc123&si=Share_1", discord.LastActivity?.DetailsUrl);
+  }
+
+  [Fact]
+  public async Task TrackTitle_LongShareLink_IsShortenedToTheVideoId()
+  {
+    // Discord nimmt für details_url höchstens 256 Zeichen und lehnt sonst die
+    // ganze Aktivität ab. Der Button verträgt den langen Link weiterhin.
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings());
+
+    var longShareUrl = "https://music.youtube.com/watch?v=abc123&list=" + new string('x', 300);
+    await service.HandleAsync(Playing() with { ShareUrl = longShareUrl }, CancellationToken.None);
+
+    Assert.Equal("https://music.youtube.com/watch?v=abc123", discord.LastActivity?.DetailsUrl);
+    Assert.Contains(discord.LastActivity!.Buttons!, b => b.Url == longShareUrl);
+  }
+
+  [Theory]
+  [InlineData("https://music.youtube.com/search?q=Sam%20Smith")]
+  [InlineData("https://music.youtube.com/")]
+  public async Task TrackTitle_WithoutTrackUrl_HasNoLink(string url)
+  {
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings());
+
+    await service.HandleAsync(Playing() with { Url = url }, CancellationToken.None);
+
+    Assert.Equal(1, discord.SetCount);
+    Assert.Null(discord.LastActivity?.DetailsUrl);
+  }
+
+  [Theory]
+  [InlineData("")]
+  [InlineData("nicht mal eine url")]
+  [InlineData("https://music.youtube.com/playlist?list=PL123")]
+  public void TitleLink_IsOnlyBuiltForTracks(string trackUrl)
+    => Assert.Null(PresenceService.GetTitleLinkUrl(trackUrl));
+
+  private const string CoverUrl ="https://lh3.googleusercontent.com/abcDEF123-xyz=w544-h544-l90-rj";
 
   [Fact]
   public async Task AlbumArt_IsUsedAsLargeImage()
@@ -687,6 +746,7 @@ public class PresenceServiceTests
     // Uebersetzungen selbst deckt PresenceTextTests ab.
     Assert.Equal(PresenceText.Advertisement, discord.LastActivity?.State);
     Assert.Equal("YouTube Music", discord.LastActivity?.Details);
+    Assert.Null(discord.LastActivity?.DetailsUrl);
   }
 
   [Fact]

@@ -6,8 +6,19 @@ Dates for published GitHub releases use Europe/Vienna time. The [GitHub release 
 
 ## [Unreleased]
 
+### Added
+
+- The song title in the Discord presence links to the track on YouTube Music. Discord allows at most 256 characters for this link and rejects the whole activity otherwise, so a longer share link is reduced to the plain `watch?v=` link. Pages without a track, such as a search, leave the title without a link. The track button is unchanged.
+- Clicking the update notification opens the update window, where the update can be installed right away. If the release has no setup file, the click opens the release page instead. This also works for the notification from the check at startup.
+
+### Changed
+
+- The tray menu stays open after **Check for updates**. The entry shows that the check is running, and a found update appears right below it as its own entry. Other entries still close the menu.
+- German texts in the companion and the extension now consistently address the user as "du"; instructions previously written in the infinitive were reworded. Buttons, menu entries and headings keep the infinitive. English texts are unchanged.
+
 ### Fixed
 
+- The hint for **Show album art in Discord** said the YouTube Music logo appears without a cover. Since the Discord application's images were replaced (see 1.6.3), it is the YTM Presence logo.
 - After Discord restarts while a track is paused, the presence returns within about ten seconds. The extension sends no new state while paused, so the presence used to stay missing until playback resumed or the track changed. The companion's regular idle check now resends the last activity when the connection to Discord was lost.
 - Discord's progress bar follows a seek right away. Seeks used to wait for the minimum update interval of 15 seconds by default; they now count as a critical change like a track change. Jumps of up to three seconds still count as normal progress.
 - Test runs no longer write into the installed companion's log under `%APPDATA%\YTMPresence\logs`. Test servers and their clients had ended up there and in exported diagnostics, for example as "Unknown browser #1" on a random port.

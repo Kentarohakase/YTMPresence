@@ -110,7 +110,7 @@ Store copy and privacy information:
 
 ## Updates
 
-Choose `Check for updates` in the tray menu to check the latest GitHub release. If it includes a setup EXE, the app can download it, verify it and launch the installer. The app also checks once at startup when `CheckForUpdatesOnStartup` is enabled.
+Choose `Check for updates` in the tray menu to check the latest GitHub release. The menu stays open during the check, and a found update appears as its own entry. If the release includes a setup EXE, the app can download it, verify it and launch the installer. The app also checks once at startup when `CheckForUpdatesOnStartup` is enabled. Clicking the notification about a new version opens the same update window.
 
 Updates use the following checks and safeguards:
 
@@ -126,7 +126,7 @@ Updates use the following checks and safeguards:
 
 ## Tray menu
 
-- `Settings...`: opens the settings window for token, server, presence and Discord client ID. **Show album art in Discord** (on by default) uses the track's cover as the large presence image; without a cover, Discord shows the YouTube Music logo. **Show the song title in Discord's status line** (on by default) shows "Listening to <title>" in the member list instead of the Discord application's name.
+- `Settings...`: opens the settings window for token, server, presence and Discord client ID. **Show album art in Discord** (on by default) uses the track's cover as the large presence image; without a cover, Discord shows the YTM Presence logo. **Show the song title in Discord's status line** (on by default) shows "Listening to <title>" in the member list instead of the Discord application's name.
 - `Open mini player`: shows the current track, cover, progress, play/pause, previous/next and a button to open the track
 - `Open diagnostics`: shows server, extension, Discord, track and security status, and can produce a diagnostics report without the security token
 - `Only show presence while music plays`: clears the Discord presence immediately on pause

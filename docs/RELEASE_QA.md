@@ -32,7 +32,8 @@ Complete this checklist for each release tag before sharing the release widely.
 ## Update test
 
 - Install an older version.
-- Run `Check for updates` from the tray menu.
+- Run `Check for updates` from the tray menu. The menu stays open, the entry shows the running check, and the update entry appears below it without reopening the menu.
+- Click the update notification while it is still on screen. The update installer window opens in the foreground; check the same after a restart with `CheckForUpdatesOnStartup` enabled. Note whether clicking the notification later in the Windows notification center does anything.
 - The update menu entry opens the update installer window.
 - `Download only` shows progress, target path and a confirmed SHA256 check, without exiting the app.
 - `Install` launches the setup only after a successful SHA256 check; **YTMPresence then exits by itself** (the installer no longer terminates the app by process name).
@@ -114,7 +115,7 @@ Unit tests cover which URL the companion sends, not how Discord renders it. Chec
 
 - Play an album track and a music video. The activity's large image shows each track's cover without a play/pause icon on top; the album hover text remains. For the music video, the image shows the video thumbnail without black bars at the top and bottom. Note how Discord fits the 16:9 image into its square frame.
 - Change tracks and confirm the cover follows within one update interval. Pause and resume; the cover stays and the state line shows the paused state.
-- Turn off **Show album art in Discord** and save. The YouTube Music logo with its play/pause icon returns within one update interval; turning the option on restores the cover.
+- Turn off **Show album art in Discord** and save. The YTM Presence logo with its play/pause icon returns within one update interval; turning the option on restores the cover.
 - During an advertisement with **Show as ad**, the logo appears instead of a cover.
 - If Discord rejects the activity, diagnostics show Discord's reason. Record the cover URL's host and length, not the full URL, when reporting it.
 
@@ -127,6 +128,12 @@ Check from a second account or another device, since Discord shows your own stat
 - During an advertisement with **Show as ad**, the status shows the application name.
 - The profile card and "Active Now" keep showing the application name in their header; only the status line changes.
 - Confirm that Discord accepts the activity: diagnostics show the last result as accepted, not rejected.
+
+## Discord title link
+
+- From a second account, open the activity on the profile card and click the song title. YouTube Music opens the playing track.
+- Play a track from a playlist or a shared link with extra parameters; the title still opens that track, and diagnostics show the activity as accepted.
+- During an advertisement with **Show as ad**, the title is not a link.
 
 ## After pushing
 

@@ -13,6 +13,8 @@ using YTMPresence.Core.Updates;
 
 using ContextMenuStrip = System.Windows.Forms.ContextMenuStrip;
 using NotifyIcon = System.Windows.Forms.NotifyIcon;
+using ToolStripDropDownCloseReason = System.Windows.Forms.ToolStripDropDownCloseReason;
+using ToolStripItem = System.Windows.Forms.ToolStripItem;
 using ToolStripMenuItem = System.Windows.Forms.ToolStripMenuItem;
 using ToolStripSeparator = System.Windows.Forms.ToolStripSeparator;
 using ToolTipIcon = System.Windows.Forms.ToolTipIcon;
@@ -24,6 +26,11 @@ public partial class App : System.Windows.Application
   private const string RunRegistryValueName = "YTM Presence";
 
   private NotifyIcon? _trayIcon;
+
+  // Was ein Klick auf die zuletzt gezeigte Benachrichtigung auslöst. Windows
+  // meldet nur den Klick, nicht welche Benachrichtigung gemeint war; jede neue
+  // Benachrichtigung ersetzt deshalb die Aktion der vorherigen.
+  private Action? _notificationClickAction;
 
   private ToolStripMenuItem? _serverStatusItem;
   private ToolStripMenuItem? _extensionStatusItem;
@@ -173,7 +180,7 @@ public partial class App : System.Windows.Application
 
     try
     {
-      _trayIcon?.ShowBalloonTip(
+      ShowNotification(
           4000,
           UiText.UnexpectedErrorTitle,
           UiText.UnexpectedErrorMessage,
@@ -349,7 +356,7 @@ public partial class App : System.Windows.Application
     _checkUpdatesItem.Click += async (_, __) => await CheckForUpdatesAsync(showUpToDate: true);
 
     _openLatestReleaseItem = new ToolStripMenuItem(UiText.OpenLatestRelease) { Visible = false };
-    _openLatestReleaseItem.Click += (_, __) => OpenUpdateTarget();
+    _openLatestReleaseItem.Click += (_, __) => OpenUpdateTarget(_openLatestReleaseItem.Tag);
 
     var openYtmItem = new ToolStripMenuItem(UiText.OpenYtm);
     openYtmItem.Click += (_, __) => OpenUrl("https://music.youtube.com/");
@@ -368,6 +375,12 @@ public partial class App : System.Windows.Application
       Visible = true,
       Text = $"{UiText.AppName} {GetAppVersion()}",
       Icon = LoadTrayIcon() ?? System.Drawing.SystemIcons.Application
+    };
+    _trayIcon.BalloonTipClicked += (_, __) =>
+    {
+      var action = _notificationClickAction;
+      _notificationClickAction = null;
+      action?.Invoke();
     };
 
     var versionItem = new ToolStripMenuItem(UiText.AppVersion(GetAppVersion())) { Enabled = false };
@@ -400,7 +413,39 @@ public partial class App : System.Windows.Application
     menu.Items.Add(new ToolStripSeparator());
     menu.Items.Add(exitItem);
 
+    // Ein Klick auf einen Eintrag schließt das Menü sonst sofort. Bei der
+    // Update-Suche bleibt es offen: Der Eintrag zeigt den Fortschritt, und ein
+    // gefundenes Update erscheint gleich darunter als eigener Eintrag.
+    // ItemClicked kommt vor Closing, das selbst nicht sagt, welcher Eintrag
+    // geklickt wurde.
+    ToolStripItem? clickedItem = null;
+    menu.ItemClicked += (_, e) => clickedItem = e.ClickedItem;
+    menu.Closing += (_, e) =>
+    {
+      if (e.CloseReason == ToolStripDropDownCloseReason.ItemClicked &&
+          ReferenceEquals(clickedItem, _checkUpdatesItem))
+      {
+        e.Cancel = true;
+      }
+
+      clickedItem = null;
+    };
+
     _trayIcon.ContextMenuStrip = menu;
+  }
+
+  /// <summary>
+  /// Zeigt eine Benachrichtigung am Tray-Symbol. <paramref name="onClick"/>
+  /// läuft, wenn die Benachrichtigung angeklickt wird, solange keine neuere
+  /// sie ersetzt hat.
+  /// </summary>
+  private void ShowNotification(int timeoutMs, string title, string text, ToolTipIcon icon, Action? onClick = null)
+  {
+    if (_trayIcon is null)
+      return;
+
+    _notificationClickAction = onClick;
+    _trayIcon.ShowBalloonTip(timeoutMs, title, text, icon);
   }
 
   private static System.Drawing.Icon? LoadTrayIcon()
@@ -440,7 +485,7 @@ public partial class App : System.Windows.Application
       _serverPortInUse = CompanionServer.IsAddressInUse(ex);
       if (_serverPortInUse)
       {
-        _trayIcon?.ShowBalloonTip(
+        ShowNotification(
             10000,
             UiText.ErrorTitle,
             UiText.PortInUseMessage(_settings.ListenPort),
@@ -676,7 +721,7 @@ public partial class App : System.Windows.Application
 
       Logger.Info("Security token regenerated.");
 
-      _trayIcon?.ShowBalloonTip(
+      ShowNotification(
           4000,
           UiText.TokenRenewedTitle,
           UiText.TokenRenewedMessage,
@@ -686,7 +731,7 @@ public partial class App : System.Windows.Application
     {
       Logger.Error(ex, "Error regenerating token.");
 
-      _trayIcon?.ShowBalloonTip(
+      ShowNotification(
           4000,
           UiText.ErrorTitle,
           UiText.TokenRenewErrorMessage,
@@ -703,7 +748,7 @@ public partial class App : System.Windows.Application
 
       if (showBalloon)
       {
-        _trayIcon?.ShowBalloonTip(
+        ShowNotification(
             2500,
             UiText.TokenCopyTitle,
             UiText.TokenCopyMessage,
@@ -767,7 +812,7 @@ public partial class App : System.Windows.Application
 
         if (showUpToDate)
         {
-          _trayIcon?.ShowBalloonTip(
+          ShowNotification(
               4500,
               UiText.ErrorTitle,
               UiText.UpdateCheckFailed(result.ErrorMessage),
@@ -797,22 +842,28 @@ public partial class App : System.Windows.Application
 
         Logger.Info($"Update available: {result.LatestVersion} ({updateUrl}).");
 
+        // Mit Setup führen Menüeintrag und Benachrichtigung zum Update-Fenster,
+        // sonst zur Release-Seite.
+        var hasSetup = !string.IsNullOrWhiteSpace(result.SetupDownloadUrl);
+        object? updateTarget = hasSetup ? result : updateUrl;
+
         if (_openLatestReleaseItem is not null)
         {
-          _openLatestReleaseItem.Text = string.IsNullOrWhiteSpace(result.SetupDownloadUrl)
-              ? UiText.UpdateAvailable(result.LatestVersion)
-              : UiText.DownloadUpdate(result.LatestVersion);
-          _openLatestReleaseItem.Tag = string.IsNullOrWhiteSpace(result.SetupDownloadUrl)
-              ? updateUrl
-              : result;
+          _openLatestReleaseItem.Text = hasSetup
+              ? UiText.DownloadUpdate(result.LatestVersion)
+              : UiText.UpdateAvailable(result.LatestVersion);
+          _openLatestReleaseItem.Tag = updateTarget;
           _openLatestReleaseItem.Visible = true;
         }
 
-        _trayIcon?.ShowBalloonTip(
+        ShowNotification(
             6500,
             UiText.UpdateAvailable(result.LatestVersion),
-            UiText.UpdateAvailableMessage(result.LatestVersion),
-            ToolTipIcon.Info);
+            hasSetup
+                ? UiText.UpdateAvailableMessage(result.LatestVersion)
+                : UiText.UpdateAvailableReleaseMessage(result.LatestVersion),
+            ToolTipIcon.Info,
+            onClick: () => OpenUpdateTarget(updateTarget));
 
         return;
       }
@@ -824,7 +875,7 @@ public partial class App : System.Windows.Application
 
       if (showUpToDate)
       {
-        _trayIcon?.ShowBalloonTip(
+        ShowNotification(
             3500,
             UiText.AppName,
             UiText.NoUpdateAvailable(result.CurrentVersion),
@@ -837,7 +888,7 @@ public partial class App : System.Windows.Application
 
       if (showUpToDate)
       {
-        _trayIcon?.ShowBalloonTip(
+        ShowNotification(
             4500,
             UiText.ErrorTitle,
             UiText.UpdateCheckFailed(ex.Message),
@@ -884,16 +935,17 @@ public partial class App : System.Windows.Application
     }
   }
 
-  private void OpenUpdateTarget()
+  private void OpenUpdateTarget(object? target)
   {
-    if (_openLatestReleaseItem?.Tag is UpdateCheckResult update &&
+    if (target is UpdateCheckResult update &&
         !string.IsNullOrWhiteSpace(update.SetupDownloadUrl))
     {
       ShowUpdateDownloadWindow(update);
       return;
     }
 
-    OpenUrl(_openLatestReleaseItem?.Tag?.ToString() ?? "https://github.com/Kentarohakase/YTMPresence/releases");
+    var url = target?.ToString();
+    OpenUrl(string.IsNullOrWhiteSpace(url) ? "https://github.com/Kentarohakase/YTMPresence/releases" : url);
   }
 
   private static void OpenPath(string path)

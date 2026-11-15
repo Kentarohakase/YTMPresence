@@ -59,6 +59,28 @@ public class DiscordIpcPayloadTests
   }
 
   [Fact]
+  public void SetActivity_SendsTheTitleLinkAsDetailsUrl()
+  {
+    var activity = new DiscordActivity("Title", "Artist", DetailsUrl: "https://music.youtube.com/watch?v=abc123");
+
+    using var doc = JsonDocument.Parse(DiscordIpcClient.BuildSetActivityJson(activity, "abc123"));
+    var sent = doc.RootElement.GetProperty("args").GetProperty("activity");
+
+    Assert.Equal("https://music.youtube.com/watch?v=abc123", sent.GetProperty("details_url").GetString());
+  }
+
+  [Fact]
+  public void SetActivity_OmitsDetailsUrlWhenNotSet()
+  {
+    var activity = new DiscordActivity("Title", "Artist");
+
+    using var doc = JsonDocument.Parse(DiscordIpcClient.BuildSetActivityJson(activity, "abc123"));
+    var sent = doc.RootElement.GetProperty("args").GetProperty("activity");
+
+    Assert.False(sent.TryGetProperty("details_url", out _));
+  }
+
+  [Fact]
   public void ClearActivity_CarriesProcessIdAndTheGivenNonce()
   {
     // Die Nonce ordnet Discords Antwort dem Befehl zu. Dass jeder Befehl eine
