@@ -4,6 +4,18 @@ All notable changes to YTMPresence are documented in this file.
 
 Dates for published GitHub releases use Europe/Vienna time. The [GitHub release list](https://github.com/Kentarohakase/YTMPresence/releases), checked on 2026-11-07, contains no releases for 0.7.0, 0.8.11 or 1.0.0; their existing entries and dates are retained as project history.
 
+## [1.6.3] - 2026-11-15
+
+### Fixed
+
+- The tooltip of **Show the song title in Discord's status line** said the profile shows the title as well and named "Listening to YouTube Music". Only the status line, for example in the member list, changes; the profile card and "Active Now" keep the Discord application's name. The tooltip now describes this without naming the application.
+
+### Notes
+
+- The Discord application is now called "YTM Presence" instead of "YouTube Music". Its icon and the `ytm_large`, `play` and `pause` images use the new logo. These changes were made in the Discord Developer Portal, so they apply to every companion version once Discord's cache catches up.
+- Terms of use are in [docs/TERMS.md](docs/TERMS.md); the Discord application links to them and to the privacy notice.
+- The browser extension is unchanged apart from its version number.
+
 ## [1.6.2] - 2026-11-15
 
 ### Added

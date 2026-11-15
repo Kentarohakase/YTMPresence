@@ -23,7 +23,9 @@ This roadmap replaces the draft of 2026-10-12. Release numbers indicate the prop
 
 **Published on GitHub in 1.6.1 on 2026-11-15:** the three finished extension items from the 1.7.0 plan below (companion version notice, **Copy diagnostics**, welcome page on first install), the shorter Discord status line and the cover host check in the mini player; see the [changelog](CHANGELOG.md#161---2026-11-15). The live checks from [release QA](docs/RELEASE_QA.md) are not recorded for this release.
 
-**Published on GitHub in 1.6.2 on 2026-11-15:** the song title in Discord's status line and the new logo for companion, extension and installer; see the [changelog](CHANGELOG.md#162---2026-11-15). On 2026-11-15 the maintainer reported that the member list shows the song title. The new tray, setup and Discord icons have not been checked live; the Discord application icon and the `ytm_large` asset still have to be uploaded in the Developer Portal.
+**Published on GitHub in 1.6.2 on 2026-11-15:** the song title in Discord's status line and the new logo for companion, extension and installer; see the [changelog](CHANGELOG.md#162---2026-11-15). On 2026-11-15 the maintainer reported that the member list shows the song title. The new tray and setup icons have not been checked live.
+
+**Prepared as 1.6.3 on 2026-11-15:** a corrected tooltip for the status line option; see the [changelog](CHANGELOG.md#163---2026-11-15). On the same day the Discord application was renamed to "YTM Presence" and its icon and the `ytm_large`, `play` and `pause` images were replaced in the Developer Portal; that applies to all versions. GitHub publication is not yet recorded.
 
 **Problems identified on 2026-11-02 and their release status:**
 
