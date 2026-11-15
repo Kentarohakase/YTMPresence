@@ -357,8 +357,9 @@ public sealed class PresenceService
           : PresenceText.PausedWithoutTime(AppendAlbum(artist, album));
     }
 
-    // Ohne Angabe zeigt Discord in der Statuszeile den Anwendungsnamen
-    // ("Hört YouTube Music"); Details ist hier der Songtitel.
+    // Ohne Angabe zeigt Discord in der Statuszeile den Namen der
+    // Discord-Anwendung aus dem Developer Portal; Details ist hier der
+    // Songtitel.
     return new DiscordActivity(
         Details: title,
         State: stateLine,
