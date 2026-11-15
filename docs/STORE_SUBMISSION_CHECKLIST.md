@@ -52,7 +52,7 @@ Prepare screenshots of:
 
 Requirements:
 
-- Store icon (labelled „Händlersymbol" in the German interface): 128x128 PNG. `YTMPresence/extension/icons/icon128.png` meets the requirement; Google also recommends 16 px of transparent padding around a 96x96 graphic.
+- Store icon (labelled „Händlersymbol" in the German interface): 128x128 PNG. `YTMPresence/extension/icons/icon128.png` meets the requirement and keeps the 16 px of transparent padding around a 96x96 graphic that Google recommends. All icons are generated from `branding/ytmpresence-logo.svg` with `scripts/render-brand-icons.ps1`.
 - Screenshots: 1280x800 or 640x400, at least one, at most five. Show Discord presence in the first image, which appears as the search-result preview.
 - Before uploading, check that the security token is not legible in any image.
 

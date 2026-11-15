@@ -414,7 +414,10 @@ public partial class App : System.Windows.Application
       if (stream is null)
         return null;
 
-      return new System.Drawing.Icon(stream);
+      // app.ico enthält mehrere Größen. Ohne Angabe nähme Icon die 32-px-
+      // Fassung und der Infobereich skalierte sie herunter; SmallIconSize
+      // folgt der DPI-Skalierung (16 px bei 100 %, 24 px bei 150 %).
+      return new System.Drawing.Icon(stream, System.Windows.Forms.SystemInformation.SmallIconSize);
     }
     catch
     {
