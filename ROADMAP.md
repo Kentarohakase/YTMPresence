@@ -27,6 +27,8 @@ This roadmap replaces the draft of 2026-10-12. Release numbers indicate the prop
 
 **Published on GitHub in 1.6.3 on 2026-11-15:** a corrected tooltip for the status line option; see the [changelog](CHANGELOG.md#163---2026-11-15). On the same day the Discord application was renamed to "YTM Presence" and its icon and the `ytm_large`, `play` and `pause` images were replaced in the Developer Portal; that applies to all versions. The 1.6.3 extension is identical to 1.6.2 apart from its version number.
 
+**Prepared as 1.6.4 on 2026-11-15:** the song title in Discord links to the track; the tray menu stays open during the update check, and the update notification opens the update window; the presence returns after a Discord restart during a pause, and seeks reach Discord's progress bar right away; German texts address the user as "du". See the [changelog](CHANGELOG.md#164---2026-11-15). On 2026-11-15 the maintainer reported that a local test build of the update menu, the update notification and the title link worked. The reconnect and seek fixes have no recorded live check. GitHub publication is not yet recorded.
+
 **Problems identified on 2026-11-02 and their release status:**
 
 | # | Problem | User impact | Priority |

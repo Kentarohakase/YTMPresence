@@ -4,7 +4,7 @@ All notable changes to YTMPresence are documented in this file.
 
 Dates for published GitHub releases use Europe/Vienna time. The [GitHub release list](https://github.com/Kentarohakase/YTMPresence/releases), checked on 2026-11-07, contains no releases for 0.7.0, 0.8.11 or 1.0.0; their existing entries and dates are retained as project history.
 
-## [Unreleased]
+## [1.6.4] - 2026-11-15
 
 ### Added
 
@@ -18,10 +18,14 @@ Dates for published GitHub releases use Europe/Vienna time. The [GitHub release 
 
 ### Fixed
 
-- The hint for **Show album art in Discord** said the YouTube Music logo appears without a cover. Since the Discord application's images were replaced (see 1.6.3), it is the YTM Presence logo.
 - After Discord restarts while a track is paused, the presence returns within about ten seconds. The extension sends no new state while paused, so the presence used to stay missing until playback resumed or the track changed. The companion's regular idle check now resends the last activity when the connection to Discord was lost.
 - Discord's progress bar follows a seek right away. Seeks used to wait for the minimum update interval of 15 seconds by default; they now count as a critical change like a track change. Jumps of up to three seconds still count as normal progress.
+- The hint for **Show album art in Discord** said the YouTube Music logo appears without a cover. Since the Discord application's images were replaced (see 1.6.3), it is the YTM Presence logo.
 - Test runs no longer write into the installed companion's log under `%APPDATA%\YTMPresence\logs`. Test servers and their clients had ended up there and in exported diagnostics, for example as "Unknown browser #1" on a random port.
+
+### Notes
+
+- The browser extension changes only its German texts. It requests no new permissions.
 
 ## [1.6.3] - 2026-11-15
 
