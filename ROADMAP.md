@@ -23,6 +23,8 @@ This roadmap replaces the draft of 2026-10-12. Release numbers indicate the prop
 
 **Published on GitHub in 1.6.1 on 2026-11-15:** the three finished extension items from the 1.7.0 plan below (companion version notice, **Copy diagnostics**, welcome page on first install), the shorter Discord status line and the cover host check in the mini player; see the [changelog](CHANGELOG.md#161---2026-11-15). The live checks from [release QA](docs/RELEASE_QA.md) are not recorded for this release.
 
+**Prepared as 1.6.2 on 2026-11-15:** the song title in Discord's status line and the new logo for companion, extension and installer; see the [changelog](CHANGELOG.md#162---2026-11-15). On 2026-11-15 the maintainer reported that the member list shows the song title. GitHub publication is not yet recorded.
+
 **Problems identified on 2026-11-02 and their release status:**
 
 | # | Problem | User impact | Priority |

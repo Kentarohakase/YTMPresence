@@ -4,7 +4,7 @@ All notable changes to YTMPresence are documented in this file.
 
 Dates for published GitHub releases use Europe/Vienna time. The [GitHub release list](https://github.com/Kentarohakase/YTMPresence/releases), checked on 2026-11-07, contains no releases for 0.7.0, 0.8.11 or 1.0.0; their existing entries and dates are retained as project history.
 
-## [Unreleased]
+## [1.6.2] - 2026-11-15
 
 ### Added
 
@@ -13,6 +13,10 @@ Dates for published GitHub releases use Europe/Vienna time. The [GitHub release 
 ### Changed
 
 - New logo for the companion, the extension and the installer: a music note with signal arcs, replacing the red play button that resembled YouTube's own logo. `app.ico` now holds sizes from 16 to 256 px instead of a single 16 px image, so the EXE, the setup and the tray icon stay sharp at higher display scaling; the tray picks the size that matches the scaling. All icons are generated from `branding/ytmpresence-logo.svg` (with a simplified variant up to 24 px) by `scripts/render-brand-icons.ps1`. The Discord application icon and the `ytm_large` asset are set in the Discord Developer Portal; matching 512 and 1024 px images are in `branding/`.
+
+### Notes
+
+- The only extension change in this release is the new icon set. It reaches store users only with a separate store upload; GitHub and the Chrome Web Store update independently. The extension requests no new permissions.
 
 ## [1.6.1] - 2026-11-15
 
