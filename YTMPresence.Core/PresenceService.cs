@@ -152,7 +152,7 @@ public sealed class PresenceService
     // Pausenposition oder Spulen. Das Bild gehört dazu, damit ein
     // nachgereichtes Cover die Presence aktualisiert.
     var key = $"{state.IsPlaying}|{title}|{artist}|{trackUrl}|{largeImage}|{activity.State}|" +
-        $"{timestamps?.StartUnixSeconds}-{timestamps?.EndUnixSeconds}";
+        $"{activity.StatusDisplayType}|{timestamps?.StartUnixSeconds}-{timestamps?.EndUnixSeconds}";
 
     await TryUpdateAsync(key, activity, force: criticalChange, ct);
   }
@@ -357,13 +357,16 @@ public sealed class PresenceService
           : PresenceText.PausedWithoutTime(AppendAlbum(artist, album));
     }
 
+    // Ohne Angabe zeigt Discord in der Statuszeile den Anwendungsnamen
+    // ("Hört YouTube Music"); Details ist hier der Songtitel.
     return new DiscordActivity(
         Details: title,
         State: stateLine,
         Timestamps: timestamps,
         Assets: assets,
         Buttons: buttons.ToArray(),
-        Type: DiscordActivityType.Listening
+        Type: DiscordActivityType.Listening,
+        StatusDisplayType: _settings.ShowTrackTitleInStatus ? DiscordStatusDisplayType.Details : null
     );
   }
 

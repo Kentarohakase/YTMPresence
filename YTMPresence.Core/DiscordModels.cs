@@ -12,13 +12,25 @@ public enum DiscordActivityType
   Custom = 4,
   Competing = 5
 }
+/// <summary>
+/// Welches Feld Discord in der Statuszeile zeigt, etwa in der Mitgliederliste
+/// ("Hört …"). Ohne Angabe nimmt Discord den Namen der Anwendung.
+/// </summary>
+public enum DiscordStatusDisplayType
+{
+  Name = 0,
+  State = 1,
+  Details = 2
+}
+
 public sealed record DiscordActivity(
     [property: JsonPropertyName("details")] string? Details,
     [property: JsonPropertyName("state")] string? State,
     [property: JsonPropertyName("timestamps")] DiscordTimestamps? Timestamps = null,
     [property: JsonPropertyName("assets")] DiscordAssets? Assets = null,
     [property: JsonPropertyName("buttons")] DiscordButton[]? Buttons = null,
-    [property: JsonPropertyName("type")] DiscordActivityType Type = DiscordActivityType.Listening);
+    [property: JsonPropertyName("type")] DiscordActivityType Type = DiscordActivityType.Listening,
+    [property: JsonPropertyName("status_display_type")] DiscordStatusDisplayType? StatusDisplayType = null);
 
 public sealed record DiscordTimestamps(
     [property: JsonPropertyName("start")] long? StartUnixSeconds,

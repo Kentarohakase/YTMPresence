@@ -99,6 +99,7 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="{x:Static tw:UiText.LabelDiscordUpdateInterval}" VerticalAlignment="Center" />
@@ -145,6 +146,14 @@
                               Grid.ColumnSpan="2"
                               Content="{x:Static tw:UiText.SettingsShowAlbumArtInDiscord}"
                               ToolTip="{x:Static tw:UiText.SettingsShowAlbumArtInDiscordHint}"
+                              Margin="0,8,0,0" />
+
+                    <CheckBox x:Name="ShowTrackTitleInStatusBox"
+                              Grid.Row="6"
+                              Grid.Column="0"
+                              Grid.ColumnSpan="2"
+                              Content="{x:Static tw:UiText.SettingsShowTrackTitleInStatus}"
+                              ToolTip="{x:Static tw:UiText.SettingsShowTrackTitleInStatusHint}"
                               Margin="0,8,0,0" />
                 </Grid>
             </GroupBox>

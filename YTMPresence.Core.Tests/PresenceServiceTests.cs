@@ -513,6 +513,55 @@ public class PresenceServiceTests
   }
 
   [Fact]
+  public async Task StatusLine_ShowsTheTrackTitleByDefault()
+  {
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings());
+
+    await service.HandleAsync(Playing(title: "Hello"), CancellationToken.None);
+
+    Assert.Equal(DiscordStatusDisplayType.Details, discord.LastActivity?.StatusDisplayType);
+    Assert.Equal("Hello", discord.LastActivity?.Details);
+  }
+
+  [Fact]
+  public async Task StatusLine_Disabled_LeavesTheApplicationName()
+  {
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings { ShowTrackTitleInStatus = false });
+
+    await service.HandleAsync(Playing(), CancellationToken.None);
+
+    Assert.Null(discord.LastActivity?.StatusDisplayType);
+  }
+
+  [Fact]
+  public async Task StatusLine_ToggledSetting_ResendsWithTheNextState()
+  {
+    var settings = new AppSettings { MinDiscordUpdateSeconds = 0 };
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, settings);
+
+    await service.HandleAsync(Playing(), CancellationToken.None);
+    settings.ShowTrackTitleInStatus = false;
+    await service.HandleAsync(Playing(), CancellationToken.None);
+
+    Assert.Equal(2, discord.SetCount);
+    Assert.Null(discord.LastActivity?.StatusDisplayType);
+  }
+
+  [Fact]
+  public async Task Ad_LeavesTheApplicationNameInTheStatusLine()
+  {
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings { AdBehavior = AdBehavior.ShowAdvertisement });
+
+    await service.HandleAsync(Playing(isAd: true), CancellationToken.None);
+
+    Assert.Null(discord.LastActivity?.StatusDisplayType);
+  }
+
+  [Fact]
   public async Task IdenticalState_IsDeduped()
   {
     var discord = new FakeDiscordClient();

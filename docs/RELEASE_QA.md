@@ -118,6 +118,15 @@ Unit tests cover which URL the companion sends, not how Discord renders it. Chec
 - During an advertisement with **Show as ad**, the logo appears instead of a cover.
 - If Discord rejects the activity, diagnostics show Discord's reason. Record the cover URL's host and length, not the full URL, when reporting it.
 
+## Discord status line
+
+Check from a second account or another device, since Discord shows your own status differently.
+
+- While a track plays, the member list shows "Listening to <song title>". Change tracks; the status follows.
+- Turn off **Show the song title in Discord's status line** and save. With the next update the member list shows "Listening to YouTube Music" again.
+- During an advertisement with **Show as ad**, the status shows "YouTube Music".
+- Confirm that Discord accepts the activity: diagnostics show the last result as accepted, not rejected.
+
 ## After pushing
 
 - The GitHub Actions release workflow passes.

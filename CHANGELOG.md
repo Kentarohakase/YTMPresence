@@ -4,6 +4,12 @@ All notable changes to YTMPresence are documented in this file.
 
 Dates for published GitHub releases use Europe/Vienna time. The [GitHub release list](https://github.com/Kentarohakase/YTMPresence/releases), checked on 2026-11-07, contains no releases for 0.7.0, 0.8.11 or 1.0.0; their existing entries and dates are retained as project history.
 
+## [Unreleased]
+
+### Added
+
+- Discord's status line, for example in the member list, shows "Listening to <song title>" instead of "Listening to YouTube Music". The companion sets the activity's `status_display_type` to the details field for this. **Show the song title in Discord's status line** in the settings window switches back to the application name; existing settings files start with the title enabled. Advertisements keep "YouTube Music".
+
 ## [1.6.1] - 2026-11-15
 
 ### Added

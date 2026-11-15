@@ -36,6 +36,29 @@ public class DiscordIpcPayloadTests
   }
 
   [Fact]
+  public void SetActivity_SendsStatusDisplayTypeAsNumber()
+  {
+    var activity = new DiscordActivity("Title", "Artist", StatusDisplayType: DiscordStatusDisplayType.Details);
+
+    using var doc = JsonDocument.Parse(DiscordIpcClient.BuildSetActivityJson(activity, "abc123"));
+    var sent = doc.RootElement.GetProperty("args").GetProperty("activity");
+
+    Assert.Equal(2, sent.GetProperty("status_display_type").GetInt32());
+  }
+
+  [Fact]
+  public void SetActivity_OmitsStatusDisplayTypeWhenNotSet()
+  {
+    // Ohne das Feld nimmt Discord den Anwendungsnamen, wie vor der Option.
+    var activity = new DiscordActivity("Title", "Artist");
+
+    using var doc = JsonDocument.Parse(DiscordIpcClient.BuildSetActivityJson(activity, "abc123"));
+    var sent = doc.RootElement.GetProperty("args").GetProperty("activity");
+
+    Assert.False(sent.TryGetProperty("status_display_type", out _));
+  }
+
+  [Fact]
   public void ClearActivity_CarriesProcessIdAndTheGivenNonce()
   {
     // Die Nonce ordnet Discords Antwort dem Befehl zu. Dass jeder Befehl eine

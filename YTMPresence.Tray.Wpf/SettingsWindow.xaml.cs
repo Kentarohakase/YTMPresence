@@ -44,6 +44,7 @@ public partial class SettingsWindow : Window
     PausedClearSecondsBox.Text = _settings.PausedClearSeconds.ToString();
     OnlyShowWhenPlayingBox.IsChecked = _settings.OnlyShowWhenPlaying;
     ShowAlbumArtInDiscordBox.IsChecked = _settings.ShowAlbumArtInDiscord;
+    ShowTrackTitleInStatusBox.IsChecked = _settings.ShowTrackTitleInStatus;
     AdBehaviorBox.SelectedValue = _settings.AdBehavior.ToString();
 
     DiscordClientIdBox.Text = _settings.DiscordClientId;
@@ -138,6 +139,7 @@ public partial class SettingsWindow : Window
     _settings.PausedClearSeconds = pausedClearSeconds;
     _settings.OnlyShowWhenPlaying = OnlyShowWhenPlayingBox.IsChecked == true;
     _settings.ShowAlbumArtInDiscord = ShowAlbumArtInDiscordBox.IsChecked == true;
+    _settings.ShowTrackTitleInStatus = ShowTrackTitleInStatusBox.IsChecked == true;
     _settings.AdBehavior = selectedAdBehavior;
     _settings.SecurityToken = token;
 

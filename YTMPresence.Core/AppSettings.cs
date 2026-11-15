@@ -44,6 +44,12 @@ public sealed class AppSettings
   /// </summary>
   public bool ShowAlbumArtInDiscord { get; set; } = true;
 
+  /// <summary>
+  /// Zeigt in Discords Statuszeile, etwa in der Mitgliederliste, den
+  /// Songtitel ("Hört Titel") statt des Anwendungsnamens "YouTube Music".
+  /// </summary>
+  public bool ShowTrackTitleInStatus { get; set; } = true;
+
   public AdBehavior AdBehavior { get; set; } = AdBehavior.ShowAdvertisement;
   public DiscordAssetKeys Assets { get; set; } = new();
   public PlayerWindowSettings PlayerWindow { get; set; } = new();

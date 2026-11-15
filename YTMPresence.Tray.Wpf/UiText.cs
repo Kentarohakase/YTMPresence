@@ -450,6 +450,8 @@ public static class UiText
   public static string AdClear => T(de: "Presence löschen", en: "Clear presence", es: "Clear presence");
   public static string SettingsOnlyShowWhenPlaying => T(de: "Presence nur anzeigen, wenn Musik läuft", en: "Only show presence while music plays", es: "Only show presence while music plays");
   public static string SettingsShowAlbumArtInDiscord => T(de: "Album-Cover in Discord anzeigen", en: "Show album art in Discord", es: "Show album art in Discord");
+  public static string SettingsShowTrackTitleInStatus => T(de: "Songtitel in der Discord-Statuszeile anzeigen", en: "Show the song title in Discord's status line", es: "Show the song title in Discord's status line");
+  public static string SettingsShowTrackTitleInStatusHint => T(de: "In der Mitgliederliste und im Profil steht dann „Hört <Titel>“ statt „Hört YouTube Music“.", en: "The member list and profile then show “Listening to <title>” instead of “Listening to YouTube Music”.", es: "The member list and profile then show “Listening to <title>” instead of “Listening to YouTube Music”.");
   public static string SettingsShowAlbumArtInDiscordHint => T(de: "Discord lädt das Cover selbst von den Bild-Servern von YouTube Music. Ohne Cover erscheint das YouTube-Music-Logo.", en: "Discord loads the cover itself from YouTube Music's image servers. Without a cover, the YouTube Music logo is shown.", es: "Discord loads the cover itself from YouTube Music's image servers. Without a cover, the YouTube Music logo is shown.");
   public static string GroupDiscord => T(de: "Discord", en: "Discord", es: "Discord");
   public static string LabelClientId => T(de: "Client ID", en: "Client ID", es: "Client ID");

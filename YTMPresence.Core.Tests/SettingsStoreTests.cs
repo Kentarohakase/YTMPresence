@@ -58,7 +58,18 @@ public class SettingsStoreTests : IDisposable
     var loaded = SettingsStore.LoadOrCreateDefault(_path);
 
     Assert.True(loaded.ShowAlbumArtInDiscord);
+    Assert.True(loaded.ShowTrackTitleInStatus);
     Assert.True(loaded.OnlyShowWhenPlaying);
+  }
+
+  [Fact]
+  public void SaveThenLoad_KeepsDisabledTrackTitleInStatus()
+  {
+    SettingsStore.Save(_path, new AppSettings { ShowTrackTitleInStatus = false });
+
+    var loaded = SettingsStore.LoadOrCreateDefault(_path);
+
+    Assert.False(loaded.ShowTrackTitleInStatus);
   }
 
   [Fact]

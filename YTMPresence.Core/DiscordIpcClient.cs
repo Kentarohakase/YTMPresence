@@ -132,13 +132,19 @@ public sealed class DiscordIpcClient : IDiscordPresenceClient, IAsyncDisposable
   public Task<DiscordCommandResult> SetActivityAsync(DiscordActivity activity, CancellationToken ct)
   {
     var nonce = NewNonce();
+    return SendCommandAsync(nonce, BuildSetActivityJson(activity, nonce), ct);
+  }
+
+  /// <summary>Baut die Nachricht zum Setzen der Presence; Null-Felder entfallen.</summary>
+  internal static string BuildSetActivityJson(DiscordActivity activity, string nonce)
+  {
     var payload = new
     {
       cmd = "SET_ACTIVITY",
       args = new { pid = Environment.ProcessId, activity },
       nonce
     };
-    return SendCommandAsync(nonce, JsonSerializer.Serialize(payload, JsonOptions), ct);
+    return JsonSerializer.Serialize(payload, JsonOptions);
   }
 
   public Task<DiscordCommandResult> ClearActivityAsync(CancellationToken ct)

@@ -125,7 +125,7 @@ Updates use the following checks and safeguards:
 
 ## Tray menu
 
-- `Settings...`: opens the settings window for token, server, presence and Discord client ID. **Show album art in Discord** (on by default) uses the track's cover as the large presence image; without a cover, Discord shows the YouTube Music logo.
+- `Settings...`: opens the settings window for token, server, presence and Discord client ID. **Show album art in Discord** (on by default) uses the track's cover as the large presence image; without a cover, Discord shows the YouTube Music logo. **Show the song title in Discord's status line** (on by default) shows "Listening to <title>" in the member list instead of "Listening to YouTube Music".
 - `Open mini player`: shows the current track, cover, progress, play/pause, previous/next and a button to open the track
 - `Open diagnostics`: shows server, extension, Discord, track and security status, and can produce a diagnostics report without the security token
 - `Only show presence while music plays`: clears the Discord presence immediately on pause
