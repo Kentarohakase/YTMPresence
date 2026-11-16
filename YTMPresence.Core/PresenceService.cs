@@ -34,6 +34,12 @@ public sealed class PresenceService
 
   private const string TrackUrlPrefix = "https://music.youtube.com/watch?v=";
 
+  // Name der Aktivität ("Hört YouTube Music"). Die verifizierte
+  // Discord-Anwendung heißt "YTM Presence" und lässt sich nicht mehr frei
+  // umbenennen; Discord-Clients ohne Unterstützung für das Feld zeigen
+  // weiter diesen Namen.
+  internal const string ActivityName = "YouTube Music";
+
   // Obergrenze für details_url laut Discords Activity-Objekt.
   private const int MaxTitleLinkLength = 256;
 
@@ -279,7 +285,8 @@ public sealed class PresenceService
             Timestamps: null,
             Assets: adAssets,
             Buttons: null,
-            Type: DiscordActivityType.Listening
+            Type: DiscordActivityType.Listening,
+            Name: ActivityName
         );
 
         await TryUpdateAsync("AD", adActivity, force: criticalChange, ct);
@@ -391,9 +398,8 @@ public sealed class PresenceService
           : PresenceText.PausedWithoutTime(AppendAlbum(artist, album));
     }
 
-    // Ohne Angabe zeigt Discord in der Statuszeile den Namen der
-    // Discord-Anwendung aus dem Developer Portal; Details ist hier der
-    // Songtitel.
+    // Ohne Angabe zeigt Discord in der Statuszeile den Namen der Aktivität
+    // ("YouTube Music"); Details ist hier der Songtitel.
     return new DiscordActivity(
         Details: title,
         State: stateLine,
@@ -402,7 +408,8 @@ public sealed class PresenceService
         Buttons: buttons.ToArray(),
         Type: DiscordActivityType.Listening,
         StatusDisplayType: _settings.ShowTrackTitleInStatus ? DiscordStatusDisplayType.Details : null,
-        DetailsUrl: GetTitleLinkUrl(trackUrl)
+        DetailsUrl: GetTitleLinkUrl(trackUrl),
+        Name: ActivityName
     );
   }
 

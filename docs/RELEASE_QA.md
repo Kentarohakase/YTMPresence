@@ -124,9 +124,9 @@ Unit tests cover which URL the companion sends, not how Discord renders it. Chec
 Check from a second account or another device, since Discord shows your own status differently.
 
 - While a track plays, the member list shows "Listening to <song title>". Change tracks; the status follows.
-- Turn off **Show the song title in Discord's status line** and save. With the next update the member list shows the Discord application's name again ("Listening to <application name>").
-- During an advertisement with **Show as ad**, the status shows the application name.
-- The profile card and "Active Now" keep showing the application name in their header; only the status line changes.
+- Turn off **Show the song title in Discord's status line** and save. With the next update the member list shows "Listening to YouTube Music" again.
+- During an advertisement with **Show as ad**, the status shows "Listening to YouTube Music".
+- The profile card and "Active Now" show "Listening to YouTube Music" in their header, not the application name "YTM Presence"; only the status line changes with the option. The companion sends the name in the activity's `name` field. Record which places still show "YTM Presence" and the Discord client version; an older client may ignore the field.
 - Confirm that Discord accepts the activity: diagnostics show the last result as accepted, not rejected.
 
 ## Discord title link

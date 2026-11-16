@@ -656,7 +656,20 @@ public class PresenceServiceTests
   }
 
   [Fact]
-  public async Task StatusLine_Disabled_LeavesTheApplicationName()
+  public async Task Activity_IsNamedYouTubeMusic()
+  {
+    // Ohne das Feld zeigte Discord "Hört YTM Presence", den Namen der
+    // verifizierten Anwendung.
+    var discord = new FakeDiscordClient();
+    var service = new PresenceService(discord, new AppSettings());
+
+    await service.HandleAsync(Playing(), CancellationToken.None);
+
+    Assert.Equal("YouTube Music", discord.LastActivity?.Name);
+  }
+
+  [Fact]
+  public async Task StatusLine_Disabled_ShowsTheActivityName()
   {
     var discord = new FakeDiscordClient();
     var service = new PresenceService(discord, new AppSettings { ShowTrackTitleInStatus = false });
@@ -664,6 +677,7 @@ public class PresenceServiceTests
     await service.HandleAsync(Playing(), CancellationToken.None);
 
     Assert.Null(discord.LastActivity?.StatusDisplayType);
+    Assert.Equal("YouTube Music", discord.LastActivity?.Name);
   }
 
   [Fact]
@@ -682,7 +696,7 @@ public class PresenceServiceTests
   }
 
   [Fact]
-  public async Task Ad_LeavesTheApplicationNameInTheStatusLine()
+  public async Task Ad_ShowsTheActivityNameInTheStatusLine()
   {
     var discord = new FakeDiscordClient();
     var service = new PresenceService(discord, new AppSettings { AdBehavior = AdBehavior.ShowAdvertisement });
@@ -690,6 +704,7 @@ public class PresenceServiceTests
     await service.HandleAsync(Playing(isAd: true), CancellationToken.None);
 
     Assert.Null(discord.LastActivity?.StatusDisplayType);
+    Assert.Equal("YouTube Music", discord.LastActivity?.Name);
   }
 
   [Fact]

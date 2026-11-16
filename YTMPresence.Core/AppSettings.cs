@@ -46,7 +46,7 @@ public sealed class AppSettings
 
   /// <summary>
   /// Zeigt in Discords Statuszeile, etwa in der Mitgliederliste, den
-  /// Songtitel ("Hört Titel") statt des Namens der Discord-Anwendung.
+  /// Songtitel ("Hört Titel") statt "Hört YouTube Music".
   /// </summary>
   public bool ShowTrackTitleInStatus { get; set; } = true;
 
