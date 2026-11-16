@@ -4,11 +4,15 @@ All notable changes to YTMPresence are documented in this file.
 
 Dates for published GitHub releases use Europe/Vienna time. The [GitHub release list](https://github.com/Kentarohakase/YTMPresence/releases), checked on 2026-11-07, contains no releases for 0.7.0, 0.8.11 or 1.0.0; their existing entries and dates are retained as project history.
 
-## [Unreleased]
+## [1.6.5] - 2026-11-16
 
 ### Changed
 
 - Discord shows "Listening to YouTube Music" again instead of "Listening to YTM Presence", for example on the profile card and in "Active Now". The companion now sends the name in the activity's `name` field; the verified Discord application keeps its name "YTM Presence", which Discord clients without support for the field continue to show. With **Show the song title in Discord's status line** turned on, the member list still shows the song title.
+
+### Notes
+
+- The browser extension is unchanged apart from its version number.
 
 ## [1.6.4] - 2026-11-15
 

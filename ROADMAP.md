@@ -29,6 +29,8 @@ This roadmap replaces the draft of 2026-10-12. Release numbers indicate the prop
 
 **Published on GitHub in 1.6.4 on 2026-11-15:** the song title in Discord links to the track; the tray menu stays open during the update check, and the update notification opens the update window; the presence returns after a Discord restart during a pause, and seeks reach Discord's progress bar right away; German texts address the user as "du". See the [changelog](CHANGELOG.md#164---2026-11-15). On 2026-11-15 the maintainer reported that a local test build of the update menu, the update notification and the title link worked. The reconnect and seek fixes have no recorded live check.
 
+**Prepared as 1.6.5 on 2026-11-16:** Discord shows "Listening to YouTube Music" instead of "Listening to YTM Presence"; the companion sends the name in the activity's `name` field because the verified Discord application can no longer be renamed freely. See the [changelog](CHANGELOG.md#165---2026-11-16). On 2026-11-15 the maintainer reported that a local test build showed "Listening to YouTube Music" in Discord. A second account and older Discord clients were not checked. The 1.6.5 extension is identical to 1.6.4 apart from its version number. GitHub publication is not yet recorded.
+
 **Problems identified on 2026-11-02 and their release status:**
 
 | # | Problem | User impact | Priority |

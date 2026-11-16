@@ -80,6 +80,7 @@ The retrieved store page reports 1.4.0, updated 2026-08-10, but comes from a cac
 
 | Version | GitHub release | Store submission | Store review | Store publication | Notes |
 | --- | --- | --- | --- | --- | --- |
+| 1.6.5 | Prepared 2026-11-16; publication not yet recorded | Not uploaded | Not recorded | Not published | Extension identical to 1.6.4 apart from its version number. No permission changes. |
 | 1.6.4 | [Published 2026-11-15](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.6.4) | Not uploaded as of 2026-11-15 | Not recorded | Not published | Extension change: German texts address the user consistently with "du". No permission changes. |
 | 1.6.3 | [Published 2026-11-15](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.6.3) | Not uploaded as of 2026-11-15 | Not recorded | Not published | Extension identical to 1.6.2 apart from its version number. No permission changes. |
 | 1.6.2 | [Published 2026-11-15](https://github.com/Kentarohakase/YTMPresence/releases/tag/v1.6.2) | Not uploaded as of 2026-11-15 | Not recorded | Not published | Extension change: new icon set only. No permission changes. |
